@@ -18,6 +18,17 @@ public class DirectDrawDemo extends JPanel {
         fillStars(150);
 //        drawRect(Color.RED, 0, 0, width/2, height/2);
 //        drawNoise(0, 0, width/1, height/1);
+
+//
+//        java.util.Timer t = new java.util.Timer();
+//        t.schedule(new TimerTask() {
+//                       @Override
+//                       public void run() {
+//                           drawNoise(0, 0, canvas.getWidth(), canvas.getHeight());
+//                       }
+//                   },
+//                17,
+//                17);
     }
 
     public void drawNoise(int x1, int y1, int width, int height) {
@@ -113,15 +124,6 @@ public class DirectDrawDemo extends JPanel {
 //        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
-        java.util.Timer t = new java.util.Timer();
-        t.schedule(new TimerTask() {
-                       @Override
-                       public void run() {
-//                drawNoise(0, 0, canvas.getWidth(), canvas.getHeight());
-                       }
-                   },
-                500,
-                500);
     }
 }
 
