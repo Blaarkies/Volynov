@@ -14,21 +14,30 @@ public class DirectDrawDemo extends JPanel {
 
     public DirectDrawDemo(int width, int height) {
         canvas = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+//        startup();
+
+
+/*        fillCanvas(Color.BLACK);
+        fillStars(150);
+        drawNoise(250,250,500,500);
+        drawRect(Color.RED, 0, 0, width/2, height/2);
+        drawNoise(0, 0, width/1, height/1);
+
+
+        java.util.Timer t = new java.util.Timer();
+        t.schedule(new TimerTask() {
+                       @Override
+                       public void run() {
+                           drawNoise(0, 0, canvas.getWidth(), canvas.getHeight());
+                       }
+                   },
+                17,
+                17);*/
+    }
+
+    public void startup() {
         fillCanvas(Color.BLACK);
         fillStars(150);
-//        drawRect(Color.RED, 0, 0, width/2, height/2);
-//        drawNoise(0, 0, width/1, height/1);
-
-//
-//        java.util.Timer t = new java.util.Timer();
-//        t.schedule(new TimerTask() {
-//                       @Override
-//                       public void run() {
-//                           drawNoise(0, 0, canvas.getWidth(), canvas.getHeight());
-//                       }
-//                   },
-//                17,
-//                17);
     }
 
     public void drawNoise(int x1, int y1, int width, int height) {
@@ -63,7 +72,6 @@ public class DirectDrawDemo extends JPanel {
                 canvas.setRGB(x, y, color);
             }
         }
-
         repaint();
     }
 
@@ -88,32 +96,11 @@ public class DirectDrawDemo extends JPanel {
         repaint();
     }
 
-
-//    public void drawLine(Color c, int x1, int y1, int x2, int y2) {
-//        // Implement line drawing
-//        repaint();
-//    }
-
-//    public void drawRect(Color c, int x1, int y1, int width, int height) {
-//        int color = c.getRGB();
-//        // Implement rectangle drawing
-//        for (int x = x1; x < x1 + width; x++) {
-//            for (int y = y1; y < y1 + height; y++) {
-//                canvas.setRGB(x, y, color);
-//            }
-//        }
-//        repaint();
-//    }
-
-//    public void drawOval(Color c, int x1, int y1, int width, int height) {
-//        // Implement oval drawing
-//        repaint();
-//    }
-
     public void makeWindow() {
         int width = canvas.getWidth();
         int height = canvas.getHeight();
-        JFrame frame = new JFrame("Direct draw demo");
+//        System.out.println(height + "|" + height);
+        JFrame frame = new JFrame("Volynov");
 
         DirectDrawDemo panel = new DirectDrawDemo(width, height);
 
@@ -121,9 +108,7 @@ public class DirectDrawDemo extends JPanel {
         frame.pack();
         frame.setVisible(true);
         frame.setResizable(false);
-//        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-
     }
 }
 

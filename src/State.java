@@ -10,4 +10,7 @@ public class State {
     public List<FreeBody> planets = new ArrayList<>();
     // planets = particles(worlds, asteroids, sun, warheads) for now
 
+    public void addPlayer() {
+        players.add(new Vehicle());
+    }
 }
