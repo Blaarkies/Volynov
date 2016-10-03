@@ -1,10 +1,12 @@
+package backend;
+
 import backend.FreeBody;
 import backend.Vehicle;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class State {
+public class GameState {
 
     public List<Vehicle> players = new ArrayList<>();
     public List<FreeBody> planets = new ArrayList<>();

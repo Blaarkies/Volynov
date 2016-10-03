@@ -4,6 +4,9 @@ public class Motion {
 
     public PositionDouble postition;
     public Velocity velocity;
+    //todo: angular speed
+
+    //visitor pattern
 
     public Motion() {
         this.velocity = new Velocity();
