@@ -7,11 +7,9 @@ import java.awt.*;
 
 public class AnimatedBoat {
 
-    public AnimationPane animationPane; // = new AnimationPane();
-//    public GameState gameState;
+    public AnimationPane animationPane;
 
     public AnimatedBoat(GameState gameState) {
-//        this.gameState = gameState;
         this.animationPane = new AnimationPane(gameState);
         EventQueue.invokeLater(new Runnable() {
             @Override
@@ -29,7 +27,6 @@ public class AnimatedBoat {
                 JFrame frame = new JFrame("Test");
                 frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
                 frame.setLayout(new BorderLayout());
-//                frame.add(new AnimationPane());
                 frame.add(animationPane);
 
                 frame.pack();

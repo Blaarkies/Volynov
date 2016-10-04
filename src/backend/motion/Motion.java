@@ -2,19 +2,22 @@ package backend.motion;
 
 public class Motion {
 
-    public PositionDouble postition;
+    public PositionDouble position;
     public Velocity velocity;
-    //todo: angular speed
 
     //visitor pattern
 
     public Motion() {
         this.velocity = new Velocity();
-        this.postition = new PositionDouble();
+        this.position = new PositionDouble();
     }
 
     public Motion(Velocity velocity, PositionDouble postition) {
         this.velocity = velocity;
-        this.postition = new PositionDouble();
+        this.position = new PositionDouble();
+    }
+
+    public PositionDouble getPosition() {
+        return position;
     }
 }

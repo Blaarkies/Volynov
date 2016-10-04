@@ -1,6 +1,5 @@
 import backend.GameState;
 import backend.Vehicle;
-import backend.motion.PositionDouble;
 import frontend.AnimatedBoat;
 
 import javax.swing.*;
@@ -14,26 +13,23 @@ public class Main {
         AnimatedBoat img = new AnimatedBoat(gameState);
 
         timer(gameState);
-//        img.animationPane.drawNoise(0,0,100,100);
-
-//        DirectDrawDemo frontendWindow = new DirectDrawDemo(1000, 1000);
 
         gameState.addPlayer();
-        System.out.println(gameState.players.get(0).name);
+        gameState.addPlayer();
 
-//        frontendWindow.startup();
-//        frontendWindow.makeWindow();
-//        frontendWindow.drawNoise(250,250,500,500);
-
+        gameState.addPlanet();
+        gameState.addPlanet();
     }
 
     public static void timer(final GameState gameState) {
         Timer timer = new Timer(100, new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                for (Vehicle player: gameState.players) {
-                    player.motion.postition.x++;
-                    player.motion.postition.y++;
+
+                for (Vehicle vehicle: gameState.players) {
+                    double x = (Math.random()-0.5)*10;
+                    double y = (Math.random()-0.5)*10;
+                    vehicle.motion.position.addPosition(x, y);
                 }
             }
 

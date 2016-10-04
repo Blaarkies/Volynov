@@ -15,5 +15,7 @@ public class Vehicle extends FreeBody {
         this.money = 800;
         this.kills = 0;
         this.deaths = 0;
+
+        this.motion.position.setPosition(250, 250);
     }
 }

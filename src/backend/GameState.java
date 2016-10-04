@@ -15,4 +15,8 @@ public class GameState {
     public void addPlayer() {
         players.add(new Vehicle());
     }
+
+    public void addPlanet() {
+        planets.add(new FreeBody());
+    }
 }
