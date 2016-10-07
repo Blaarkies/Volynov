@@ -3,6 +3,7 @@ package frontend;
 import backend.FreeBody;
 import backend.GameState;
 import backend.motion.PositionDouble;
+import backend.motion.Trailer;
 
 import javax.swing.*;
 import java.awt.*;
@@ -14,6 +15,7 @@ import java.util.List;
 public class AnimationPane extends JPanel {
 
     private BufferedImage canvasBackground = new BufferedImage(500, 500, BufferedImage.TYPE_INT_ARGB);
+    private BufferedImage canvasTrailers = new BufferedImage(500, 500, BufferedImage.TYPE_INT_ARGB);
     private BufferedImage canvasVehicles = new BufferedImage(500, 500, BufferedImage.TYPE_INT_ARGB);
     private BufferedImage canvasPlanets = new BufferedImage(500, 500, BufferedImage.TYPE_INT_ARGB);
     private BufferedImage canvasFrontend = new BufferedImage(500, 500, BufferedImage.TYPE_INT_ARGB);
@@ -43,6 +45,11 @@ public class AnimationPane extends JPanel {
     }
 
     private void paintTheUniverse() {
+        Graphics2D graphicsTrailers = canvasTrailers.createGraphics();
+        graphicsTrailers.setBackground(new Color(0,0,0,0));
+        graphicsTrailers.clearRect(0,0,500,500);
+        paintTrailers(graphicsTrailers);
+
         Graphics2D graphicsPlanets = canvasPlanets.createGraphics();
         graphicsPlanets.setBackground(new Color(0,0,0,0));
         graphicsPlanets.clearRect(0,0,500,500);
@@ -55,19 +62,20 @@ public class AnimationPane extends JPanel {
 
         Graphics2D graphicsDisplay = canvasDisplay.createGraphics();
         graphicsDisplay.drawImage(canvasBackground, 0, 0, null);
+        graphicsDisplay.drawImage(canvasTrailers, 0, 0, null);
         graphicsDisplay.drawImage(canvasPlanets, 0, 0, null);
         graphicsDisplay.drawImage(canvasVehicles, 0, 0, null);
     }
 
-    private <T extends FreeBody> void paintElements(Graphics2D graphics, List<T> list, Color paint) {
-        graphics.setPaint(paint);
+    private <T extends FreeBody> void paintFreeBodies(Graphics2D graphics, List<T> list, Color paint) {
         for (T element : list) {
-            PositionDouble positionDouble = element.motion.getPosition();
-            int x = (int) positionDouble.x;
-            int y = (int) positionDouble.y;
+            graphics.setPaint(paint);
 
-            graphics.setPaint(paint); // todo: temp
+            PositionDouble elementPosition = element.motion.getPosition();
+            int x = (int)elementPosition.x;
+            int y = (int)elementPosition.y;
             int size = (int)element.radius;
+
             graphics.fillOval(x - size, y - size, size*2, size*2);
 
             graphics.setPaint(Color.CYAN);
@@ -75,16 +83,49 @@ public class AnimationPane extends JPanel {
         }
     }
 
+    private <T extends FreeBody> void paintTrailers(Graphics2D graphics, List<T> list, Color paint) {
+        for (T element : list) {
+
+            int x = (int)element.motion.trailers.get(0).position.x;
+            int y = (int)element.motion.trailers.get(0).position.y;
+            double size = (double)element.motion.trailers.size();
+            int index = 0;
+            for (Trailer trailer : element.motion.trailers) {
+
+                Color fadedPaint = new Color(
+                        paint.getRed(),
+                        paint.getGreen(),
+                        paint.getBlue(),
+                        (int)(index*(255/size))
+                );
+
+                graphics.setPaint(fadedPaint);
+                graphics.drawLine(x, y, (int)trailer.position.x, (int)trailer.position.y);
+                x = (int)trailer.position.x;
+                y = (int)trailer.position.y;
+                index++;
+            }
+        }
+    }
+
     private void paintVehicles(Graphics2D graphicsInput) {
         Graphics2D graphics = (Graphics2D)graphicsInput.create();
-        paintElements(graphics, gameState.players, Color.RED.darker());
+        paintFreeBodies(graphics, gameState.players, Color.RED.darker());
 
         graphics.dispose();
     }
 
     private void paintPlanets(Graphics2D graphicsInput) {
         Graphics2D graphics = (Graphics2D)graphicsInput.create();
-        paintElements(graphics, gameState.planets, Color.BLUE.darker());
+        paintFreeBodies(graphics, gameState.planets, Color.BLUE.darker());
+
+        graphics.dispose();
+    }
+
+    private void paintTrailers(Graphics2D graphicsInput) {
+        Graphics2D graphics = (Graphics2D)graphicsInput.create();
+        paintTrailers(graphics, gameState.players, Color.YELLOW);
+        paintTrailers(graphics, gameState.planets, Color.YELLOW.darker());
 
         graphics.dispose();
     }

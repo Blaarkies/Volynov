@@ -14,11 +14,11 @@ public class Main {
 
         timer(gameState);
 
-        gameState.addPlayer(100,100,0, 0, 0.3,0, "1");
-        gameState.addPlayer(305,300,0, 0,-0.3,0, "2");
+        gameState.addPlayer(250, 100, 0,  1.2,0,1, "1");
+        gameState.addPlayer(298,300,0, 0,-0.3,0, "2");
 
-        gameState.addPlanet(250, 50, 0,  0.3,0,1, "A");
-        gameState.addPlanet(250, 450,0, -0.3,0,-0.5, "B");
+        gameState.addPlanet(250, 50, 0,  -0.3,0,1, "A");
+        gameState.addPlanet(250, 450,0, 0.3,0,-0.5, "B");
     }
 
     public static void timer(final GameState gameState) {

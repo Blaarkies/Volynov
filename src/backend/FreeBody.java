@@ -44,7 +44,8 @@ public class FreeBody implements UniversalConstants {
         double m = client.mass;
         double M = this.mass;
         double r = client.motion.position.distance(this.motion.position);
-        double forceOnClient = G*m*M / (r*r); // todo: use sqr function
+        double forceOnClient = G*m*M / (r*r); // todo: use sqr function(Math.pow is very slow)
+        forceOnClient = forceOnClient < 10 ? forceOnClient : 1; // todo: dampen extreme cases
 
         double direction = client.motion.position.getDirection(this.motion.position);
 
