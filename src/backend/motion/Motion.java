@@ -5,19 +5,27 @@ public class Motion {
     public PositionDouble position;
     public Velocity velocity;
 
-    //visitor pattern
+    // research visitor pattern to use somewhere
 
     public Motion() {
-        this.velocity = new Velocity();
         this.position = new PositionDouble();
+        this.velocity = new Velocity();
     }
 
-    public Motion(Velocity velocity, PositionDouble postition) {
-        this.velocity = velocity;
-        this.position = new PositionDouble();
+    public Motion(double x, double y, double h, double dx, double dy, double dh) {
+        this.position = new PositionDouble(x, y, h);
+        this.velocity = new Velocity(dx, dy, dh);
     }
 
     public PositionDouble getPosition() {
         return position;
+    }
+
+    public void updatePositionChanges() {
+        position.addToPosition(
+                velocity.dx,
+                velocity.dy,
+                velocity.dh
+        );
     }
 }

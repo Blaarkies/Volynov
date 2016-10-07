@@ -1,6 +1,5 @@
 import backend.GameState;
-import backend.Vehicle;
-import frontend.AnimatedBoat;
+import frontend.Animator;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
@@ -9,28 +8,26 @@ import java.awt.event.ActionListener;
 public class Main {
 
     public static void main(String[] args) {
+
         GameState gameState = new GameState();
-        AnimatedBoat img = new AnimatedBoat(gameState);
+        Animator img = new Animator(gameState);
 
         timer(gameState);
 
-        gameState.addPlayer();
-        gameState.addPlayer();
+        gameState.addPlayer(100,100,0, 0, 0.3,0, "1");
+        gameState.addPlayer(305,300,0, 0,-0.3,0, "2");
 
-        gameState.addPlanet();
-        gameState.addPlanet();
+        gameState.addPlanet(250, 50, 0,  0.3,0,1, "A");
+        gameState.addPlanet(250, 450,0, -0.3,0,-0.5, "B");
     }
 
     public static void timer(final GameState gameState) {
-        Timer timer = new Timer(100, new ActionListener() {
+        Timer timer = new Timer(16, new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
 
-                for (Vehicle vehicle: gameState.players) {
-                    double x = (Math.random()-0.5)*10;
-                    double y = (Math.random()-0.5)*10;
-                    vehicle.motion.position.addPosition(x, y);
-                }
+                gameState.tickPositionChanges();
+                gameState.tickVelocityChanges();
             }
 
         });

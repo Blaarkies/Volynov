@@ -4,7 +4,7 @@ public class PositionDouble {
 
     public double x;
     public double y;
-    public double heading;
+    public double h;
 
     public PositionDouble() {
         setPosition(0, 0, 0);
@@ -17,7 +17,7 @@ public class PositionDouble {
     public void setPosition(double x, double y, double heading) {
         this.x = x;
         this.y = y;
-        this.heading = heading;
+        this.h = heading;
     }
 
     public void setPosition(double x, double y) {
@@ -25,8 +25,21 @@ public class PositionDouble {
         this.y = y;
     }
 
-    public void addPosition(double x, double y) {
+    public void addToPosition(double x, double y, double heading) {
         this.x += x;
         this.y += y;
+        this.h += heading;
+    }
+
+    public double distance(PositionDouble positionDouble) {
+        return Math.sqrt(sqr(positionDouble.x-this.x)+sqr(positionDouble.y-this.y));
+    }
+
+    public double getDirection(PositionDouble client) { // returns range [0..Pi] -> [-Pi..0]
+        return Math.atan2(client.x - this.x, client.y - this.y);
+    }
+
+    public double sqr(double number) {
+        return number * number;
     }
 }

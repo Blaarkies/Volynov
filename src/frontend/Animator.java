@@ -5,11 +5,11 @@ import backend.GameState;
 import javax.swing.*;
 import java.awt.*;
 
-public class AnimatedBoat {
+public class Animator {
 
     public AnimationPane animationPane;
 
-    public AnimatedBoat(GameState gameState) {
+    public Animator(GameState gameState) {
         this.animationPane = new AnimationPane(gameState);
         EventQueue.invokeLater(new Runnable() {
             @Override
