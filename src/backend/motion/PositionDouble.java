@@ -4,7 +4,7 @@ public class PositionDouble {
 
     public double x;
     public double y;
-    public double h;
+    public double h; // heading or rotationalPosition
 
     public PositionDouble() {
         setPosition(0, 0, 0);

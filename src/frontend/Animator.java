@@ -9,8 +9,8 @@ public class Animator {
 
     public AnimationPane animationPane;
 
-    public Animator(GameState gameState) {
-        this.animationPane = new AnimationPane(gameState);
+    public Animator(GameState gameState, int displayWidth, int displayHeight) {
+        this.animationPane = new AnimationPane(gameState, displayWidth, displayHeight);
         EventQueue.invokeLater(new Runnable() {
             @Override
             public void run() {
@@ -24,7 +24,7 @@ public class Animator {
                         | UnsupportedLookAndFeelException ex) {
                 }
 
-                JFrame frame = new JFrame("Test");
+                JFrame frame = new JFrame("Volynov");
                 frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
                 frame.setLayout(new BorderLayout());
                 frame.add(animationPane);

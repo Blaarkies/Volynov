@@ -11,27 +11,29 @@ public class GameState {
     public List<FreeBody> planets = new ArrayList<>();
     // planets = particles(worlds, asteroids, sun, warheads) for now
 
-    public void addPlayer(double x, double y, double h, double dx, double dy, double dh,
-                          String id) {
+    public void addPlayer(double x, double y, double h,
+                          double dx, double dy, double dh,
+                          String id, int trailersPopulation) {
         players.add(
                 new Vehicle("Player 1", 100, 800, 0, 0,
                         new FreeBody(1, 325, 10,
                                 x, y, h, dx, dy, dh,
-                                id
+                                id, trailersPopulation
                         )
                 )
         );
     }
 
-    public void addPlanet(double x, double y, double h, double dx, double dy, double dh,
-                          String id) {
+    public void addPlanet(double x, double y, double h,
+                          double dx, double dy, double dh,
+                          String id, int trailersPopulation) {
         planets.add(
             new FreeBody(
                     1000,
                     325,
                     30,
                     x, y, h, dx, dy, dh,
-                    id
+                    id, trailersPopulation
             )
         );
     }
@@ -48,11 +50,10 @@ public class GameState {
 
     public void tickVelocityChanges() {
         for (Vehicle vehicle: players) {
-
             double xF = 0; // Force in x direction
             double yF = 0;
             for (FreeBody planet: planets) {
-                Vec2d f = planet.gravityForce(vehicle);
+                Vec2d f = planet.gravitationalForce(vehicle);
                 xF += f.x;
                 yF += f.y;
             }
@@ -60,15 +61,12 @@ public class GameState {
             vehicle.motion.velocity.addToVelocity(xF/vehicle.mass,yF/vehicle.mass, 0);
         }
 
-
-
         for (FreeBody planet: planets) {
-
             double xF = 0; // Force in x direction
             double yF = 0;
             for (FreeBody otherPlanet: planets) {
                 if (!otherPlanet.id.equals(planet.id)) {
-                    Vec2d f = otherPlanet.gravityForce(planet);
+                    Vec2d f = otherPlanet.gravitationalForce(planet);
                     xF += f.x;
                     yF += f.y;
                 }
@@ -76,5 +74,8 @@ public class GameState {
 
             planet.motion.velocity.addToVelocity(xF/planet.mass,yF/planet.mass, 0);
         }
+    }
+
+    public void tickFrictionChanges() {
     }
 }
