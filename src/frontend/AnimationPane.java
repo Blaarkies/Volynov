@@ -80,15 +80,21 @@ public class AnimationPane extends JPanel {
         for (T element : list) {
             graphics.setPaint(paint); // todo: label drawing should be separated function
 
-            PositionDouble elementPosition = element.motion.position;
-            int x = (int)elementPosition.x;
-            int y = (int)elementPosition.y;
+            int x = (int)element.motion.position.x;
+            int y = (int)element.motion.position.y;
             int size = (int)element.radius;
+
+            int scale = (int)(100*Math.log(100000*element.motion.acceleration.getMagnitude()+1));
+            int ddx = (int)(element.motion.acceleration.ddx*scale);
+            int ddy = (int)(element.motion.acceleration.ddy*scale);
 
             graphics.fillOval(x - size, y - size, size*2, size*2);
 
             graphics.setPaint(Color.CYAN);
-            graphics.drawString(element.id, x-3, y+4);
+            graphics.drawString(element.id, x-3, y+5);
+
+            graphics.drawLine(x, y, x+ddx, y+ddy);
+            graphics.drawString("●", x-5+ddx, y+5+ddy);
         }
     }
 

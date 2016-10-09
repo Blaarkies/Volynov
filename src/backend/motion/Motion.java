@@ -7,12 +7,14 @@ public class Motion {
 
     public PositionDouble position;
     public Velocity velocity;
+    public Acceleration acceleration;
     public Queue<Trailer> trailers = new LinkedList<>();
     public int trailersPopulation;
 
     public Motion() {
         this.position = new PositionDouble();
         this.velocity = new Velocity();
+        this.acceleration = new Acceleration();
         this.trailersPopulation = 100;
         addNewTrailer(this.position.x, this.position.y);
     }
@@ -20,6 +22,7 @@ public class Motion {
     public Motion(double x, double y, double h, double dx, double dy, double dh, int trailersPopulation) {
         this.position = new PositionDouble(x, y, h);
         this.velocity = new Velocity(dx, dy, dh);
+        this.acceleration = new Acceleration();
         this.trailersPopulation = trailersPopulation;
         addNewTrailer(x, y);
     }
@@ -31,6 +34,14 @@ public class Motion {
                 this.velocity.dh
         );
         addNewTrailer(this.position.x, this.position.y);
+    }
+
+    public void updateVelocityChanges() {
+        this.velocity.addToVelocity(
+                this.acceleration.ddx,
+                this.acceleration.ddy,
+                this.acceleration.ddh
+        );
     }
 
     public void addNewTrailer(double x, double y) {

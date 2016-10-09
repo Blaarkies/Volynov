@@ -48,7 +48,7 @@ public class GameState {
         }
     }
 
-    public void tickVelocityChanges() {
+    public void tickAccelerationChanges() {
         for (Vehicle vehicle: players) {
             double xF = 0; // Force in x direction
             double yF = 0;
@@ -57,8 +57,8 @@ public class GameState {
                 xF += f.x;
                 yF += f.y;
             }
-
-            vehicle.motion.velocity.addToVelocity(xF/vehicle.mass,yF/vehicle.mass, 0);
+//            vehicle.motion.velocity.addToVelocity(xF/vehicle.mass,yF/vehicle.mass, 0);
+            vehicle.motion.acceleration.setAcceleration(xF/vehicle.mass,yF/vehicle.mass, 0);
         }
 
         for (FreeBody planet: planets) {
@@ -71,11 +71,54 @@ public class GameState {
                     yF += f.y;
                 }
             }
-
-            planet.motion.velocity.addToVelocity(xF/planet.mass,yF/planet.mass, 0);
+//            planet.motion.velocity.addToVelocity(xF/planet.mass,yF/planet.mass, 0);
+            planet.motion.acceleration.setAcceleration(xF/planet.mass,yF/planet.mass, 0);
         }
     }
 
+    public void tickCollisionChanges() {
+        for (Vehicle vehicle: players) {
+            double xF = 0; // Force in x direction
+            double yF = 0;
+            for (FreeBody planet: planets) {
+
+                double distanceBetweenEntities = planet.motion.position.distance(vehicle.motion.position);
+                if (distanceBetweenEntities < planet.radius+vehicle.radius) {
+                    Vec2d f = planet.collisionNormalForce(vehicle);
+                    xF += f.x;
+                    yF += f.y;
+                }
+            }
+
+            vehicle.motion.acceleration.addToAcceleration(xF/vehicle.mass,yF/vehicle.mass, 0);
+        }
+
+//        for (FreeBody planet: planets) {
+//
+//            double xF = 0; // Force in x direction
+//            double yF = 0;
+//            for (FreeBody otherPlanet: planets) {
+//                if (!otherPlanet.id.equals(planet.id)) {
+//                    Vec2d f = otherPlanet.gravitationalForce(planet);
+//                    xF += f.x;
+//                    yF += f.y;
+//                }
+//            }
+//
+//            planet.motion.velocity.addToVelocity(xF/planet.mass,yF/planet.mass, 0);
+//        }
+    }
+
     public void tickFrictionChanges() {
+    }
+
+    public void tickVelocityChanges() {
+        for (Vehicle vehicle: players) {
+            vehicle.motion.updateVelocityChanges();
+        }
+
+        for (FreeBody planet: planets) {
+            planet.motion.updateVelocityChanges();
+        }
     }
 }
