@@ -1,45 +1,53 @@
 package backend.motion;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.LinkedList;
+import java.util.Queue;
 
 public class Motion {
 
     public PositionDouble position;
     public Velocity velocity;
-    public List<Trailer> trailers = new ArrayList<>();
-
-    // research visitor pattern to use somewhere
+    public Acceleration acceleration;
+    public Queue<Trailer> trailers = new LinkedList<>();
+    public int trailersPopulation;
 
     public Motion() {
         this.position = new PositionDouble();
         this.velocity = new Velocity();
+        this.acceleration = new Acceleration();
+        this.trailersPopulation = 100;
         addNewTrailer(this.position.x, this.position.y);
     }
 
-    public Motion(double x, double y, double h, double dx, double dy, double dh) {
+    public Motion(double x, double y, double h, double dx, double dy, double dh, int trailersPopulation) {
         this.position = new PositionDouble(x, y, h);
         this.velocity = new Velocity(dx, dy, dh);
+        this.acceleration = new Acceleration();
+        this.trailersPopulation = trailersPopulation;
         addNewTrailer(x, y);
     }
 
-    public PositionDouble getPosition() {
-        return this.position;
+    public void updatePositionChanges() {
+        position.addToPosition(
+                velocity.dx,
+                velocity.dy,
+                velocity.dh
+        );
+        addNewTrailer(position.x, position.y);
     }
 
-    public void updatePositionChanges() {
-        this.position.addToPosition(
-                this.velocity.dx,
-                this.velocity.dy,
-                this.velocity.dh
+    public void updateVelocityChanges() {
+        velocity.addToVelocity(
+                acceleration.ddx,
+                acceleration.ddy,
+                acceleration.ddh
         );
-        addNewTrailer(this.position.x, this.position.y);
     }
 
     public void addNewTrailer(double x, double y) {
-        this.trailers.add(new Trailer(x, y));
-        if (this.trailers.size() > 500) {
-            this.trailers.remove(0);
+        trailers.add(new Trailer(x, y));
+        if (trailers.size() > trailersPopulation) {
+            trailers.poll();
         }
     }
 }

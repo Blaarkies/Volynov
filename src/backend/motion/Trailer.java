@@ -2,12 +2,11 @@ package backend.motion;
 
 public class Trailer {
 
+    // todo: needless class, but trailers are intended to have more properties later on
     public PositionDouble position;
-//    public int age;
 
     public Trailer() {
         this.position = new PositionDouble();
-//        this.age = 0;
     }
 
     public Trailer(double x, double y) {
