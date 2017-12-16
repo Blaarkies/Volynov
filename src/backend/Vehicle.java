@@ -33,9 +33,10 @@ public class Vehicle extends FreeBody {
         this.radius = freeBody.radius;
 
         this.mass = 1;
-        this.angularMass = getAngularMass(mass,radius);
+        this.angularMass = getAngularMass(mass, radius);
         this.temperature = 315;
-        this.motion = new Motion(freeBody.motion.position.x,
+        this.motion = new Motion(
+                freeBody.motion.position.x,
                 freeBody.motion.position.y,
                 freeBody.motion.position.h,
                 freeBody.motion.velocity.dx,

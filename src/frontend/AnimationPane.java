@@ -2,8 +2,8 @@ package frontend;
 
 import backend.FreeBody;
 import backend.GameState;
-import backend.motion.PositionDouble;
 import backend.motion.Trailer;
+import com.sun.javafx.geom.Vec3d;
 
 import javax.swing.*;
 import java.awt.*;
@@ -71,56 +71,91 @@ public class AnimationPane extends JPanel {
 
     private Graphics2D clearCanvas(BufferedImage canvas) {
         Graphics2D graphics = canvas.createGraphics();
-        graphics.setBackground(new Color(0, 0, 0, 0)); // todo: should this be created every time?
+        graphics.setBackground(new Color(0, 0, 0, 0));
+        // todo: should this be created every time?
         graphics.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
         return graphics;
     }
 
-    private <T extends FreeBody> void paintFreeBodies(Graphics2D graphics, List<T> list, Color paint) {
+    private int getValidColourValue(double value) {
+        if (value > 255) {
+            return 255;
+        } else if (value < 0) {
+            return 0;
+        }
+        return (int) value;
+    }
+
+    private Vec3d getPersonalityVector(int value) {
+        int red = Integer.parseInt(Integer.toString(value).substring(0, 1));
+        int green = Integer.parseInt(Integer.toString(value).substring(1, 2));
+        int blue = Integer.parseInt(Integer.toString(value).substring(2, 3));
+        return new Vec3d(red, green, blue);
+    }
+
+    private <T extends FreeBody> void paintFreeBodies(Graphics2D graphics,
+                                                      List<T> list,
+                                                      Color paint) {
         for (T element : list) {
-            graphics.setPaint(paint); // todo: label drawing should be separated function
 
-            int x = (int)element.motion.position.x;
-            int y = (int)element.motion.position.y;
-            int size = (int)element.radius;
+            int x = (int) element.motion.position.x;
+            int y = (int) element.motion.position.y;
+            int size = (int) element.radius;
 
-            int scale = (int)(100*Math.log(100000*element.motion.acceleration.getMagnitude()+1));
-            int ddx = (int)(element.motion.acceleration.ddx*scale);
-            int ddy = (int)(element.motion.acceleration.ddy*scale);
+            int scale = (int) (100 * Math.log(100000 * element.motion.acceleration.getMagnitude() + 1));
+            int ddx = (int) (element.motion.acceleration.ddx * scale);
+            int ddy = (int) (element.motion.acceleration.ddy * scale);
 
-            graphics.fillOval(x - size, y - size, size*2, size*2);
+            Vec3d personalityVector = getPersonalityVector(element.hashCode());
+            int red = getValidColourValue(paint.getRed() + personalityVector.x * 5 - 45);
+            int green = getValidColourValue(paint.getGreen() + personalityVector.y * 5 - 45);
+            int blue = getValidColourValue(paint.getBlue() + personalityVector.z * 5 - 45);
 
-            graphics.setPaint(Color.CYAN);
-            graphics.drawString(element.id, x-3, y+5);
+            Color variantPaint = new Color(red, green, blue);
+            graphics.setPaint(variantPaint);
+            graphics.fillOval(x - size, y - size, size * 2, size * 2);
 
-            graphics.drawLine(x, y, x+ddx, y+ddy);
-            graphics.drawString("●", x-5+ddx, y+5+ddy);
+            double h = element.motion.position.h;
+            int xh = x + ((int) (element.radius * Math.cos(h)));
+            int yh = y + ((int) (element.radius * Math.sin(h)));
+            graphics.setPaint(Color.YELLOW);
+            graphics.drawLine(x, y, xh, yh);
+
+            graphics.setPaint(Color.DARK_GRAY);
+            graphics.drawString("●", x - 5 + ddx, y + 5 + ddy);
+            graphics.drawLine(x, y, x + ddx, y + ddy);
+
+            graphics.setPaint(Color.WHITE);
+            graphics.drawString(element.id, x - 3, y + 5);
         }
     }
 
-    private <T extends FreeBody> void paintTrailers(Graphics2D graphics, List<T> list, Color paint, float intensity) {
+    private <T extends FreeBody> void paintTrailers(Graphics2D graphics,
+                                                    List<T> list,
+                                                    Color paint,
+                                                    float intensity) {
         for (T element : list) {
-            double size = (double)element.motion.trailers.size();
+            double size = (double) element.motion.trailers.size();
 
             Trailer trailerPrev = null;
             Iterator<Trailer> iterator = element.motion.trailers.iterator();
-            for (int index=0;iterator.hasNext();index++) {
+            for (int index = 0; iterator.hasNext(); index++) {
                 Trailer trailerNext = iterator.next();
                 if (trailerPrev == null) {
                     trailerPrev = trailerNext;
                     continue;
                 }
 
-                int xPrev = (int)trailerPrev.position.x;
-                int yPrev = (int)trailerPrev.position.y;
-                int xNext = (int)trailerNext.position.x;
-                int yNext = (int)trailerNext.position.y;
+                int xPrev = (int) trailerPrev.position.x;
+                int yPrev = (int) trailerPrev.position.y;
+                int xNext = (int) trailerNext.position.x;
+                int yNext = (int) trailerNext.position.y;
 
                 Color fadedPaint = new Color(
                         paint.getRed(),
                         paint.getGreen(),
                         paint.getBlue(),
-                        (int) (index * ((255*intensity) / size))
+                        (int) (index * ((255 * intensity) / size))
                 );
                 graphics.setPaint(fadedPaint);
                 graphics.drawLine(xPrev, yPrev, xNext, yNext);
@@ -131,42 +166,43 @@ public class AnimationPane extends JPanel {
     }
 
     private void paintVehicles(Graphics2D graphicsInput) {
-        Graphics2D graphics = (Graphics2D)graphicsInput.create();
+        Graphics2D graphics = (Graphics2D) graphicsInput.create();
         paintFreeBodies(graphics, gameState.players, Color.RED.darker());
         graphics.dispose();
     }
 
     private void paintPlanets(Graphics2D graphicsInput) {
-        Graphics2D graphics = (Graphics2D)graphicsInput.create();
+        Graphics2D graphics = (Graphics2D) graphicsInput.create();
         paintFreeBodies(graphics, gameState.planets, Color.BLUE.darker());
         graphics.dispose();
     }
 
     private void paintTrailers(Graphics2D graphicsInput) {
-        Graphics2D graphics = (Graphics2D)graphicsInput.create();
+        Graphics2D graphics = (Graphics2D) graphicsInput.create();
         paintTrailers(graphics, gameState.players, Color.RED, 0.3f);
         paintTrailers(graphics, gameState.planets, Color.BLUE, 0.3f);
         graphics.dispose();
     }
 
     private void fillStars(Graphics2D graphicsInput, int totalStars, int width, int height) {
-        Graphics2D graphics = (Graphics2D)graphicsInput.create();
+        Graphics2D graphics = (Graphics2D) graphicsInput.create();
 
-        Color starColor = new Color(255,250,248);
-        Color transparent = new Color(0, 0, 0, 0); // Color.TRANSLUCENT behaves unexpected
+        Color starColor = new Color(255, 250, 248);
+        Color transparent = new Color(0, 0, 0, 0);
+        // Color.TRANSLUCENT behaves unexpected
 
         for (int starCount = 0; starCount < totalStars; starCount++) {
-            int x = (int)(Math.random() * width);
-            int y = (int)(Math.random() * height);
+            int x = (int) (Math.random() * width);
+            int y = (int) (Math.random() * height);
 
-            int starSize = (int)(Math.random()*4+1);
-            float starSizeF = (float)starSize;
+            int starSize = (int) (Math.random() * 4 + 1);
+            float starSizeF = (float) starSize;
 
             float[] fractions = new float[]{0.0f, 1.0f};
             Color[] colors = new Color[]{starColor, transparent};
             Paint paint = new RadialGradientPaint(x, y, starSizeF, fractions, colors);
             graphics.setPaint(paint);
-            graphics.fillOval(x-starSize/2,y-starSize/2,starSize,starSize);
+            graphics.fillOval(x - starSize / 2, y - starSize / 2, starSize, starSize);
 
             fractions = new float[]{0.3f, 1.0f};
             paint = new RadialGradientPaint(x, y, starSizeF, fractions, colors);
@@ -177,11 +213,14 @@ public class AnimationPane extends JPanel {
         graphics.dispose();
     }
 
-    private void fillCanvas(Graphics2D graphicsInput, Color color, int width, int height) {
-        Graphics2D graphics = (Graphics2D)graphicsInput.create();
+    private void fillCanvas(Graphics2D graphicsInput,
+                            Color color,
+                            int width,
+                            int height) {
+        Graphics2D graphics = (Graphics2D) graphicsInput.create();
 
         graphics.setPaint(color);
-        graphics.fillRect(0,0,width,height);
+        graphics.fillRect(0, 0, width, height);
         graphics.dispose();
     }
 

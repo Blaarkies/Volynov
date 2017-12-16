@@ -28,26 +28,26 @@ public class Motion {
     }
 
     public void updatePositionChanges() {
-        this.position.addToPosition(
-                this.velocity.dx,
-                this.velocity.dy,
-                this.velocity.dh
+        position.addToPosition(
+                velocity.dx,
+                velocity.dy,
+                velocity.dh
         );
-        addNewTrailer(this.position.x, this.position.y);
+        addNewTrailer(position.x, position.y);
     }
 
     public void updateVelocityChanges() {
-        this.velocity.addToVelocity(
-                this.acceleration.ddx,
-                this.acceleration.ddy,
-                this.acceleration.ddh
+        velocity.addToVelocity(
+                acceleration.ddx,
+                acceleration.ddy,
+                acceleration.ddh
         );
     }
 
     public void addNewTrailer(double x, double y) {
-        this.trailers.add(new Trailer(x, y));
-        if (this.trailers.size() > this.trailersPopulation) {
-            this.trailers.poll();
+        trailers.add(new Trailer(x, y));
+        if (trailers.size() > trailersPopulation) {
+            trailers.poll();
         }
     }
 }
