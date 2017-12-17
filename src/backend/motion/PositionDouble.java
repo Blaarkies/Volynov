@@ -31,7 +31,7 @@ public class PositionDouble {
         this.h += heading;
     }
 
-    public double distance(PositionDouble positionDouble) {
+    public double getDistance(PositionDouble positionDouble) {
         return Math.sqrt(sqr(positionDouble.x - x) + sqr(positionDouble.y - y));
     }
 

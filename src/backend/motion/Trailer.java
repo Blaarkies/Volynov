@@ -13,5 +13,6 @@ public class Trailer {
         this();
         this.position = new PositionDouble(x, y, 0);
     }
+
 }
 

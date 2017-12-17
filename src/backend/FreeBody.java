@@ -1,6 +1,9 @@
 package backend;
 
+import backend.motion.Acceleration;
 import backend.motion.Motion;
+import backend.motion.PositionDouble;
+import backend.motion.Velocity;
 
 public class FreeBody implements UniversalConstants {
 
@@ -36,6 +39,22 @@ public class FreeBody implements UniversalConstants {
 
     public double getAngularMass(double mass, double area) {
         return mass * area; // todo: find real equation
+    }
+
+    public Acceleration getRelativeAcceleration(FreeBody client) {
+        return motion.acceleration.getRelativeAcceleration(client.motion.acceleration);
+    }
+
+    public Velocity getRelativeVelocity(FreeBody client) {
+        return motion.velocity.getRelativeVelocity(client.motion.velocity);
+    }
+
+    public double getDistance(FreeBody client) {
+        return motion.position.getDistance(client.motion.position);
+    }
+
+    public double getDirection(FreeBody client) {
+        return motion.position.getDirection(client.motion.position);
     }
 
 }

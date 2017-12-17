@@ -16,12 +16,12 @@ public class GameState {
 
     public void addPlayer(double x, double y, double h,
                           double dx, double dy, double dh,
-                          String id, int trailersPopulation) {
+                          String id, int trailerQuantity) {
         players.add(
                 new Vehicle("Player " + id, 100, 800, 0, 0,
                         new FreeBody(1, 325, 10,
                                 x, y, h, dx, dy, dh,
-                                id, trailersPopulation
+                                id, trailerQuantity
                         )
                 )
         );
@@ -29,14 +29,14 @@ public class GameState {
 
     public void addPlanet(double x, double y, double h,
                           double dx, double dy, double dh,
-                          String id, int trailersPopulation, int radius, int mass) {
+                          String id, int trailerQuantity, int radius, int mass) {
         planets.add(
                 new FreeBody(
                         mass,
                         325,
                         radius,
                         x, y, h, dx, dy, dh,
-                        id, trailersPopulation
+                        id, trailerQuantity
                 )
         );
     }
@@ -95,7 +95,7 @@ public class GameState {
 
             for (FreeBody planet : planets) {
 
-                double distanceBetweenEntities = planet.motion.position.distance(vehicle.motion.position);
+                double distanceBetweenEntities = planet.getDistance(vehicle);
                 if (distanceBetweenEntities <= planet.radius + vehicle.radius) {
                     Vec2d f = Contact.contactNormalForce(planet, vehicle);
                     xF += f.x;
@@ -106,7 +106,7 @@ public class GameState {
             for (Vehicle otherVehicle : players) {
 
                 if (otherVehicle.hashCode() != vehicle.hashCode()) {
-                    double distanceBetweenEntities = otherVehicle.motion.position.distance(vehicle.motion.position);
+                    double distanceBetweenEntities = otherVehicle.getDistance(vehicle);
                     if (distanceBetweenEntities <= otherVehicle.radius + vehicle.radius) {
                         Vec2d f = Contact.contactNormalForce(otherVehicle, vehicle);
                         xF += f.x;
@@ -123,12 +123,7 @@ public class GameState {
                             0))
             );
         }
-        for (AccelerationRecord item : accelerationRecords) { // TODO: extract method
-            item.motion.acceleration.addToAcceleration(
-                    item.accelerationToAdd.ddx,
-                    item.accelerationToAdd.ddy,
-                    item.accelerationToAdd.ddh);
-        }
+        addRecordsToAcceleration(accelerationRecords);
 
         accelerationRecords = new ArrayList<>();
         for (FreeBody planet : planets) {
@@ -137,7 +132,7 @@ public class GameState {
 
             for (FreeBody otherPlanet : planets) {
                 if (otherPlanet.hashCode() != planet.hashCode()) {
-                    double distanceBetweenEntities = otherPlanet.motion.position.distance(planet.motion.position);
+                    double distanceBetweenEntities = otherPlanet.getDistance(planet);
                     if (distanceBetweenEntities <= otherPlanet.radius + planet.radius) {
                         Vec2d f = Contact.contactNormalForce(otherPlanet, planet);
                         xF += f.x;
@@ -154,12 +149,7 @@ public class GameState {
                             0))
             );
         }
-        for (AccelerationRecord item : accelerationRecords) {
-            item.motion.acceleration.addToAcceleration(
-                    item.accelerationToAdd.ddx,
-                    item.accelerationToAdd.ddy,
-                    item.accelerationToAdd.ddh);
-        }
+        addRecordsToAcceleration(accelerationRecords);
     }
 
     public void tickFrictionChanges() {
@@ -173,6 +163,15 @@ public class GameState {
 
         for (FreeBody planet : planets) {
             planet.motion.updateVelocityChanges();
+        }
+    }
+
+    private void addRecordsToAcceleration(List<AccelerationRecord> accelerationRecords) {
+        for (AccelerationRecord item : accelerationRecords) {
+            item.motion.acceleration.addToAcceleration(
+                    item.accelerationToAdd.ddx,
+                    item.accelerationToAdd.ddy,
+                    item.accelerationToAdd.ddh);
         }
     }
 }

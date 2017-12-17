@@ -12,10 +12,10 @@ public class Gravity {
         double G = UniversalConstants.gravitationalConstant;
         double m = client.mass;
         double M = server.mass;
-        double r = client.motion.position.distance(server.motion.position);
+        double r = client.getDistance(server);
         double forceOnClient = G * m * M / (r * r); // todo: use sqr() function(Math.pow(a,b) is very slow
 
-        double direction = client.motion.position.getDirection(server.motion.position);
+        double direction = client.getDirection(server);
 
         double xF = forceOnClient * Math.sin(direction);
         double yF = forceOnClient * Math.cos(direction);

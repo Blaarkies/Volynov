@@ -134,33 +134,42 @@ public class AnimationPane extends JPanel {
                                                     List<T> list,
                                                     Color paint,
                                                     float intensity) {
+        float maxIntensity = 255 * intensity;
+
         for (T element : list) {
             double size = (double) element.motion.trailers.size();
 
-            Trailer trailerPrev = null;
+            Trailer preTrailer = null;
             Iterator<Trailer> iterator = element.motion.trailers.iterator();
             for (int index = 0; iterator.hasNext(); index++) {
-                Trailer trailerNext = iterator.next();
-                if (trailerPrev == null) {
-                    trailerPrev = trailerNext;
+
+                Trailer nowTrailer = iterator.next();
+                if (preTrailer == null) {
+                    preTrailer = nowTrailer;
                     continue;
                 }
 
-                int xPrev = (int) trailerPrev.position.x;
-                int yPrev = (int) trailerPrev.position.y;
-                int xNext = (int) trailerNext.position.x;
-                int yNext = (int) trailerNext.position.y;
+                int xPre = (int) preTrailer.position.x;
+                int yPre = (int) preTrailer.position.y;
+//                int xNow = (int) nowTrailer.position.x;
+//                int yNow = (int) nowTrailer.position.y;
+
+                double h = -preTrailer.position.getDirection(nowTrailer.position) + Math.PI / 2;
+                double r = preTrailer.position.getDistance(nowTrailer.position);
+                r--;
+                int xNow = xPre + ((int) (r * Math.cos(h)));
+                int yNow = yPre + ((int) (r * Math.sin(h)));
 
                 Color fadedPaint = new Color(
                         paint.getRed(),
                         paint.getGreen(),
                         paint.getBlue(),
-                        (int) (index * ((255 * intensity) / size))
+                        (int) (index * (maxIntensity / size) + 32)
                 );
                 graphics.setPaint(fadedPaint);
-                graphics.drawLine(xPrev, yPrev, xNext, yNext);
+                graphics.drawLine(xPre, yPre, xNow, yNow);
 
-                trailerPrev = trailerNext;
+                preTrailer = nowTrailer;
             }
         }
     }
