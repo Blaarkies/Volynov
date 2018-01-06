@@ -1,6 +1,8 @@
 package backend.motion;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
 
 public class Motion {
@@ -8,9 +10,10 @@ public class Motion {
     public PositionDouble position;
     public Velocity velocity;
     public Acceleration acceleration;
+    public List<ContactEvent> contactEvents = new ArrayList<>();
+
     public Queue<Trailer> trailers = new LinkedList<>();
     public int trailerQuantity;
-
     private Trailer lastTrailer;
 
     public Motion() {

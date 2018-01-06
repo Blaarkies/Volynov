@@ -31,12 +31,16 @@ public class PositionDouble {
         this.h += heading;
     }
 
-    public double getDistance(PositionDouble positionDouble) {
+    public double getDistance(PositionDouble positionDouble) { // TODO: Force uses these
         return Math.sqrt(sqr(positionDouble.x - x) + sqr(positionDouble.y - y));
     }
 
-    public double getDirection(PositionDouble client) { // returns range [0..Pi] -> [-Pi..0]
-        return Math.atan2(client.x - x, client.y - y);
+    public double getDirection(PositionDouble client) {
+        double theta = Math.atan2(client.y - y, client.x - x);
+        theta = (theta < 0)
+                ? theta + Math.PI * 2
+                : theta;
+        return theta;
     }
 
     public double sqr(double number) {

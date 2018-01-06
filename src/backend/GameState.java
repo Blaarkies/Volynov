@@ -1,6 +1,8 @@
 package backend;
 
 import backend.motion.Acceleration;
+import backend.motion.ContactEvent;
+import backend.motion.Force;
 import backend.physics.Contact;
 import backend.physics.Gravity;
 import com.sun.javafx.geom.Vec2d;
@@ -53,7 +55,7 @@ public class GameState {
     }
 
     //    need some iterator function, that cycles through every FreeBody in gameState?
-    public void tickAccelerationChanges() {
+    public void tickGravityChanges() {
 //        Vehicles
         for (Vehicle vehicle : players) {
             double xF = 0;
@@ -97,9 +99,9 @@ public class GameState {
 
                 double distanceBetweenEntities = planet.getDistance(vehicle);
                 if (distanceBetweenEntities <= planet.radius + vehicle.radius) {
-                    Vec2d f = Contact.contactNormalForce(planet, vehicle);
-                    xF += f.x;
-                    yF += f.y;
+                    Vec2d contactForces = calculateContactForces(planet, vehicle);
+                    xF += contactForces.x;
+                    yF += contactForces.y;
                 }
             }
 
@@ -108,9 +110,9 @@ public class GameState {
                 if (otherVehicle.hashCode() != vehicle.hashCode()) {
                     double distanceBetweenEntities = otherVehicle.getDistance(vehicle);
                     if (distanceBetweenEntities <= otherVehicle.radius + vehicle.radius) {
-                        Vec2d f = Contact.contactNormalForce(otherVehicle, vehicle);
-                        xF += f.x;
-                        yF += f.y;
+                        Vec2d contactForces = calculateContactForces(otherVehicle, vehicle);
+                        xF += contactForces.x;
+                        yF += contactForces.y;
                     }
                 }
             }
@@ -134,9 +136,9 @@ public class GameState {
                 if (otherPlanet.hashCode() != planet.hashCode()) {
                     double distanceBetweenEntities = otherPlanet.getDistance(planet);
                     if (distanceBetweenEntities <= otherPlanet.radius + planet.radius) {
-                        Vec2d f = Contact.contactNormalForce(otherPlanet, planet);
-                        xF += f.x;
-                        yF += f.y;
+                        Vec2d contactForces = calculateContactForces(otherPlanet, planet);
+                        xF += contactForces.x;
+                        yF += contactForces.y;
                     }
                 }
             }
@@ -153,7 +155,15 @@ public class GameState {
     }
 
     public void tickFrictionChanges() {
+        for (FreeBody planet : planets) {
+        }
+
+        for (Vehicle vehicle : players) {
+            Contact.frictionForce(vehicle);
+        }
+
     }
+
 
     //    need some iterator function, that cycles through every FreeBody in gameState?
     public void tickVelocityChanges() {
@@ -173,5 +183,12 @@ public class GameState {
                     item.accelerationToAdd.ddy,
                     item.accelerationToAdd.ddh);
         }
+    }
+
+    private Vec2d calculateContactForces(FreeBody server, FreeBody client) {
+        Vec2d Fn = Contact.contactNormalForce(server, client);
+        client.motion.contactEvents.add(new ContactEvent(Fn, server));
+
+        return new Vec2d(Fn.x, Fn.y);
     }
 }

@@ -39,7 +39,16 @@ public class AnimationPane extends JPanel {
         fillStars(graphicsBackground, 150, displayWidth, displayHeight);
         graphicsBackground.dispose();
 
-        Timer timer = new Timer(33, new ActionListener() {
+
+        JButton b1 = new JButton();
+        b1.setSize(40,10);
+        b1.setText("HelloWorld");
+        add(b1);
+
+
+        int fps = 30;
+        int msPerFrame = 1000 / fps;
+        Timer timer = new Timer(msPerFrame, new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 paintTheUniverse();
@@ -154,7 +163,7 @@ public class AnimationPane extends JPanel {
 //                int xNow = (int) nowTrailer.position.x;
 //                int yNow = (int) nowTrailer.position.y;
 
-                double h = -preTrailer.position.getDirection(nowTrailer.position) + Math.PI / 2;
+                double h = preTrailer.position.getDirection(nowTrailer.position);
                 double r = preTrailer.position.getDistance(nowTrailer.position);
                 r--;
                 int xNow = xPre + ((int) (r * Math.cos(h)));

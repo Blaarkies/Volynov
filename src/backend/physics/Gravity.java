@@ -8,7 +8,6 @@ public class Gravity {
 
     // returns the weight force exerted on the client
     public static Vec2d gravitationalForce(FreeBody server, FreeBody client) {
-        // F = (G*m*M)/(r^2)
         double G = UniversalConstants.gravitationalConstant;
         double m = client.mass;
         double M = server.mass;
@@ -17,8 +16,8 @@ public class Gravity {
 
         double direction = client.getDirection(server);
 
-        double xF = forceOnClient * Math.sin(direction);
-        double yF = forceOnClient * Math.cos(direction);
+        double xF = forceOnClient * Math.cos(direction);
+        double yF = forceOnClient * Math.sin(direction);
 
         return new Vec2d(xF, yF);
     }

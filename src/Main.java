@@ -11,21 +11,27 @@ public class Main {
         GameState gameState = new GameState();
         Animator display = new Animator(gameState, 800, 600);
 
-        gameState.addPlayer(160, 200, 0, 0, -1.9, 0.1, "1", 20);
-        gameState.addPlayer(250, 200, 0, 1.48, 0, 0.2, "2", 20);
+        gameState.addPlayer(300+120, 300, 0, 0, -1.5, 0.1, "1", 20);
+        gameState.addPlayer(300, 300-120, 0, -1.5, 0, 0.1, "2", 20);
+        gameState.addPlayer(300-120, 300, 0, 0, 1.5, 0.1, "3", 20);
+        gameState.addPlayer(300, 300+120, 0, 1.5, 0, 0.1, "4", 20);
 
-        gameState.addPlanet(200, 200, 0, 0, 0, -0.01, "A", 20, 30, 1000);
+        gameState.addPlanet(300, 300, 0, 0, 0, -0.01, "A", 20, 100, 5000);
+
 
         timer(gameState);
     }
 
+    private static int fps = 60;
+    private static int msPerFrame = 1000 / fps;
+
     public static void timer(final GameState gameState) {
-        Timer timer = new Timer(16, new ActionListener() {
+        Timer timer = new Timer(msPerFrame, new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 gameState.tickPositionChanges();
 
-                gameState.tickAccelerationChanges();
+                gameState.tickGravityChanges();
                 gameState.tickContactChanges();
                 gameState.tickFrictionChanges();
 
