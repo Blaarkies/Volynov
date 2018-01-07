@@ -12,6 +12,8 @@ import java.util.List;
 
 public class GameState {
 
+    public boolean paused = false;
+
     public List<Vehicle> players = new ArrayList<>();
     public List<FreeBody> planets = new ArrayList<>();
     // planets = particles(worlds, asteroids, sun, warheads) for now

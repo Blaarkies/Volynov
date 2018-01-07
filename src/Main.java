@@ -11,12 +11,14 @@ public class Main {
         GameState gameState = new GameState();
         Animator display = new Animator(gameState, 800, 600);
 
-        gameState.addPlayer(300+120, 300, 0, 0, -1.5, 0.1, "1", 20);
-        gameState.addPlayer(300, 300-120, 0, -1.5, 0, 0.1, "2", 20);
-        gameState.addPlayer(300-120, 300, 0, 0, 1.5, 0.1, "3", 20);
-        gameState.addPlayer(300, 300+120, 0, 1.5, 0, 0.1, "4", 20);
+        gameState.addPlayer(100, 100, 0, 0.8, 0.3, 0.1, "1", 20);
+        gameState.addPlayer(200, 118, 0, 0, 1, 0.1, "2", 20);
 
-        gameState.addPlanet(300, 300, 0, 0, 0, -0.01, "A", 20, 100, 5000);
+        gameState.addPlayer(670, 300, 0, 0, -1, 0.2, "3", 20);
+        gameState.addPlayer(600, 300, 0, 0, 0.4, 0.2, "4", 20);
+
+        gameState.addPlanet(300, 300, 0, 0, -0.7, -0.01, "A", 20, 30, 1000);
+        gameState.addPlanet(500, 300, 0, 0, 0.3, -0.01, "B", 20, 40, 2000);
 
 
         timer(gameState);
@@ -29,13 +31,16 @@ public class Main {
         Timer timer = new Timer(msPerFrame, new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                gameState.tickPositionChanges();
+                if (!gameState.paused) {
 
-                gameState.tickGravityChanges();
-                gameState.tickContactChanges();
-                gameState.tickFrictionChanges();
+                    gameState.tickPositionChanges();
 
-                gameState.tickVelocityChanges();
+                    gameState.tickGravityChanges();
+                    gameState.tickContactChanges();
+                    gameState.tickFrictionChanges();
+
+                    gameState.tickVelocityChanges();
+                }
             }
 
         });

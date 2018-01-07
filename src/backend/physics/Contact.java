@@ -51,7 +51,7 @@ public class Contact {
     }
 
     public static void frictionForce(FreeBody client) {
-        double uKinetic = 0.4;
+        double uKinetic = 0.5;
 
         List<ContactEvent> contactEvents = client.motion.contactEvents;
         for (ContactEvent contactEvent : contactEvents) {
@@ -68,16 +68,17 @@ public class Contact {
                     ? normalForce.getDirection() - (Math.PI / 2)
                     : normalForce.getDirection() + (Math.PI / 2);
 
-            double forceOnClient = uKinetic * normalForce.getMagnitude();
-            double xF = forceOnClient * Math.cos(frictionDirection);
-            double yF = forceOnClient * Math.sin(frictionDirection);
+            double accOnClient = uKinetic * normalForce.getMagnitude() / client.mass;
+            if (accOnClient > velocity.getMagnitude()) {
+                accOnClient = velocity.getMagnitude();
+            }
+            double xAcc = accOnClient * Math.cos(frictionDirection);
+            double yAcc = accOnClient * Math.sin(frictionDirection);
 
             client.motion.acceleration.addToAcceleration(
-                    xF / client.mass,
-                    yF / client.mass,
+                    xAcc,
+                    yAcc,
                     0);
-
-            int a = 1;
         }
         contactEvents.clear();
 

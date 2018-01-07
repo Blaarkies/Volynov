@@ -21,7 +21,7 @@ public class AnimationPane extends JPanel {
     private BufferedImage canvasTrailers;
     private BufferedImage canvasVehicles;
     private BufferedImage canvasPlanets;
-    private BufferedImage canvasFrontend;
+    private BufferedImage canvasGUI;
     private BufferedImage canvasDisplay;
 
     public AnimationPane(GameState gameState, int displayWidth, int displayHeight) {
@@ -31,20 +31,13 @@ public class AnimationPane extends JPanel {
         this.canvasTrailers = new BufferedImage(displayWidth, displayHeight, BufferedImage.TYPE_INT_ARGB);
         this.canvasVehicles = new BufferedImage(displayWidth, displayHeight, BufferedImage.TYPE_INT_ARGB);
         this.canvasPlanets = new BufferedImage(displayWidth, displayHeight, BufferedImage.TYPE_INT_ARGB);
-        this.canvasFrontend = new BufferedImage(displayWidth, displayHeight, BufferedImage.TYPE_INT_ARGB);
+        this.canvasGUI = new BufferedImage(displayWidth, displayHeight, BufferedImage.TYPE_INT_ARGB);
         this.canvasDisplay = new BufferedImage(displayWidth, displayHeight, BufferedImage.TYPE_INT_ARGB);
 
         Graphics2D graphicsBackground = canvasBackground.createGraphics();
         fillCanvas(graphicsBackground, Color.BLACK, displayWidth, displayHeight);
         fillStars(graphicsBackground, 150, displayWidth, displayHeight);
         graphicsBackground.dispose();
-
-
-        JButton b1 = new JButton();
-        b1.setSize(40,10);
-        b1.setText("HelloWorld");
-        add(b1);
-
 
         int fps = 30;
         int msPerFrame = 1000 / fps;
@@ -71,11 +64,15 @@ public class AnimationPane extends JPanel {
         Graphics2D graphicsVehicles = clearCanvas(canvasVehicles);
         paintVehicles(graphicsVehicles);
 
+        Graphics2D graphicsGUI = clearCanvas(canvasGUI);
+        paintGUI(graphicsGUI);
+
         Graphics2D graphicsDisplay = clearCanvas(canvasDisplay);
         graphicsDisplay.drawImage(canvasBackground, 0, 0, null);
         graphicsDisplay.drawImage(canvasTrailers, 0, 0, null);
         graphicsDisplay.drawImage(canvasPlanets, 0, 0, null);
         graphicsDisplay.drawImage(canvasVehicles, 0, 0, null);
+        graphicsDisplay.drawImage(canvasGUI, 0, 0, null);
     }
 
     private Graphics2D clearCanvas(BufferedImage canvas) {
@@ -160,8 +157,6 @@ public class AnimationPane extends JPanel {
 
                 int xPre = (int) preTrailer.position.x;
                 int yPre = (int) preTrailer.position.y;
-//                int xNow = (int) nowTrailer.position.x;
-//                int yNow = (int) nowTrailer.position.y;
 
                 double h = preTrailer.position.getDirection(nowTrailer.position);
                 double r = preTrailer.position.getDistance(nowTrailer.position);
@@ -181,6 +176,24 @@ public class AnimationPane extends JPanel {
                 preTrailer = nowTrailer;
             }
         }
+    }
+
+    private <T> void paintButtons(Graphics2D graphics) {
+        JButton b1 = new JButton();
+        b1.setSize(40, 10);
+        b1.setText("Pause   ▌ ▌");
+        b1.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                gameState.paused = !gameState.paused;
+            }
+        });
+        add(b1);
+    }
+
+    private void paintGUI(Graphics2D graphicsInput) {
+        Graphics2D graphics = (Graphics2D) graphicsInput.create();
+        paintButtons(graphics);
+        graphics.dispose();
     }
 
     private void paintVehicles(Graphics2D graphicsInput) {
