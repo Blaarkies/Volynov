@@ -17,12 +17,24 @@
 <br>
 <h6>2016 10 09, First contact 
 <br> <i>Added basic collision physics</i></h6>
-<code>Cyan lines are current acceleration vectors</code>
-<img src="https://github.com/Blaarkies/Volynov/blob/dev/src/assets/first_collisions.gif"/>
+<ins>
+  <p class="rich-diff-level-zero">
+    <a target="_blank" class="rich-diff-level-one">
+      <img src="https://github.com/Blaarkies/Volynov/blob/master/src/assets/first_collisions.gif"/>
+    </a>
+  </p>
+</ins>
 <hr>
 
 <br>
 <h6>2016 10 07, Of n-bodies and tracers...
 <br> <i>Added gravitational acceleration</i></h6>
-<img src="https://github.com/Blaarkies/Volynov/blob/dev/src/assets/n_body_tracers.gif"/>
+<ins>
+  <p class="rich-diff-level-zero">
+    <a target="_blank" class="rich-diff-level-one">
+      <img src="https://github.com/Blaarkies/Volynov/blob/master/src/assets/n_body_tracers.gif"/>
+    </a>
+  </p>
+</ins>
 <hr>
+
