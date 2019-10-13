@@ -21,7 +21,7 @@ public class AnimationPane extends JPanel {
     private BufferedImage canvasTrailers;
     private BufferedImage canvasVehicles;
     private BufferedImage canvasPlanets;
-    private BufferedImage canvasFrontend;
+    private BufferedImage canvasGUI;
     private BufferedImage canvasDisplay;
 
     public AnimationPane(GameState gameState, int displayWidth, int displayHeight) {
@@ -31,7 +31,7 @@ public class AnimationPane extends JPanel {
         this.canvasTrailers = new BufferedImage(displayWidth, displayHeight, BufferedImage.TYPE_INT_ARGB);
         this.canvasVehicles = new BufferedImage(displayWidth, displayHeight, BufferedImage.TYPE_INT_ARGB);
         this.canvasPlanets = new BufferedImage(displayWidth, displayHeight, BufferedImage.TYPE_INT_ARGB);
-        this.canvasFrontend = new BufferedImage(displayWidth, displayHeight, BufferedImage.TYPE_INT_ARGB);
+        this.canvasGUI = new BufferedImage(displayWidth, displayHeight, BufferedImage.TYPE_INT_ARGB);
         this.canvasDisplay = new BufferedImage(displayWidth, displayHeight, BufferedImage.TYPE_INT_ARGB);
 
         Graphics2D graphicsBackground = canvasBackground.createGraphics();
@@ -39,7 +39,9 @@ public class AnimationPane extends JPanel {
         fillStars(graphicsBackground, 150, displayWidth, displayHeight);
         graphicsBackground.dispose();
 
-        Timer timer = new Timer(33, new ActionListener() {
+        int fps = 30;
+        int msPerFrame = 1000 / fps;
+        Timer timer = new Timer(msPerFrame, new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 paintTheUniverse();
@@ -62,11 +64,15 @@ public class AnimationPane extends JPanel {
         Graphics2D graphicsVehicles = clearCanvas(canvasVehicles);
         paintVehicles(graphicsVehicles);
 
+        Graphics2D graphicsGUI = clearCanvas(canvasGUI);
+        paintGUI(graphicsGUI);
+
         Graphics2D graphicsDisplay = clearCanvas(canvasDisplay);
         graphicsDisplay.drawImage(canvasBackground, 0, 0, null);
         graphicsDisplay.drawImage(canvasTrailers, 0, 0, null);
         graphicsDisplay.drawImage(canvasPlanets, 0, 0, null);
         graphicsDisplay.drawImage(canvasVehicles, 0, 0, null);
+        graphicsDisplay.drawImage(canvasGUI, 0, 0, null);
     }
 
     private Graphics2D clearCanvas(BufferedImage canvas) {
@@ -134,35 +140,60 @@ public class AnimationPane extends JPanel {
                                                     List<T> list,
                                                     Color paint,
                                                     float intensity) {
+        float maxIntensity = 255 * intensity;
+
         for (T element : list) {
             double size = (double) element.motion.trailers.size();
 
-            Trailer trailerPrev = null;
+            Trailer preTrailer = null;
             Iterator<Trailer> iterator = element.motion.trailers.iterator();
             for (int index = 0; iterator.hasNext(); index++) {
-                Trailer trailerNext = iterator.next();
-                if (trailerPrev == null) {
-                    trailerPrev = trailerNext;
+
+                Trailer nowTrailer = iterator.next();
+                if (preTrailer == null) {
+                    preTrailer = nowTrailer;
                     continue;
                 }
 
-                int xPrev = (int) trailerPrev.position.x;
-                int yPrev = (int) trailerPrev.position.y;
-                int xNext = (int) trailerNext.position.x;
-                int yNext = (int) trailerNext.position.y;
+                int xPre = (int) preTrailer.position.x;
+                int yPre = (int) preTrailer.position.y;
+
+                double h = preTrailer.position.getDirection(nowTrailer.position);
+                double r = preTrailer.position.getDistance(nowTrailer.position);
+                r--;
+                int xNow = xPre + ((int) (r * Math.cos(h)));
+                int yNow = yPre + ((int) (r * Math.sin(h)));
 
                 Color fadedPaint = new Color(
                         paint.getRed(),
                         paint.getGreen(),
                         paint.getBlue(),
-                        (int) (index * ((255 * intensity) / size))
+                        (int) (index * (maxIntensity / size) + 32)
                 );
                 graphics.setPaint(fadedPaint);
-                graphics.drawLine(xPrev, yPrev, xNext, yNext);
+                graphics.drawLine(xPre, yPre, xNow, yNow);
 
-                trailerPrev = trailerNext;
+                preTrailer = nowTrailer;
             }
         }
+    }
+
+    private <T> void paintButtons(Graphics2D graphics) {
+        JButton b1 = new JButton();
+        b1.setSize(40, 10);
+        b1.setText("Pause   ▌ ▌");
+        b1.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                gameState.paused = !gameState.paused;
+            }
+        });
+        add(b1);
+    }
+
+    private void paintGUI(Graphics2D graphicsInput) {
+        Graphics2D graphics = (Graphics2D) graphicsInput.create();
+        paintButtons(graphics);
+        graphics.dispose();
     }
 
     private void paintVehicles(Graphics2D graphicsInput) {

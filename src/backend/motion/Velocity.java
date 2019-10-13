@@ -11,15 +11,12 @@ public class Velocity {
     public double dh; //change in heading or rotationalSpeed
 
     public Velocity() {
-        setVelocity(0, 0, 0);
+        this.dx = 0;
+        this.dy = 0;
+        this.dh = 0;
     }
 
     public Velocity(double dx, double dy, double dh) {
-//        this();
-        setVelocity(dx, dy, dh);
-    }
-
-    public void setVelocity(double dx, double dy, double dh) {
         this.dx = dx;
         this.dy = dy;
         this.dh = dh;
@@ -29,8 +26,12 @@ public class Velocity {
         return Point2D.distance(0, 0, dx, dy);
     }
 
-    public double getDirection() { // returns range [0..Pi] -> [-Pi..0]
-        return Math.atan2(dx, dy);
+    public double getDirection() {
+        double theta = Math.atan2(dy, dx);
+        theta = (theta < 0)
+                ? theta + Math.PI * 2
+                : theta;
+        return theta;
     }
 
     //    inertial frame of reference ON the slow moving planet. How fast is the sat coming towards the planet?

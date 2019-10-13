@@ -42,7 +42,7 @@ public class Vehicle extends FreeBody {
                 freeBody.motion.velocity.dx,
                 freeBody.motion.velocity.dy,
                 freeBody.motion.velocity.dh,
-                freeBody.motion.trailersPopulation);
+                freeBody.motion.trailerQuantity);
 
         this.id = freeBody.id;
     }
