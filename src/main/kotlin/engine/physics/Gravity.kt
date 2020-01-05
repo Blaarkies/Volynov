@@ -9,14 +9,15 @@ import kotlin.math.sin
 
 object Gravity {
 
+    private const val G = UniversalConstants.gravitationalConstant
+
     fun gravitationalForce(server: FreeBody, client: FreeBody): Force {
-        val G = UniversalConstants.gravitationalConstant
         val m = client.mass
         val M = server.mass
         val r = client.getDistance(server)
         val forceOnClient = G * m * M / (r * r)
 
-        val direction = client.getDirection(server)
+        val direction = server.getDirection(client)
 
         val xF = forceOnClient * cos(direction)
         val yF = forceOnClient * sin(direction)

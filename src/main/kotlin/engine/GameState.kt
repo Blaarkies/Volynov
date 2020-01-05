@@ -128,7 +128,7 @@ class GameState {
         if (!paused) {
             tickLocationChanges()
             tickGravityChanges()
-            tickContactChanges()
+//            tickContactChanges()
             tickFrictionChanges()
             tickVelocityChanges()
         }

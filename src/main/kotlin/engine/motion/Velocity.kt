@@ -9,7 +9,7 @@ class Velocity(var dx: Double = .0, var dy: Double = .0, var dh: Double = .0) {
         get() = Director.getDirection(dx, dy)
 
     /**
-     * Inertial frame of reference ON the slow moving planet. How fast is the satellite moving towards the planet?
+     * Inertial frame of reference ON the slow moving server. How fast is the satellite moving towards the planet?
      * As fast as the planet, in the opposite direction as the planet (-dx) + the satellite's velocity
      */
     fun getRelativeVelocity(client: Velocity): Velocity =

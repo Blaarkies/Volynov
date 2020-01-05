@@ -1,4 +1,6 @@
 package engine.motion
 
-class Trailer(var location: Location)
+class Trailer(location: Location) {
+    val location: Location = Location(location.x, location.y, location.h)
+}
 

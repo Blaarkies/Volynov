@@ -7,7 +7,7 @@ import engine.motion.Velocity
 
 open class FreeBody(
     var motion: Motion,
-    var mass: Double = .0,
+    var mass: Double = 1.0,
     var temperature: Double = .0,
     var radius: Double = .0
 ) {
@@ -16,7 +16,7 @@ open class FreeBody(
         get() = calculateAngularMass()
 
     constructor(
-        mass: Double = .0,
+        mass: Double = 1.0,
         temperature: Double = .0,
         radius: Double = .0,
         x: Double = .0, y: Double = .0, h: Double = .0,

@@ -15,23 +15,19 @@ val kotlinVersion = "1.3.10"
 val lwjglVersion = "3.2.3"
 val lwjglNatives = "natives-windows"
 
+tasks.test {
+    useJUnitPlatform()
+    testLogging {
+        events("passed", "skipped", "failed")
+    }
+}
+
 dependencies {
-    //    implementation(kotlin("stdlib-jdk8"))
-//    implementation("org.jetbrains.kotlin:kotlin-stdlib:1.3.61")
     implementation(kotlin("stdlib-jdk8"))
-//    implementation(kotlin("stdlib", kotlinVersion))
-
-//    testImplementation(kotlin("test"))
-//    testImplementation(kotlin("test-junit"))
-
-//    testCompile("junit:junit:4.11")
-//    testCompile("org.jetbrains.kotlin:kotlin-test-junit:$kotlinVersion")
-
-
+    testImplementation("org.junit.jupiter:junit-jupiter:5.5.2")
     implementation("org.apache.commons:commons-math3:3.6.1")
 
     implementation(platform("org.lwjgl:lwjgl-bom:$lwjglVersion"))
-
     val lwjglList = listOf(
         arrayOf("lwjgl", true),
         arrayOf("lwjgl-assimp", true),
