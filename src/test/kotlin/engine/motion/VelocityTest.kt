@@ -10,14 +10,14 @@ internal class VelocityTest {
     fun getRelativeVelocity() {
         var server = Velocity(1.0, 2.0)
         var client = Velocity(1.0, 2.0)
-        var relative = server.getRelativeVelocity(client)
+        var relative = server.getRelative(client)
 
         assertEquals(.0, relative.dx)
         assertEquals(.0, relative.dy)
 
         server = Velocity(-1.0, -2.0)
         client = Velocity(1.0, 2.0)
-        relative = server.getRelativeVelocity(client)
+        relative = server.getRelative(client)
 
         assertEquals(2.0, relative.dx)
         assertEquals(4.0, relative.dy)
@@ -30,7 +30,7 @@ internal class VelocityTest {
         assertEquals(.0, subject.dy)
         assertEquals(.0, subject.dh)
 
-        subject.addVelocity(1.0, 2.0, 3.0)
+        subject.add(1.0, 2.0, 3.0)
         assertEquals(1.0, subject.dx)
         assertEquals(2.0, subject.dy)
         assertEquals(3.0, subject.dh)

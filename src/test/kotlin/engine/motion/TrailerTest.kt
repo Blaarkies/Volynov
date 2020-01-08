@@ -13,7 +13,7 @@ internal class TrailerTest {
         assertEquals(.0, trailer.location.x)
         assertEquals(.0, trailer.location.y)
 
-        location.addLocation(1.0, 1.0)
+        location.add(1.0, 1.0)
         assertNotEquals(1.0, trailer.location.x)
         assertNotEquals(1.0, trailer.location.y)
     }

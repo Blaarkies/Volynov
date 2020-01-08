@@ -33,11 +33,11 @@ open class FreeBody(
     }
 
     fun getRelativeAcceleration(client: FreeBody): Acceleration {
-        return motion.acceleration.getRelativeAcceleration(client.motion.acceleration)
+        return motion.acceleration.getRelative(client.motion.acceleration)
     }
 
     fun getRelativeVelocity(client: FreeBody): Velocity {
-        return motion.velocity.getRelativeVelocity(client.motion.velocity)
+        return motion.velocity.getRelative(client.motion.velocity)
     }
 
     fun getDistance(client: FreeBody): Double {

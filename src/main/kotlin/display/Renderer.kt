@@ -3,7 +3,12 @@ package display
 import utils.Utils
 import display.graph.ShaderProgram
 import engine.GameState
+import engine.Planet
+import engine.Vehicle
+import engine.utilities.Utilities
+import org.apache.commons.math3.geometry.euclidean.threed.Plane
 import org.lwjgl.opengl.GL11
+import org.lwjgl.opengl.GL11.*
 import org.lwjgl.opengl.GL15
 import org.lwjgl.opengl.GL20
 import org.lwjgl.opengl.GL30
@@ -18,13 +23,6 @@ class Renderer {
 
     @Throws(Exception::class)
     fun init() {
-        renderStart()
-        val vertices = floatArrayOf(
-            0.0f, 0.5f, 0.0f,
-            -0.5f, -0.5f, 0.0f,
-            0.5f, -0.5f, 0.0f
-        )
-        renderEnd(vertices)
     }
 
     private fun renderStart() {
@@ -63,7 +61,7 @@ class Renderer {
         GL30.glBindVertexArray(vaoId)
         GL20.glEnableVertexAttribArray(0)
         // Draw the vertices
-        GL11.glDrawArrays(GL11.GL_TRIANGLES, 0, 3)
+        glDrawArrays(GL_TRIANGLES, 0, 3)
         // Restore state
         GL20.glDisableVertexAttribArray(0)
         GL30.glBindVertexArray(0)
@@ -74,38 +72,63 @@ class Renderer {
         clear()
 
         if (window.isResized) {
-            GL11.glViewport(0, 0, window.width, window.height)
+            glViewport(0, 0, window.width, window.height)
             window.isResized = false
         }
 
         processNewState(gameState)
-
-/*        shaderProgram!!.bind()
-        // Bind to the VAO
-        GL30.glBindVertexArray(vaoId)
-        GL20.glEnableVertexAttribArray(0)
-        // Draw the vertices
-        GL11.glDrawArrays(GL11.GL_TRIANGLES, 0, 3)
-        // Restore state
-        GL20.glDisableVertexAttribArray(0)
-        GL30.glBindVertexArray(0)
-        shaderProgram!!.unbind()*/
     }
 
     private fun processNewState(gameState: GameState) {
-        gameState.planets.forEach {
-            val location = it.motion.location
-            val x = location.x.toFloat() / 1000
-            val y = location.y.toFloat() / 1000
+        gameState.planets
+            .union(gameState.vehicles)
+            .forEach {
+                val location = it.motion.location
+                val multiplier = 0.002f
+                val x = location.x.toFloat() * multiplier
+                val y = location.y.toFloat() * multiplier
 
-            renderStart()
-            val vertices = floatArrayOf(
-                0.0f + x, 0.1f + y, 0.0f,
-                -0.1f + x, -0.1f + y, 0.0f,
-                0.1f + x, -0.1f + y, 0.0f
-            )
-            renderEnd(vertices)
-        }
+                val tri = when (it) {
+                    is Vehicle -> floatArrayOf(
+                        0.0f, 0.05f, 0.0f,
+                        -0.05f, -0.05f, 0.0f,
+                        0.05f, -0.05f, 0.0f
+                    )
+                    is Planet -> floatArrayOf(
+                        0.0f, 0.1f, 0.0f,
+                        -0.1f, -0.1f, 0.0f,
+                        0.1f, -0.1f, 0.0f
+                    )
+                    else -> floatArrayOf(
+                        0.0f, 0.1f, 0.0f,
+                        -0.1f, -0.1f, 0.0f,
+                        0.1f, -0.1f, 0.0f
+                    )
+                }
+
+
+                renderStart()
+                val vertices = floatArrayOf(
+                    tri[0] + x, tri[1] + y, tri[2],
+                    tri[3] + x, tri[4] + y, tri[5],
+                    tri[6] + x, tri[7] + y, tri[8]
+                )
+                renderEnd(vertices)
+
+                it.motion.trailers.stream()
+                    .forEach{trailer ->
+                    val tx = trailer.location.x.toFloat() * multiplier
+                    val ty = trailer.location.y.toFloat() * multiplier
+
+                    renderStart()
+                    val vertices = floatArrayOf(
+                        tri[0]*0.2f + tx, tri[1]*0.2f + ty, tri[2],
+                        tri[3]*0.2f + tx, tri[4]*0.2f + ty, tri[5],
+                        tri[6]*0.2f + tx, tri[7]*0.2f + ty, tri[8]
+                    )
+                    renderEnd(vertices)
+                }
+            }
     }
 
     fun cleanup() {
@@ -122,6 +145,6 @@ class Renderer {
     }
 
     private fun clear() {
-        GL11.glClear(GL11.GL_COLOR_BUFFER_BIT or GL11.GL_DEPTH_BUFFER_BIT)
+        glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
     }
 }

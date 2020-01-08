@@ -18,7 +18,7 @@ val lwjglNatives = "natives-windows"
 tasks.test {
     useJUnitPlatform()
     testLogging {
-        events("passed", "skipped", "failed")
+        events("PASSED", "SKIPPED", "FAILED")
     }
 }
 

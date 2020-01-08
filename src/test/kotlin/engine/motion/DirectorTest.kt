@@ -1,12 +1,9 @@
 package engine.motion
 
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-
-import org.junit.jupiter.api.Assertions.*
 import kotlin.math.PI
-import kotlin.math.cos
 import kotlin.math.roundToInt
-import kotlin.math.sin
 
 internal class DirectorTest {
 
@@ -14,25 +11,6 @@ internal class DirectorTest {
         val multiplier = Math.pow(10.0, decimals.toDouble())
         return (this * multiplier).roundToInt() / multiplier
     }
-
-    //    @Test
-//    fun getMagnitude() {
-//        assertEquals(1.0, acceleration.magnitude)
-//
-//        acceleration = Acceleration(.0, 1.0)
-//        assertEquals(1.0, acceleration.magnitude)
-//
-//
-//        acceleration = Acceleration(1.0, 1.0)
-//        assertEquals(1.414, acceleration.magnitude.round(3))
-//
-//        acceleration = Acceleration(.0, .0, 1.0)
-//        assertEquals(.0, acceleration.magnitude)
-//    }
-//
-//    @Test
-//    fun getDirection() {
-//    }
 
     @Test
     fun getDistance() {

@@ -8,8 +8,6 @@ import engine.physics.Gravity
 
 class GameState {
 
-    var paused = false
-
     var vehicles = mutableListOf<Vehicle>()
     var planets = mutableListOf<Planet>()
 
@@ -26,9 +24,7 @@ class GameState {
         dx: Double, dy: Double, dh: Double,
         id: String
     ) {
-        vehicles.add(
-            Vehicle("Player $id", x, y, h, dx, dy, dh)
-        )
+        vehicles.add(Vehicle("Player $id", x, y, h, dx, dy, dh))
     }
 
     fun addPlanet(
@@ -54,26 +50,11 @@ class GameState {
         joinLists(locationTickables, locationTickables)
             .filter { (it1, it2) -> it1 != it2 }
             .forEach { (server, client) ->
-                client.motion.acceleration.addAcceleration(
+                client.motion.acceleration.add(
                     Gravity.gravitationalForce(server, client),
                     client.mass
                 )
             }
-
-/*        //        Vehicles
-        vehicles.forEach { vehicle ->
-            val forceSum = Force()
-            planets.forEach { planet -> forceSum.addForce(Gravity.gravitationalForce(planet, vehicle)) }
-            vehicle.motion.acceleration.addAcceleration(forceSum, vehicle.mass)
-        }
-
-        //        Planets
-        planets.forEach { planet ->
-            val forceSum = Force()
-            planets.filter { it.hashCode() != planet.hashCode() }
-                .forEach { otherPlanet -> forceSum.addForce(Gravity.gravitationalForce(planet, otherPlanet)) }
-            planet.motion.acceleration.addAcceleration(forceSum, planet.mass)
-        }*/
     }
 
     private fun tickContactChanges() {
@@ -88,7 +69,7 @@ class GameState {
             }
 
         accelerationRecords.forEach {
-            it.motion.acceleration.addAcceleration(it.acceleration)
+            it.motion.acceleration.add(it.acceleration)
         }
 
         /*vehicles.forEach { vehicle ->
@@ -125,12 +106,10 @@ class GameState {
     }
 
     fun tickClock() {
-        if (!paused) {
-            tickLocationChanges()
-            tickGravityChanges()
+        tickLocationChanges()
+        tickGravityChanges()
 //            tickContactChanges()
-            tickFrictionChanges()
-            tickVelocityChanges()
-        }
+//            tickFrictionChanges()
+        tickVelocityChanges()
     }
 }

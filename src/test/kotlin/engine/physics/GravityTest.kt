@@ -9,12 +9,28 @@ internal class GravityTest {
 
     @Test
     fun gravitationalForce() {
-        val planet = Planet("terra", .0, .0, .0, .0, .0, .0)
-        val satellite = Vehicle("sputnik")
-        satellite.motion.location.addLocation(-100.0, -100.0)
-
-        val force = Gravity.gravitationalForce(planet, satellite)
+        var planet = Planet("terra", .0, .0, .0, .0, .0, .0)
+        var satellite = Vehicle("sputnik", -100.0, -100.0, .0, .0, .0, .0)
+        var force = Gravity.gravitationalForce(planet, satellite)
         assertTrue(force.x > 0)
+        assertTrue(force.y > 0)
+
+        planet = Planet("terra", .0, .0, .0, .0, .0, .0)
+        satellite = Vehicle("sputnik", -100.0, 100.0, .0, .0, .0, .0)
+        force = Gravity.gravitationalForce(planet, satellite)
+        assertTrue(force.x > 0)
+        assertTrue(force.y < 0)
+
+        planet = Planet("terra", .0, .0, .0, .0, .0, .0)
+        satellite = Vehicle("sputnik", 100.0, 100.0, .0, .0, .0, .0)
+        force = Gravity.gravitationalForce(planet, satellite)
+        assertTrue(force.x < 0)
+        assertTrue(force.y < 0)
+
+        planet = Planet("terra", .0, .0, .0, .0, .0, .0)
+        satellite = Vehicle("sputnik", 100.0, -100.0, .0, .0, .0, .0)
+        force = Gravity.gravitationalForce(planet, satellite)
+        assertTrue(force.x < 0)
         assertTrue(force.y > 0)
     }
 }

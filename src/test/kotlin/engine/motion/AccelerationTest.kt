@@ -11,17 +11,17 @@ internal class AccelerationTest {
     fun getRelativeAcceleration() {
         acceleration = Acceleration()
         var clientAcceleration = Acceleration(1.0, 1.0)
-        var relativeAcceleration = acceleration.getRelativeAcceleration(clientAcceleration)
+        var relativeAcceleration = acceleration.getRelative(clientAcceleration)
         assertEquals(1.0, relativeAcceleration.ddx)
         assertEquals(1.0, relativeAcceleration.ddy)
 
         clientAcceleration = Acceleration(-1.0, -1.0)
-        relativeAcceleration = acceleration.getRelativeAcceleration(clientAcceleration)
+        relativeAcceleration = acceleration.getRelative(clientAcceleration)
         assertEquals(-1.0, relativeAcceleration.ddx)
         assertEquals(-1.0, relativeAcceleration.ddy)
 
         clientAcceleration = Acceleration(1.0, 1.0)
-        val invertedRelativeAcceleration = clientAcceleration.getRelativeAcceleration(acceleration)
+        val invertedRelativeAcceleration = clientAcceleration.getRelative(acceleration)
         assertEquals(-1.0, invertedRelativeAcceleration.ddx)
         assertEquals(-1.0, invertedRelativeAcceleration.ddy)
     }
@@ -29,19 +29,19 @@ internal class AccelerationTest {
     @Test
     fun addAcceleration() {
         acceleration = Acceleration()
-        acceleration.addAcceleration(1.0, 1.0, 1.0)
+        acceleration.add(1.0, 1.0, 1.0)
         assertEquals(1.0, acceleration.ddx)
         assertEquals(1.0, acceleration.ddy)
         assertEquals(1.0, acceleration.ddh)
 
         acceleration = Acceleration()
-        acceleration.addAcceleration(Acceleration(1.0, 1.0, 1.0))
+        acceleration.add(Acceleration(1.0, 1.0, 1.0))
         assertEquals(1.0, acceleration.ddx)
         assertEquals(1.0, acceleration.ddy)
         assertEquals(1.0, acceleration.ddh)
 
         acceleration = Acceleration()
-        acceleration.addAcceleration(Force(2.0, 2.0), 2.0)
+        acceleration.add(Force(2.0, 2.0), 2.0)
         assertEquals(1.0, acceleration.ddx)
         assertEquals(1.0, acceleration.ddy)
         assertEquals(0.0, acceleration.ddh)

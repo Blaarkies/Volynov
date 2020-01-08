@@ -6,7 +6,7 @@ class Location(var x: Double = .0, var y: Double = .0, var h: Double = .0) {
 
     fun getDirection(client: Location): Double = Director.getDirection(x, y, client.x, client.y)
 
-    fun addLocation(x: Double, y: Double, heading: Double = .0) {
+    fun add(x: Double, y: Double, heading: Double = .0) {
         this.x += x
         this.y += y
         this.h += heading

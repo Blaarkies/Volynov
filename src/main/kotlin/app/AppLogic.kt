@@ -13,9 +13,9 @@ class AppLogic : IGameLogic {
     val gameState = GameState()
 
     init {
-        gameState.addPlayer(100.0, 100.0, 0.0, 0.8, 0.3, 0.1, "1")
-        gameState.addPlanet(300.0, 300.0, 0.0, 0.7, -0.7, -0.1, "A", 325.0, 30.0, 100.0)
-        gameState.addPlanet(-300.0, -300.0, 0.0, -0.7, 0.7, 0.1, "B", 325.0, 25.0, 70.0)
+        gameState.addPlayer(.0, 200.0, 0.0, .3, .0, 0.1, "1")
+        gameState.addPlanet(.0, .0, 0.0, 0.0, -0.0, -0.1, "A", 325.0, 30.0, 1000.0)
+//        gameState.addPlanet(-300.0, -300.0, 0.0, -0.7, 0.7, 0.1, "B", 325.0, 25.0, 70.0)
     }
 
     @Throws(Exception::class)

@@ -75,7 +75,7 @@ object Contact {
             val xAcc = accOnClient * cos(frictionDirection)
             val yAcc = accOnClient * sin(frictionDirection)
 
-            client.motion.acceleration.addAcceleration(
+            client.motion.acceleration.add(
                 xAcc,
                 yAcc,
                 0.0

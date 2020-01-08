@@ -8,7 +8,7 @@ class Force(var x: Double = .0, var y: Double = .0) {
     val direction: Double
         get() = Director.getDirection(x, y)
 
-    fun addForce(force: Force) {
+    fun add(force: Force) {
         x += force.x
         y += force.y
     }
