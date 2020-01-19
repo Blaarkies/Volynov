@@ -1,19 +1,21 @@
 package display
 
-import utils.Utils
 import display.graph.ShaderProgram
+import engine.FreeBody
 import engine.GameState
 import engine.Planet
 import engine.Vehicle
-import engine.utilities.Utilities
-import org.apache.commons.math3.geometry.euclidean.threed.Plane
-import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL11.*
 import org.lwjgl.opengl.GL15
 import org.lwjgl.opengl.GL20
 import org.lwjgl.opengl.GL30
 import org.lwjgl.system.MemoryUtil
+import utils.Utils
 import java.nio.FloatBuffer
+import kotlin.math.PI
+import kotlin.math.cos
+import kotlin.math.sin
+import kotlin.streams.toList
 
 class Renderer {
 
@@ -21,48 +23,44 @@ class Renderer {
     private var vaoId = 0
     private var shaderProgram: ShaderProgram? = null
 
+    private val heptagon = (0 until 3)
+        .flatMap {
+            val t = 2.0 * PI * (it.toFloat() / 3.toFloat())
+            listOf(cos(t).toFloat(), sin(t).toFloat(), 0f)
+        }
+
     @Throws(Exception::class)
     fun init() {
-    }
-
-    private fun renderStart() {
         shaderProgram = ShaderProgram()
         shaderProgram!!.createVertexShader(Utils.loadResource("/vertex.vs"))
         shaderProgram!!.createFragmentShader(Utils.loadResource("/fragment.fs"))
         shaderProgram!!.link()
     }
 
-    private fun renderEnd(vertices: FloatArray) {
+    private fun renderEnd(vertices: FloatArray, type: Int = GL_TRIANGLE_FAN) {
         val verticesBuffer: FloatBuffer
-        try {
-            verticesBuffer = MemoryUtil.memAllocFloat(vertices.size)
-            verticesBuffer.put(vertices).flip()
-            // Create the VAO and bind to it
-            vaoId = GL30.glGenVertexArrays()
-            GL30.glBindVertexArray(vaoId)
-            // Create the VBO and bind to it
-            vboId = GL15.glGenBuffers()
-            GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vboId)
-            GL15.glBufferData(GL15.GL_ARRAY_BUFFER, verticesBuffer, GL15.GL_STATIC_DRAW)
-            // Define structure of the data
-            GL20.glVertexAttribPointer(0, 3, GL11.GL_FLOAT, false, 0, 0)
-            // Unbind the VBO
-            GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0)
-            // Unbind the VAO
-            GL30.glBindVertexArray(0)
-        } finally {
-//            if (verticesBuffer != null) {
-//                MemoryUtil.memFree(verticesBuffer)
-//            }
-        }
+        val vertexDimensions = 3
+        // try {
+        verticesBuffer = MemoryUtil.memAllocFloat(vertices.size)
+        verticesBuffer.put(vertices).flip()
+        vaoId = GL30.glGenVertexArrays()
+        GL30.glBindVertexArray(vaoId)
+
+        vboId = GL15.glGenBuffers()
+        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vboId)
+        GL15.glBufferData(GL15.GL_ARRAY_BUFFER, verticesBuffer, GL15.GL_STATIC_DRAW)
+
+        GL20.glVertexAttribPointer(0, vertexDimensions, GL_FLOAT, false, 0, 0)
+//        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0) // TODO: does this clear/empty the buffer?
+//        GL30.glBindVertexArray(0) // TODO: does this clear/empty the buffer?
+        // } finally { if (verticesBuffer != null) MemoryUtil.memFree(verticesBuffer) }
 
         shaderProgram!!.bind()
-        // Bind to the VAO
-        GL30.glBindVertexArray(vaoId)
+//        GL30.glBindVertexArray(vaoId) // TODO: duplicate?
         GL20.glEnableVertexAttribArray(0)
-        // Draw the vertices
-        glDrawArrays(GL_TRIANGLES, 0, 3)
-        // Restore state
+
+        glDrawArrays(type, 0, vertices.size / vertexDimensions)
+
         GL20.glDisableVertexAttribArray(0)
         GL30.glBindVertexArray(0)
         shaderProgram!!.unbind()
@@ -80,55 +78,48 @@ class Renderer {
     }
 
     private fun processNewState(gameState: GameState) {
+        val screenMultiplier = 0.002f
+
         gameState.planets
             .union(gameState.vehicles)
             .forEach {
-                val location = it.motion.location
-                val multiplier = 0.002f
-                val x = location.x.toFloat() * multiplier
-                val y = location.y.toFloat() * multiplier
-
-                val tri = when (it) {
-                    is Vehicle -> floatArrayOf(
-                        0.0f, 0.05f, 0.0f,
-                        -0.05f, -0.05f, 0.0f,
-                        0.05f, -0.05f, 0.0f
-                    )
-                    is Planet -> floatArrayOf(
-                        0.0f, 0.1f, 0.0f,
-                        -0.1f, -0.1f, 0.0f,
-                        0.1f, -0.1f, 0.0f
-                    )
-                    else -> floatArrayOf(
-                        0.0f, 0.1f, 0.0f,
-                        -0.1f, -0.1f, 0.0f,
-                        0.1f, -0.1f, 0.0f
-                    )
-                }
-
-
-                renderStart()
-                val vertices = floatArrayOf(
-                    tri[0] + x, tri[1] + y, tri[2],
-                    tri[3] + x, tri[4] + y, tri[5],
-                    tri[6] + x, tri[7] + y, tri[8]
-                )
-                renderEnd(vertices)
-
-                it.motion.trailers.stream()
-                    .forEach{trailer ->
-                    val tx = trailer.location.x.toFloat() * multiplier
-                    val ty = trailer.location.y.toFloat() * multiplier
-
-                    renderStart()
-                    val vertices = floatArrayOf(
-                        tri[0]*0.2f + tx, tri[1]*0.2f + ty, tri[2],
-                        tri[3]*0.2f + tx, tri[4]*0.2f + ty, tri[5],
-                        tri[6]*0.2f + tx, tri[7]*0.2f + ty, tri[8]
-                    )
-                    renderEnd(vertices)
-                }
+                drawFreeBody(it, screenMultiplier)
+                drawTrail(it, screenMultiplier)
             }
+    }
+
+    private fun drawFreeBody(freeBody: FreeBody, screenMultiplier: Float) {
+        val location = freeBody.motion.location
+        val x = location.x.toFloat() * screenMultiplier
+        val y = location.y.toFloat() * screenMultiplier
+
+        val shapeVertices = when (freeBody) {
+            is Vehicle -> heptagon.map { v -> v * freeBody.radius.toFloat() * screenMultiplier }
+            is Planet -> heptagon.map { v -> v * freeBody.radius.toFloat() * screenMultiplier }
+            else -> heptagon
+        }
+
+        val vertices = shapeVertices.mapIndexed { index, fl ->
+            when (index.rem(3)) {
+                0 -> fl + x
+                1 -> fl + y
+                else -> fl
+            }
+        }.toFloatArray()
+        renderEnd(vertices)
+    }
+
+    private fun drawTrail(freeBody: FreeBody, screenMultiplier: Float) {
+        val points = freeBody.motion.trailers.stream().toList()
+            .flatMap { trailer ->
+                listOf(
+                    trailer.location.x.toFloat() * screenMultiplier,
+                    trailer.location.y.toFloat() * screenMultiplier,
+                    0f
+                )
+            }
+            .toFloatArray()
+        renderEnd(points, GL_LINE_STRIP)
     }
 
     fun cleanup() {
@@ -136,10 +127,8 @@ class Renderer {
             shaderProgram!!.cleanup()
         }
         GL20.glDisableVertexAttribArray(0)
-        // Delete the VBO
         GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0)
         GL15.glDeleteBuffers(vboId)
-        // Delete the VAO
         GL30.glBindVertexArray(0)
         GL30.glDeleteVertexArrays(vaoId)
     }

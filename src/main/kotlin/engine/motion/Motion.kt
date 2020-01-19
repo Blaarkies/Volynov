@@ -9,7 +9,7 @@ class Motion(
     var acceleration: Acceleration = Acceleration(),
     var contactEvents: MutableList<ContactEvent> = mutableListOf(),
     var trailers: Queue<Trailer> = LinkedList(),
-    var trailerQuantity: Int = 20
+    var trailerQuantity: Int = 80
 ) {
 
     private var lastTrailer: Trailer = Trailer(location)
@@ -30,7 +30,7 @@ class Motion(
 
     private fun addNewTrailer() {
         val distance = location.getDistance(lastTrailer.location)
-        if (distance > 20) { // TODO: 5 should be configurable
+        if (distance > 10) { // TODO: 5 should be configurable
             val nowTrailer = Trailer(location)
             lastTrailer = nowTrailer
 
