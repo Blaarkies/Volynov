@@ -2,35 +2,42 @@ package engine.physics
 
 import engine.Planet
 import engine.Vehicle
+import engine.motion.Force
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 
 internal class GravityTest {
 
     @Test
-    fun gravitationalForce() {
-        var planet = Planet("terra", .0, .0, .0, .0, .0, .0)
-        var satellite = Vehicle("sputnik", -100.0, -100.0, .0, .0, .0, .0)
-        var force = Gravity.gravitationalForce(planet, satellite)
-        assertTrue(force.x > 0)
-        assertTrue(force.y > 0)
+    fun direction_of_gravitational_force() {
+        val forceUpRight = getGravityForceBetweenPlanetSatellite(-100.0, -100.0)
+        assertTrue(forceUpRight.x > 0)
+        assertTrue(forceUpRight.y > 0)
 
-        planet = Planet("terra", .0, .0, .0, .0, .0, .0)
-        satellite = Vehicle("sputnik", -100.0, 100.0, .0, .0, .0, .0)
-        force = Gravity.gravitationalForce(planet, satellite)
-        assertTrue(force.x > 0)
-        assertTrue(force.y < 0)
+        val forceDownRight = getGravityForceBetweenPlanetSatellite(-100.0, 100.0)
+        assertTrue(forceDownRight.x > 0)
+        assertTrue(forceDownRight.y < 0)
 
-        planet = Planet("terra", .0, .0, .0, .0, .0, .0)
-        satellite = Vehicle("sputnik", 100.0, 100.0, .0, .0, .0, .0)
-        force = Gravity.gravitationalForce(planet, satellite)
-        assertTrue(force.x < 0)
-        assertTrue(force.y < 0)
+        val forceDownLeft = getGravityForceBetweenPlanetSatellite(100.0, 100.0)
+        assertTrue(forceDownLeft.x < 0)
+        assertTrue(forceDownLeft.y < 0)
 
-        planet = Planet("terra", .0, .0, .0, .0, .0, .0)
-        satellite = Vehicle("sputnik", 100.0, -100.0, .0, .0, .0, .0)
-        force = Gravity.gravitationalForce(planet, satellite)
-        assertTrue(force.x < 0)
-        assertTrue(force.y > 0)
+        val forceUpLeft = getGravityForceBetweenPlanetSatellite(100.0, -100.0)
+        assertTrue(forceUpLeft.x < 0)
+        assertTrue(forceUpLeft.y > 0)
+    }
+
+    @Test
+    fun in_binary_system_the_massive_body_moves_less() {
+        val terra = Planet("terra", .0, .0, .0, .0, .0, .0, 9000.0)
+        val luna = Planet("luna", 100.0, .0, .0, .0, .0, .0, 500.0)
+
+        println()
+    }
+
+    private fun getGravityForceBetweenPlanetSatellite(sx: Double = .0, sy: Double = .0): Force {
+        val planet = Planet("terra", .0, .0, .0, .0, .0, .0)
+        val satellite = Vehicle("sputnik", sx, sy, .0, .0, .0, .0)
+        return Gravity.gravitationalForce(planet, satellite)
     }
 }

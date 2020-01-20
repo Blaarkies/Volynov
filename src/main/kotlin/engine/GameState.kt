@@ -34,7 +34,7 @@ class GameState {
         temperature: Double, radius: Double, mass: Double
     ) {
         planets.add(
-            Planet("Planet $id", x, y, h, dx, dy, dh, temperature, mass, radius)
+            Planet("Planet $id", x, y, h, dx, dy, dh, mass, temperature, radius)
         )
     }
 

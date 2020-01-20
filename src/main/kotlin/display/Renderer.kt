@@ -6,6 +6,7 @@ import engine.GameState
 import engine.Planet
 import engine.Vehicle
 import org.lwjgl.opengl.GL11.*
+import org.lwjgl.opengl.GL12.GL_ALIASED_LINE_WIDTH_RANGE
 import org.lwjgl.opengl.GL15
 import org.lwjgl.opengl.GL20
 import org.lwjgl.opengl.GL30
@@ -23,9 +24,9 @@ class Renderer {
     private var vaoId = 0
     private var shaderProgram: ShaderProgram? = null
 
-    private val heptagon = (0 until 3)
+    private val heptagon = (0 until 7)
         .flatMap {
-            val t = 2.0 * PI * (it.toFloat() / 3.toFloat())
+            val t = 2.0 * PI * (it.toFloat() / 7.toFloat())
             listOf(cos(t).toFloat(), sin(t).toFloat(), 0f)
         }
 
@@ -59,7 +60,12 @@ class Renderer {
 //        GL30.glBindVertexArray(vaoId) // TODO: duplicate?
         GL20.glEnableVertexAttribArray(0)
 
+//        glEnable(GL_BLEND)
+//        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+        glEnable(GL_POLYGON_SMOOTH)
+        glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST)
         glDrawArrays(type, 0, vertices.size / vertexDimensions)
+        glDisable(GL_POLYGON_SMOOTH)
 
         GL20.glDisableVertexAttribArray(0)
         GL30.glBindVertexArray(0)
@@ -119,7 +125,34 @@ class Renderer {
                 )
             }
             .toFloatArray()
-        renderEnd(points, GL_LINE_STRIP)
+
+        val vertices = points
+
+        val verticesBuffer: FloatBuffer
+        val vertexDimensions = 3
+        verticesBuffer = MemoryUtil.memAllocFloat(vertices.size)
+        verticesBuffer.put(vertices).flip()
+        vaoId = GL30.glGenVertexArrays()
+        GL30.glBindVertexArray(vaoId)
+
+        vboId = GL15.glGenBuffers()
+        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vboId)
+        GL15.glBufferData(GL15.GL_ARRAY_BUFFER, verticesBuffer, GL15.GL_STATIC_DRAW)
+
+        GL20.glVertexAttribPointer(0, vertexDimensions, GL_FLOAT, false, 0, 0)
+
+        shaderProgram!!.bind()
+        GL20.glEnableVertexAttribArray(0)
+
+        glEnable(GL_LINE_SMOOTH)
+        glHint(GL_LINE_SMOOTH_HINT, GL_NICEST)
+        glDrawArrays(GL_LINE_STRIP, 0, vertices.size / vertexDimensions)
+        glDisable(GL_BLEND)
+        glDisable(GL_LINE_SMOOTH)
+
+        GL20.glDisableVertexAttribArray(0)
+        GL30.glBindVertexArray(0)
+        shaderProgram!!.unbind()
     }
 
     fun cleanup() {
