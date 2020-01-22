@@ -30,7 +30,7 @@ class Motion(
 
     private fun addNewTrailer() {
         val distance = location.getDistance(lastTrailer.location)
-        if (distance > 10) {
+        if (distance > 5) {
             val nowTrailer = Trailer(location)
             lastTrailer = nowTrailer
 

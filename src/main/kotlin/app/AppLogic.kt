@@ -3,19 +3,21 @@ import display.Window
 import display.Renderer
 import engine.GameState
 import org.lwjgl.glfw.GLFW
+import kotlin.concurrent.thread
 
 class AppLogic : IGameLogic {
 
     private var direction: Int = 0
-    private var color: Float = 0.0f
+    private var color: Float = 0f
+    private var paused: Boolean = false
     private val renderer: Renderer = Renderer()
 
     val gameState = GameState()
 
     init {
-        gameState.addPlayer(-350.0, 0.0, 0.0, 0.0, -0.3, 0.1, "1")
-        gameState.addPlanet(.0, .0, .0, 0.0, -0.135, .0, "J", 325.0, 40.0, 2000.0)
-        gameState.addPlanet(-300.0, 0.0, 0.0, 0.0, 0.9, 0.1, "B", 325.0, 20.0, 300.0)
+        gameState.addPlayer(-350.0, 0.0, 0.0, 0.0, -0.3, .5, "1")
+        gameState.addPlanet(.0, .0, .0, 0.0, -0.135, -.3, "J", 325.0, 40.0, 2000.0)
+        gameState.addPlanet(-300.0, 0.0, 0.0, 0.0, 0.9, -.5, "B", 325.0, 20.0, 300.0)
     }
 
     @Throws(Exception::class)
@@ -24,6 +26,10 @@ class AppLogic : IGameLogic {
     }
 
     override fun input(window: Window) {
+        if (window.isKeyPressed(GLFW.GLFW_KEY_SPACE)) {
+            paused = !paused
+        }
+
         direction = when {
             window.isKeyPressed(GLFW.GLFW_KEY_UP) -> 1
             window.isKeyPressed(GLFW.GLFW_KEY_DOWN) -> -1
@@ -32,14 +38,16 @@ class AppLogic : IGameLogic {
     }
 
     override fun update(interval: Float) {
-        gameState.tickClock()
+        if (!paused) {
+            gameState.tickClock()
+        }
 
         color += direction * 0.01f
-        color.coerceIn(0.0f, 1.0f)
+        color.coerceIn(0f, 1f)
     }
 
     override fun render(window: Window) {
-        window.setClearColor(color, color, color, 0.0f)
+        window.setClearColor(color, color, color, 0f)
         renderer.render(window, gameState)
     }
 

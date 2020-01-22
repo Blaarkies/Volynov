@@ -4,12 +4,14 @@ import org.lwjgl.opengl.GL20
 
 class ShaderProgram {
 
-    private val programId: Int = GL20.glCreateProgram()
+    private val _programId: Int = GL20.glCreateProgram()
+    val programId
+        get() = _programId
     private var vertexShaderId = 0
     private var fragmentShaderId = 0
 
     init {
-        if (programId == 0) {
+        if (_programId == 0) {
             throw Exception("Could not create Shader")
         }
     }
@@ -35,30 +37,30 @@ class ShaderProgram {
         if (GL20.glGetShaderi(shaderId, GL20.GL_COMPILE_STATUS) == 0) {
             throw Exception("Error compiling Shader code: " + GL20.glGetShaderInfoLog(shaderId, 1024))
         }
-        GL20.glAttachShader(programId, shaderId)
+        GL20.glAttachShader(_programId, shaderId)
         return shaderId
     }
 
     @Throws(Exception::class)
     fun link() {
-        GL20.glLinkProgram(programId)
-        if (GL20.glGetProgrami(programId, GL20.GL_LINK_STATUS) == 0) {
-            throw Exception("Error linking Shader code: " + GL20.glGetProgramInfoLog(programId, 1024))
+        GL20.glLinkProgram(_programId)
+        if (GL20.glGetProgrami(_programId, GL20.GL_LINK_STATUS) == 0) {
+            throw Exception("Error linking Shader code: " + GL20.glGetProgramInfoLog(_programId, 1024))
         }
         if (vertexShaderId != 0) {
-            GL20.glDetachShader(programId, vertexShaderId)
+            GL20.glDetachShader(_programId, vertexShaderId)
         }
         if (fragmentShaderId != 0) {
-            GL20.glDetachShader(programId, fragmentShaderId)
+            GL20.glDetachShader(_programId, fragmentShaderId)
         }
-        GL20.glValidateProgram(programId)
-        if (GL20.glGetProgrami(programId, GL20.GL_VALIDATE_STATUS) == 0) {
-            System.err.println("Warning validating Shader code: " + GL20.glGetProgramInfoLog(programId, 1024))
+        GL20.glValidateProgram(_programId)
+        if (GL20.glGetProgrami(_programId, GL20.GL_VALIDATE_STATUS) == 0) {
+            System.err.println("Warning validating Shader code: " + GL20.glGetProgramInfoLog(_programId, 1024))
         }
     }
 
     fun bind() {
-        GL20.glUseProgram(programId)
+        GL20.glUseProgram(_programId)
     }
 
     fun unbind() {
@@ -67,8 +69,8 @@ class ShaderProgram {
 
     fun cleanup() {
         unbind()
-        if (programId != 0) {
-            GL20.glDeleteProgram(programId)
+        if (_programId != 0) {
+            GL20.glDeleteProgram(_programId)
         }
     }
 

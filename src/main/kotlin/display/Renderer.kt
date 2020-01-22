@@ -5,71 +5,113 @@ import engine.FreeBody
 import engine.GameState
 import engine.Planet
 import engine.Vehicle
-import org.lwjgl.opengl.GL11.*
-import org.lwjgl.opengl.GL12.GL_ALIASED_LINE_WIDTH_RANGE
+import engine.motion.Location
+import engine.utilities.Matrix4f
+import org.lwjgl.BufferUtils
 import org.lwjgl.opengl.GL15
-import org.lwjgl.opengl.GL20
+import org.lwjgl.opengl.GL20.*
 import org.lwjgl.opengl.GL30
-import org.lwjgl.system.MemoryUtil
+import org.lwjgl.system.MemoryStack
 import utils.Utils
-import java.nio.FloatBuffer
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.streams.toList
+
 
 class Renderer {
 
     private var vboId = 0
     private var vaoId = 0
     private var shaderProgram: ShaderProgram? = null
+    val screenMultiplier = 0.002f
 
-    private val heptagon = (0 until 7)
+    private val heptagon = (0 until 9)
         .flatMap {
-            val t = 2.0 * PI * (it.toFloat() / 7.toFloat())
-            listOf(cos(t).toFloat(), sin(t).toFloat(), 0f)
+            val t = 2.0 * PI * (it.toFloat() / 9)
+            listOf(cos(t).toFloat(), sin(t).toFloat())
         }
 
     @Throws(Exception::class)
     fun init() {
         shaderProgram = ShaderProgram()
-        shaderProgram!!.createVertexShader(Utils.loadResource("/vertex.vs"))
-        shaderProgram!!.createFragmentShader(Utils.loadResource("/fragment.fs"))
+        shaderProgram!!.createVertexShader(Utils.loadResource("/shaders/vertexBasicPosition.glsl"))
+        shaderProgram!!.createFragmentShader(Utils.loadResource("/shaders/fragmentBasicColor.glsl"))
         shaderProgram!!.link()
+
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+        glEnable(GL_BLEND)
     }
 
-    private fun renderEnd(vertices: FloatArray, type: Int = GL_TRIANGLE_FAN) {
-        val verticesBuffer: FloatBuffer
-        val vertexDimensions = 3
-        // try {
-        verticesBuffer = MemoryUtil.memAllocFloat(vertices.size)
-        verticesBuffer.put(vertices).flip()
+    private fun renderEnd(vertices: FloatArray, type: Int = GL_TRIANGLE_FAN, location: Location, scale: Double) {
+        val vertexDimensions = setupVerticesMemory(vertices)
+        setShaderProgramUniformMatrices(location, scale)
+
+        glDrawArrays(type, 0, vertices.size / vertexDimensions)
+
+        glDisableVertexAttribArray(0)
+        GL30.glBindVertexArray(0)
+        shaderProgram!!.unbind()
+    }
+
+    private fun setupVerticesMemory(vertices: FloatArray): Int {
+        val vertexDimensions = 7
         vaoId = GL30.glGenVertexArrays()
         GL30.glBindVertexArray(vaoId)
 
-        vboId = GL15.glGenBuffers()
-        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vboId)
-        GL15.glBufferData(GL15.GL_ARRAY_BUFFER, verticesBuffer, GL15.GL_STATIC_DRAW)
+        MemoryStack.stackPush().use { stack ->
+            val memoryVertices = stack.mallocFloat(vertexDimensions * vertices.size)
+                .put(vertices)
+                .flip()
+            val vboId = glGenBuffers()
+            glBindBuffer(GL_ARRAY_BUFFER, vboId)
+            glBufferData(GL_ARRAY_BUFFER, memoryVertices, GL_STATIC_DRAW)
+        } //        glVertexAttribPointer(0, vertexDimensions, GL_FLOAT, false, 0, 0)
 
-        GL20.glVertexAttribPointer(0, vertexDimensions, GL_FLOAT, false, 0, 0)
-//        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0) // TODO: does this clear/empty the buffer?
-//        GL30.glBindVertexArray(0) // TODO: does this clear/empty the buffer?
-        // } finally { if (verticesBuffer != null) MemoryUtil.memFree(verticesBuffer) }
+        val positionInputs = 3
+        val colorInputs = 4
+        val strideSize = positionInputs + colorInputs
+        val floatSize = 4
 
-        shaderProgram!!.bind()
-//        GL30.glBindVertexArray(vaoId) // TODO: duplicate?
-        GL20.glEnableVertexAttribArray(0)
+        val posAttrib: Int = glGetAttribLocation(shaderProgram!!.programId, "position")
+        glEnableVertexAttribArray(posAttrib)
+        glVertexAttribPointer(posAttrib, positionInputs, GL_FLOAT, false, strideSize * floatSize, 0)
 
-//        glEnable(GL_BLEND)
-//        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-        glEnable(GL_POLYGON_SMOOTH)
-        glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST)
-        glDrawArrays(type, 0, vertices.size / vertexDimensions)
-        glDisable(GL_POLYGON_SMOOTH)
+        val colorAttrib: Int = glGetAttribLocation(shaderProgram!!.programId, "color")
+        glEnableVertexAttribArray(colorAttrib)
+        glVertexAttribPointer(
+            colorAttrib, colorInputs, GL_FLOAT, false, strideSize * floatSize,
+            (positionInputs * floatSize).toLong()
+        ) //        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0) GL30.glBindVertexArray(0)
 
-        GL20.glDisableVertexAttribArray(0)
-        GL30.glBindVertexArray(0)
-        shaderProgram!!.unbind()
+        shaderProgram!!.bind() //        GL30.glBindVertexArray(vaoId)
+        glEnableVertexAttribArray(0)
+        return vertexDimensions
+    }
+
+    private fun setShaderProgramUniformMatrices(location: Location, scale: Double) {
+        val uniModel: Int = glGetUniformLocation(shaderProgram!!.programId, "model")
+        val model =
+            Matrix4f.translate(location.x.toFloat() * screenMultiplier, location.y.toFloat() * screenMultiplier, 0f)
+                .multiply(Matrix4f.scale(scale.toFloat() * screenMultiplier, scale.toFloat() * screenMultiplier, 0.1f))
+                .multiply(Matrix4f.rotate(location.h.toFloat(), 0f, 0f, 1f))
+
+        val uniModelBuffer = BufferUtils.createFloatBuffer(16)
+        model.toBuffer(uniModelBuffer)
+        glUniformMatrix4fv(uniModel, false, uniModelBuffer)
+
+        val uniView: Int = glGetUniformLocation(shaderProgram!!.programId, "view")
+        val view = Matrix4f()
+        val uniViewBuffer = BufferUtils.createFloatBuffer(16)
+        view.toBuffer(uniViewBuffer)
+        glUniformMatrix4fv(uniView, false, uniViewBuffer)
+
+        val uniProjection: Int = glGetUniformLocation(shaderProgram!!.programId, "projection")
+        val ratio = 1f //640f / 480f
+        val projection = Matrix4f.orthographic(-ratio, ratio, -1f, 1f, -1f, 1f)
+        val uniProjectionBuffer = BufferUtils.createFloatBuffer(16)
+        projection.toBuffer(uniProjectionBuffer)
+        glUniformMatrix4fv(uniProjection, false, uniProjectionBuffer)
     }
 
     fun render(window: Window, gameState: GameState) {
@@ -84,82 +126,56 @@ class Renderer {
     }
 
     private fun processNewState(gameState: GameState) {
-        val screenMultiplier = 0.002f
+        val allFreeBodies = gameState.planets.union(gameState.vehicles)
 
-        gameState.planets
-            .union(gameState.vehicles)
-            .forEach {
-                drawFreeBody(it, screenMultiplier)
-                drawTrail(it, screenMultiplier)
-            }
+        allFreeBodies.forEach { drawTrail(it) }
+        allFreeBodies.forEach { drawFreeBody(it) }
     }
 
-    private fun drawFreeBody(freeBody: FreeBody, screenMultiplier: Float) {
-        val location = freeBody.motion.location
-        val x = location.x.toFloat() * screenMultiplier
-        val y = location.y.toFloat() * screenMultiplier
-
-        val shapeVertices = when (freeBody) {
-            is Vehicle -> heptagon.map { v -> v * freeBody.radius.toFloat() * screenMultiplier }
-            is Planet -> heptagon.map { v -> v * freeBody.radius.toFloat() * screenMultiplier }
-            else -> heptagon
+    private fun drawFreeBody(freeBody: FreeBody) {
+        val color = when (freeBody) {
+            is Vehicle -> listOf(0.1f, 0.5f, 0.9f)
+            is Planet -> listOf(0.20f, 0.15f, 0.11f)
+            else -> listOf(1f, 1f, 1f)
         }
-
-        val vertices = shapeVertices.mapIndexed { index, fl ->
-            when (index.rem(3)) {
-                0 -> fl + x
-                1 -> fl + y
-                else -> fl
-            }
+        val shapeVertices = heptagon.chunked(2).flatMap {
+            listOf(it[0], it[1], 0f) + color + listOf(1f)
         }.toFloatArray()
-        renderEnd(vertices)
+
+        renderEnd(shapeVertices, location = freeBody.motion.location, scale = freeBody.radius)
     }
 
-    private fun drawTrail(freeBody: FreeBody, screenMultiplier: Float) {
-        val points = freeBody.motion.trailers.stream().toList()
-            .flatMap { trailer ->
+    private fun drawTrail(freeBody: FreeBody) {
+        val color = when (freeBody) {
+            is Vehicle -> listOf(0.1f, 0.5f, 0.9f)
+            is Planet -> listOf(0.20f, 0.15f, 0.11f)
+            else -> listOf(1f, 1f, 1f)
+        }
+        val vertices = freeBody.motion.trailers.stream()
+            .toList().withIndex()
+            .flatMap { (index, trailer) ->
                 listOf(
-                    trailer.location.x.toFloat() * screenMultiplier,
-                    trailer.location.y.toFloat() * screenMultiplier,
-                    0f
+                    trailer.location.x.toFloat(), trailer.location.y.toFloat(), 0f,
+                    (0.7f * 2 + color[0]) / 3,
+                    (0.3f * 2 + color[1]) / 3,
+                    (1.0f * 2 + color[2]) / 3,
+                    index.toFloat() / freeBody.motion.trailerQuantity - 0.3f
                 )
-            }
-            .toFloatArray()
+            }.toFloatArray()
 
-        val vertices = points
+        val vertexDimensions = setupVerticesMemory(vertices)
+        setShaderProgramUniformMatrices(Location(.0, .0), 1.0)
 
-        val verticesBuffer: FloatBuffer
-        val vertexDimensions = 3
-        verticesBuffer = MemoryUtil.memAllocFloat(vertices.size)
-        verticesBuffer.put(vertices).flip()
-        vaoId = GL30.glGenVertexArrays()
-        GL30.glBindVertexArray(vaoId)
-
-        vboId = GL15.glGenBuffers()
-        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vboId)
-        GL15.glBufferData(GL15.GL_ARRAY_BUFFER, verticesBuffer, GL15.GL_STATIC_DRAW)
-
-        GL20.glVertexAttribPointer(0, vertexDimensions, GL_FLOAT, false, 0, 0)
-
-        shaderProgram!!.bind()
-        GL20.glEnableVertexAttribArray(0)
-
-        glEnable(GL_LINE_SMOOTH)
-        glHint(GL_LINE_SMOOTH_HINT, GL_NICEST)
         glDrawArrays(GL_LINE_STRIP, 0, vertices.size / vertexDimensions)
-        glDisable(GL_BLEND)
-        glDisable(GL_LINE_SMOOTH)
 
-        GL20.glDisableVertexAttribArray(0)
+        glDisableVertexAttribArray(0)
         GL30.glBindVertexArray(0)
         shaderProgram!!.unbind()
     }
 
     fun cleanup() {
-        if (shaderProgram != null) {
-            shaderProgram!!.cleanup()
-        }
-        GL20.glDisableVertexAttribArray(0)
+        shaderProgram!!.cleanup()
+        glDisableVertexAttribArray(0)
         GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0)
         GL15.glDeleteBuffers(vboId)
         GL30.glBindVertexArray(0)
