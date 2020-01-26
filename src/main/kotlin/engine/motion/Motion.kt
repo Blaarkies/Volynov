@@ -9,7 +9,9 @@ class Motion(
     var acceleration: Acceleration = Acceleration(),
     var contactEvents: MutableList<ContactEvent> = mutableListOf(),
     var trailers: Queue<Trailer> = LinkedList(),
-    var trailerQuantity: Int = 80
+    var trailerQuantity: Int = 80,
+
+    var debugLastAcceleration: Acceleration = Acceleration(acceleration)
 ) {
 
     private var lastTrailer: Trailer = Trailer(location)
@@ -25,6 +27,7 @@ class Motion(
 
     fun updateVelocityChanges() {
         velocity.add(acceleration.ddx, acceleration.ddy, acceleration.ddh)
+        debugLastAcceleration = Acceleration(acceleration)
         acceleration.remove()
     }
 

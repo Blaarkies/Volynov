@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Assertions.*
 internal class VelocityTest {
 
     @Test
-    fun getRelativeVelocity() {
+    fun relative_velocity() {
         var server = Velocity(1.0, 2.0)
         var client = Velocity(1.0, 2.0)
         var relative = server.getRelative(client)
@@ -24,7 +24,7 @@ internal class VelocityTest {
     }
 
     @Test
-    fun addVelocity() {
+    fun add_velocity() {
         val subject = Velocity()
         assertEquals(.0, subject.dx)
         assertEquals(.0, subject.dy)

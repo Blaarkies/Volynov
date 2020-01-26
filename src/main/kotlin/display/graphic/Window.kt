@@ -1,4 +1,4 @@
-package display
+package display.graphic
 
 import org.lwjgl.glfw.GLFW
 import org.lwjgl.glfw.GLFWErrorCallback
@@ -14,7 +14,7 @@ class Window(
 ) {
 
     private var windowHandle: Long = 0
-    var isResized = false
+    private var isResized = false
 
     fun init() {
         // Setup an error callback. The default implementation

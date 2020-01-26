@@ -9,6 +9,10 @@ object Director {
         clientX: Double, clientY: Double
     ): Double = hypot(clientX - serverX, clientY - serverY)
 
+    fun getDistance(serverX: Double, serverY: Double): Double = getDistance(serverX, serverY, .0, .0)
+
+    fun getDistance(serverX: Float, serverY: Float): Float = hypot(.0 - serverX, .0 - serverY).toFloat()
+
     fun getMagnitude(serverX: Double, serverY: Double): Double = getDistance(serverX, serverY, .0, .0)
 
     /**

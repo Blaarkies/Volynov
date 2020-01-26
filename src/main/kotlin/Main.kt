@@ -4,7 +4,7 @@ import kotlin.system.exitProcess
 fun main() {
     try {
         val gameLogic: IGameLogic = AppLogic()
-        val gameEngine = AppRunner("Volynov", 960, 960, vSync = true, gameLogic = gameLogic)
+        val gameEngine = AppRunner("Volynov", 1000, 1000, true, gameLogic)
         gameEngine.run()
     } catch (exception: Exception) {
         exception.printStackTrace()

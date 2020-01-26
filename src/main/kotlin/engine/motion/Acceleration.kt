@@ -2,6 +2,8 @@ package engine.motion
 
 class Acceleration(var ddx: Double = .0, var ddy: Double = .0, var ddh: Double = .0) {
 
+    constructor(acceleration: Acceleration) : this(acceleration.ddx, acceleration.ddy, acceleration.ddh)
+
     val magnitude: Double
         get() = Director.getMagnitude(ddx, ddy)
 

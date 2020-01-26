@@ -1,6 +1,6 @@
 package app
 
-import display.Window
+import display.graphic.Window
 
 interface IGameLogic {
 

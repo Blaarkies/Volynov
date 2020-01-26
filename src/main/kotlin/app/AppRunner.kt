@@ -1,6 +1,6 @@
-import utils.CustomTimer
 import app.IGameLogic
-import display.Window
+import display.graphic.Window
+import utilities.CustomTimer
 
 class AppRunner(
     windowTitle: String,
@@ -9,7 +9,12 @@ class AppRunner(
     vSync: Boolean,
     private val gameLogic: IGameLogic,
     private val customTimer: CustomTimer = CustomTimer(),
-    private val window: Window = Window(windowTitle, width, height, vSync)
+    private val window: Window = Window(
+        windowTitle,
+        width,
+        height,
+        vSync
+    )
 ) : Runnable {
 
     private val targetFps = 60
