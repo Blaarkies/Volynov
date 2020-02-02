@@ -2,9 +2,16 @@
 <h3>A space artillery game where players aim to destroy each other by firing missiles, high tech payloads, and sabotage equipment at the enemy. All spaceships, planets and warheads are influenced by realistic physics to produce n-body orbits and collisions.</h3>
 
 <br>
+<h6>2020 02 02, Splash of color 
+<br> <i>Added colors, textures, rotations, arrow and text for debugging</i></h6>
+<code>Cyan lines are current acceleration vectors</code>
+<img src="https://github.com/Blaarkies/Volynov/blob/master/assets/splash_of_color.gif"/>
+<hr>
+
+<br>
 <h6>2019 12 31, Hindsight vision is 2020 
 <br> <i>Convert code to Kotlin and Java Swing to LWJGL</i></h6>
-<code>The simplest shape in OpenGL is a triangle...i don't see any problems here</code>
+<code>The simplest shape in OpenGL is a triangle, and if that is all you can draw...</code>
 <img src="https://github.com/Blaarkies/Volynov/blob/master/assets/how_to_draw_triangles.gif"/>
 <hr>
 

@@ -2,6 +2,6 @@ package engine
 
 object UniversalConstants {
 
-    const val gravitationalConstant = 0.1
+    const val gravitationalConstant = 0.2
 
 }

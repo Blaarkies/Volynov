@@ -25,7 +25,7 @@ tasks.test {
 dependencies {
     implementation(kotlin("stdlib-jdk8"))
     testImplementation("org.junit.jupiter:junit-jupiter:5.5.2")
-    implementation("org.apache.commons:commons-math3:3.6.1")
+
 
     implementation(platform("org.lwjgl:lwjgl-bom:$lwjglVersion"))
     val lwjglList = listOf(

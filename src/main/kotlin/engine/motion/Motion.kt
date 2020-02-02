@@ -9,7 +9,9 @@ class Motion(
     var acceleration: Acceleration = Acceleration(),
     var contactEvents: MutableList<ContactEvent> = mutableListOf(),
     var trailers: Queue<Trailer> = LinkedList(),
-    var trailerQuantity: Int = 20
+    var trailerQuantity: Int = 80,
+
+    var debugLastAcceleration: Acceleration = Acceleration(acceleration)
 ) {
 
     private var lastTrailer: Trailer = Trailer(location)
@@ -25,12 +27,13 @@ class Motion(
 
     fun updateVelocityChanges() {
         velocity.add(acceleration.ddx, acceleration.ddy, acceleration.ddh)
+        debugLastAcceleration = Acceleration(acceleration)
         acceleration.remove()
     }
 
     private fun addNewTrailer() {
         val distance = location.getDistance(lastTrailer.location)
-        if (distance > 20) { // TODO: 5 should be configurable
+        if (distance > 5) {
             val nowTrailer = Trailer(location)
             lastTrailer = nowTrailer
 

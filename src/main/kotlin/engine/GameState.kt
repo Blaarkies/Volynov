@@ -1,13 +1,15 @@
 package engine
 
-import engine.utilities.Utilities.joinLists
+import display.CameraView
 import engine.motion.ContactEvent
 import engine.motion.Force
 import engine.physics.Contact
 import engine.physics.Gravity
+import utilities.Utils.joinLists
 
 class GameState {
 
+    var camera = CameraView()
     var vehicles = mutableListOf<Vehicle>()
     var planets = mutableListOf<Planet>()
 
@@ -24,7 +26,7 @@ class GameState {
         dx: Double, dy: Double, dh: Double,
         id: String
     ) {
-        vehicles.add(Vehicle("Player $id", x, y, h, dx, dy, dh))
+        vehicles.add(Vehicle(id, x, y, h, dx, dy, dh))
     }
 
     fun addPlanet(
@@ -34,7 +36,7 @@ class GameState {
         temperature: Double, radius: Double, mass: Double
     ) {
         planets.add(
-            Planet("Planet $id", x, y, h, dx, dy, dh, temperature, mass, radius)
+            Planet(id, x, y, h, dx, dy, dh, mass, temperature, radius)
         )
     }
 

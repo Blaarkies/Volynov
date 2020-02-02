@@ -8,7 +8,7 @@ import java.util.*
 internal class MotionTest {
 
     @Test
-    fun updateLocationChanges() {
+    fun update_location_changes() {
         val subject = Motion(velocity = Velocity(10.0, 20.0, 30.0))
         assertEquals(.0, subject.location.x)
         assertEquals(.0, subject.location.y)
@@ -21,7 +21,7 @@ internal class MotionTest {
     }
 
     @Test
-    fun trailers() {
+    fun create_new_trailers() {
         val subject = Motion(velocity = Velocity(10.0, 20.0))
         assertEquals(1, subject.trailers.size)
         var lastTrailer = (subject.trailers as LinkedList).last
@@ -36,7 +36,7 @@ internal class MotionTest {
     }
 
     @Test
-    fun updateVelocityChanges() {
+    fun update_velocity_changes() {
         val subject = Motion(acceleration = Acceleration(10.0, 20.0, 30.0))
         assertEquals(.0, subject.velocity.dx)
         assertEquals(.0, subject.velocity.dy)

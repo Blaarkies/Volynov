@@ -13,7 +13,7 @@ internal class DirectorTest {
     }
 
     @Test
-    fun getDistance() {
+    fun distance() {
         val rightPointed = Director.getDistance(.0, .0, 1.0, 1.0)
         assertEquals(1.414, rightPointed.round(3))
 
@@ -22,13 +22,13 @@ internal class DirectorTest {
     }
 
     @Test
-    fun getMagnitude() {
+    fun magnitude() {
         val magnitude = Director.getMagnitude(1.0, 1.0)
         assertEquals(1.414, magnitude.round(3))
     }
 
     @Test
-    fun getDirection() {
+    fun direction() {
         // Test direction from client, to server
         val pointed0 = Director.getDirection(.0, .0, -1.0, .0)
         assertEquals(.0, pointed0, "0")

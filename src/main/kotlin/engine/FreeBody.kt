@@ -6,6 +6,7 @@ import engine.motion.Motion
 import engine.motion.Velocity
 
 open class FreeBody(
+    val id: String,
     var motion: Motion,
     var mass: Double = 1.0,
     var temperature: Double = .0,
@@ -16,15 +17,18 @@ open class FreeBody(
         get() = calculateAngularMass()
 
     constructor(
+        id: String = "",
         mass: Double = 1.0,
         temperature: Double = .0,
         radius: Double = .0,
         x: Double = .0, y: Double = .0, h: Double = .0,
-        dx: Double = .0, dy: Double = .0, dh: Double = .0,
-        trailersPopulation: Int = 25
+        dx: Double = .0, dy: Double = .0, dh: Double = .0
     ) : this(
-        Motion(Location(x, y, h), Velocity(dx, dy, dh), trailerQuantity = trailersPopulation),
-        mass, temperature, radius
+        id,
+        Motion(Location(x, y, h), Velocity(dx, dy, dh)),
+        mass,
+        temperature,
+        radius
     )
 
     private fun calculateAngularMass(): Double {

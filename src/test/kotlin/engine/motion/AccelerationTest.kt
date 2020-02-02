@@ -8,7 +8,7 @@ internal class AccelerationTest {
     private var acceleration = Acceleration()
 
     @Test
-    fun getRelativeAcceleration() {
+    fun relative_acceleration() {
         acceleration = Acceleration()
         var clientAcceleration = Acceleration(1.0, 1.0)
         var relativeAcceleration = acceleration.getRelative(clientAcceleration)
@@ -27,7 +27,7 @@ internal class AccelerationTest {
     }
 
     @Test
-    fun addAcceleration() {
+    fun add_acceleration() {
         acceleration = Acceleration()
         acceleration.add(1.0, 1.0, 1.0)
         assertEquals(1.0, acceleration.ddx)

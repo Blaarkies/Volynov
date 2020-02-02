@@ -1,4 +1,4 @@
-package display
+package display.graphic
 
 import org.lwjgl.glfw.GLFW
 import org.lwjgl.glfw.GLFWErrorCallback
@@ -14,7 +14,7 @@ class Window(
 ) {
 
     private var windowHandle: Long = 0
-    var isResized = false
+    private var isResized = false
 
     fun init() {
         // Setup an error callback. The default implementation
@@ -29,6 +29,7 @@ class Window(
         GLFW.glfwWindowHint(GLFW.GLFW_CONTEXT_VERSION_MINOR, 2)
         GLFW.glfwWindowHint(GLFW.GLFW_OPENGL_PROFILE, GLFW.GLFW_OPENGL_CORE_PROFILE)
         GLFW.glfwWindowHint(GLFW.GLFW_OPENGL_FORWARD_COMPAT, GL11.GL_TRUE)
+        GLFW.glfwWindowHint(GLFW.GLFW_SAMPLES, 4) // anti-aliasing
         // Create the window
         windowHandle = GLFW.glfwCreateWindow(width, height, title, MemoryUtil.NULL, MemoryUtil.NULL)
         if (windowHandle == MemoryUtil.NULL) {

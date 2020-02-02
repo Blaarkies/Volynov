@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Assertions.*
 internal class TrailerTest {
 
     @Test
-    fun trailerLocationIndependent() {
+    fun trailer_location_independent_of_parent() {
         val location = Location(.0, .0)
         val trailer = Trailer(location)
         assertEquals(.0, trailer.location.x)
