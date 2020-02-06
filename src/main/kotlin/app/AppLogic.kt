@@ -88,7 +88,7 @@ class AppLogic : IGameLogic {
             freeBody.id,
             freeBody.motion.location.x.toFloat(),
             freeBody.motion.location.y.toFloat(),
-            Color.RED
+            Color.WHITE
         )
     }
 

@@ -36,7 +36,7 @@ class Renderer {
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
         font = try {
-            Font(FileInputStream("src\\main\\resources\\Gothic3.ttf"), 16)
+            Font(FileInputStream("src\\main\\resources\\fonts\\ALBMT___.TTF"), 16)
         } catch (ex: FontFormatException) {
             Logger.getLogger(Renderer::class.java.name).log(Level.CONFIG, null, ex)
             Font()
