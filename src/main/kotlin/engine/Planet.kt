@@ -10,5 +10,6 @@ class Planet(
     dh: Double,
     mass: Double = 100.0,
     temperature: Double = 325.0,
-    radius: Double = 20.0
-) : FreeBody(id, mass, temperature, radius, x, y, h, dx, dy, dh)
+    radius: Double = 20.0,
+    restitution: Double = .1
+) : FreeBody(id, mass, temperature, radius, x, y, h, dx, dy, dh, restitution)

@@ -1,6 +1,5 @@
 package engine.physics
 
-import engine.GameState
 import engine.Planet
 import engine.Vehicle
 import engine.motion.Force
@@ -33,19 +32,15 @@ internal class GravityTest {
         val terra = Planet("terra", .0, .0, .0, .0, .0, .0, 9000.0)
         val luna = Planet("luna", 100.0, .0, .0, .0, .0, .0, 500.0)
 
-        val gameState = GameState()
-        gameState.planets.add(terra)
-        gameState.planets.add(luna)
-
         assertEquals(.0, terra.motion.acceleration.magnitude)
         assertEquals(.0, luna.motion.acceleration.magnitude)
 
-        gameState.tickClock()
+        Gravity.addGravityForces(listOf(terra, luna))
 
-        assertNotEquals(.0, terra.motion.debugLastAcceleration.magnitude)
-        assertNotEquals(.0, luna.motion.debugLastAcceleration.magnitude)
+        assertNotEquals(.0, terra.motion.acceleration.magnitude)
+        assertNotEquals(.0, luna.motion.acceleration.magnitude)
 
-        assertTrue(terra.motion.debugLastAcceleration.magnitude < luna.motion.debugLastAcceleration.magnitude)
+        assertTrue(terra.motion.acceleration.magnitude < luna.motion.acceleration.magnitude)
     }
 
     private fun getGravityForceBetweenPlanetSatellite(sx: Double = .0, sy: Double = .0): Force {

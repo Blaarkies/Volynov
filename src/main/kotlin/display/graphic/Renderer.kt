@@ -10,6 +10,7 @@ import org.lwjgl.opengl.GL20.GL_FRAGMENT_SHADER
 import org.lwjgl.opengl.GL20.GL_VERTEX_SHADER
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.system.MemoryUtil
+import utilities.Utils
 import java.awt.FontFormatException
 import java.io.FileInputStream
 import java.io.IOException
@@ -320,7 +321,7 @@ class Renderer {
         program!!.setUniform(uniTex, 0)
 
         val model = Matrix4f.translate(x, y, z)
-            .multiply(Matrix4f.rotate(h, 0f, 0f, 1f))
+            .multiply(Matrix4f.rotate(h * Utils.radianToDegree, 0f, 0f, 1f))
             .multiply(Matrix4f.scale(scaleX, scaleY, 1f))
         val uniModel = program!!.getUniformLocation("model")
         program!!.setUniform(uniModel, model)

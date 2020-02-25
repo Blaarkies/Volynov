@@ -27,7 +27,7 @@ class ShaderProgram {
         checkStatus()
     }
 
-    fun getAttributeLocation(name: CharSequence?): Int {
+    fun getAttributeLocation(name: CharSequence): Int {
         return glGetAttribLocation(id, name)
     }
 

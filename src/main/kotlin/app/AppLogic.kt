@@ -8,7 +8,14 @@ import engine.FreeBody
 import engine.GameState
 import engine.Planet
 import engine.Vehicle
+import org.jbox2d.collision.shapes.CircleShape
+import org.jbox2d.collision.shapes.PolygonShape
+import org.jbox2d.collision.shapes.Shape
+import org.jbox2d.common.Vec2
+import org.jbox2d.dynamics.*
 import org.lwjgl.glfw.GLFW
+import kotlin.math.PI
+import kotlin.math.pow
 import kotlin.streams.toList
 
 class AppLogic : IGameLogic {
@@ -23,10 +30,100 @@ class AppLogic : IGameLogic {
 
     val gameState = GameState()
 
+    val world: World
+    val timeStep = 1f / 60f
+    val velocityIterations = 8
+    val positionIterations = 3
+
     init {
-        gameState.addPlayer(-350.0, 0.0, 0.0, 0.0, -0.3, .5, "You")
-        gameState.addPlanet(.0, .0, .0, 0.0, -0.135, -.3, "Earth", 325.0, 40.0, 2000.0)
-        gameState.addPlanet(-300.0, 0.0, 0.0, 0.0, 0.9, -.5, "Moon", 325.0, 20.0, 300.0)
+        val terra = Planet("terra", .0, .0, .0, 0.0, -40.0, -.1, 800.0, radius = 60.0, restitution = 0.3)
+        val luna = Planet("luna", -270.0, .0, .0, -60.0, 260.0, .5, 100.0, radius = 25.0, restitution = 0.5)
+        val alice = Vehicle("alice", 270.0, .0, .0, -60.0, 60.0, .5, 3.0)
+        gameState.vehicles.add(alice)
+        gameState.planets.addAll(listOf(terra, luna))
+        gameState.planets.addAll((0..8).map {
+            Planet(
+                "$it body",
+                100.0 * it - 650.0,
+                100.0 * it - 250.0,
+                .0,
+                .0,
+                .0,
+                15.0,
+                0.5,
+                radius = 5.0
+            )
+        })
+
+        world = World(Vec2(0f, 0f))
+
+        val allFreeBodies = gameState.planets.union(gameState.vehicles)
+        allFreeBodies.forEach {
+            val bodyDef = BodyDef()
+            bodyDef.type = BodyType.DYNAMIC
+            bodyDef.position.set(it.motion.location.x.toFloat(), it.motion.location.y.toFloat())
+            val shapeBox = CircleShape()
+            shapeBox.radius = it.radius.toFloat()
+
+            val fixtureDef = FixtureDef()
+            fixtureDef.shape = shapeBox
+            fixtureDef.density = (it.mass / (PI * it.radius.pow(2))).toFloat()
+            fixtureDef.friction = .3f
+            fixtureDef.restitution = it.restitution.toFloat()
+
+            val worldBody = world.createBody(bodyDef)
+            worldBody.createFixture(fixtureDef)
+
+            worldBody.applyForceToCenter(
+                Vec2(
+                    it.motion.velocity.dx.toFloat() * worldBody.mass * 9.81f,
+                    it.motion.velocity.dy.toFloat() * worldBody.mass * 9.81f
+                )
+            )
+
+            worldBody.applyAngularImpulse(it.motion.velocity.dh.toFloat() * worldBody.inertia)
+
+            it.shapeBox = shapeBox
+            it.worldBody = worldBody
+        }
+
+/*        val groundBodyDef = BodyDef()
+        groundBodyDef.position.set(0f, -100f)
+        groundBox = PolygonShape()
+        groundBox.setAsBox(250f, 10f)
+        groundBody = world.createBody(groundBodyDef)
+        groundBody.createFixture(groundBox, 0f)
+
+        val bodyDef = BodyDef()
+        bodyDef.type = BodyType.DYNAMIC
+        bodyDef.position.set(0f, 0f)
+        dynamicBox = PolygonShape()
+        dynamicBox.setAsBox(5f, 50f)
+        val fixtureDef1 = FixtureDef()
+        fixtureDef1.shape = dynamicBox
+        fixtureDef1.density = 1f
+        fixtureDef1.friction = .5f
+        fixtureDef1.restitution = .7f
+
+        body = world.createBody(bodyDef)
+        body.createFixture(fixtureDef1)
+        body.applyTorque(11000000f)
+
+        val circleDef = BodyDef()
+        circleDef.type = BodyType.DYNAMIC
+        circleDef.position.set(0f, 0f)
+        circleBox = CircleShape()
+        circleBox.radius = 30f
+
+        val fixtureDef = FixtureDef()
+        fixtureDef.shape = circleBox
+        fixtureDef.density = 1f
+        fixtureDef.friction = .9f
+        fixtureDef.restitution = .7f
+
+        circle = world.createBody(circleDef)
+        circle.createFixture(fixtureDef)
+        circle.applyTorque(-100000000f)*/
     }
 
     @Throws(Exception::class)
@@ -47,7 +144,7 @@ class AppLogic : IGameLogic {
 
     override fun update(interval: Float) {
         if (!paused) {
-            gameState.tickClock()
+            gameState.tickClock(world, timeStep, velocityIterations, positionIterations)
         }
     }
 
@@ -57,7 +154,7 @@ class AppLogic : IGameLogic {
         val allFreeBodies = gameState.planets.union(gameState.vehicles)
         allFreeBodies.forEach { drawTrail(it) }
         allFreeBodies.forEach { drawFreeBody(it) }
-        allFreeBodies.forEach { drawDebugForces(it) }
+//        allFreeBodies.forEach { drawDebugForces(it) }
     }
 
     private fun drawDebugForces(freeBody: FreeBody) {
@@ -122,11 +219,11 @@ class AppLogic : IGameLogic {
     private fun drawFreeBody(freeBody: FreeBody) {
         when {
             freeBody is Vehicle -> metal.bind()
-            freeBody is Planet && freeBody.radius <= 20.0 -> pavement.bind()
+            freeBody is Planet && freeBody.radius <= 30.0 -> pavement.bind()
             freeBody is Planet -> marble_earth.bind()
             else -> white_pixel.bind()
         }
-        val data = BasicShapes.polygon30.chunked(2)
+        val data3 = BasicShapes.polygon30.chunked(2)
             .flatMap {
                 listOf(
                     it[0], it[1], 0f,
@@ -137,12 +234,12 @@ class AppLogic : IGameLogic {
             .toFloatArray()
 
         renderer.drawShape(
-            data,
-            freeBody.motion.location.x,
-            freeBody.motion.location.y,
-            freeBody.motion.location.h,
-            freeBody.radius,
-            freeBody.radius
+            data3,
+            freeBody.worldBody!!.position.x.toDouble(),
+            freeBody.worldBody!!.position.y.toDouble(),
+            freeBody.worldBody!!.angle.toDouble(),
+            freeBody.shapeBox!!.radius.toDouble(),
+            freeBody.shapeBox!!.radius.toDouble()
         )
     }
 

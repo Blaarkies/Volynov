@@ -2,29 +2,24 @@ package engine.motion
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import utilities.Utils
 import kotlin.math.PI
-import kotlin.math.roundToInt
 
 internal class DirectorTest {
-
-    fun Double.round(decimals: Int = 2): Double {
-        val multiplier = Math.pow(10.0, decimals.toDouble())
-        return (this * multiplier).roundToInt() / multiplier
-    }
 
     @Test
     fun distance() {
         val rightPointed = Director.getDistance(.0, .0, 1.0, 1.0)
-        assertEquals(1.414, rightPointed.round(3))
+        assertEquals(1.414, Utils.roundDouble(rightPointed, 3))
 
         val leftPointed = Director.getDistance(.0, .0, -1.0, -1.0)
-        assertEquals(1.414, leftPointed.round(3))
+        assertEquals(1.414, Utils.roundDouble(leftPointed, 3))
     }
 
     @Test
     fun magnitude() {
         val magnitude = Director.getMagnitude(1.0, 1.0)
-        assertEquals(1.414, magnitude.round(3))
+        assertEquals(1.414, Utils.roundDouble(magnitude, 3))
     }
 
     @Test

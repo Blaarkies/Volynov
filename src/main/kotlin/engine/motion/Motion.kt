@@ -1,5 +1,6 @@
 package engine.motion
 
+import engine.FreeBody
 import java.util.*
 
 
@@ -7,7 +8,6 @@ class Motion(
     var location: Location = Location(),
     var velocity: Velocity = Velocity(),
     var acceleration: Acceleration = Acceleration(),
-    var contactEvents: MutableList<ContactEvent> = mutableListOf(),
     var trailers: Queue<Trailer> = LinkedList(),
     var trailerQuantity: Int = 80,
 
@@ -42,5 +42,24 @@ class Motion(
                 trailers.poll()
             }
         }
+    }
+
+    companion object {
+
+        fun addLocationChanges(freeBodies: List<FreeBody>) {
+            freeBodies.forEach { it.motion.updateLocationChanges() }
+        }
+
+        fun addVelocityChanges(freeBodies: List<FreeBody>) {
+            freeBodies.forEach { it.motion.updateVelocityChanges() }
+        }
+
+        fun addNewTrailers(freeBodies: List<FreeBody>) {
+            freeBodies.forEach {
+                it.motion.location = it.worldBody!!.position.let { Location(it.x.toDouble(), it.y.toDouble()) }
+                it.motion.addNewTrailer()
+            }
+        }
+
     }
 }
