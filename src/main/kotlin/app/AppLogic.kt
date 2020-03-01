@@ -1,22 +1,18 @@
 import app.IGameLogic
-import display.graphic.Window
-import display.graphic.BasicShapes
-import display.graphic.Color
-import display.graphic.Renderer
-import display.graphic.Texture
-import engine.FreeBody
+import display.graphic.*
+import engine.freeBody.FreeBody
 import engine.GameState
-import engine.Planet
-import engine.Vehicle
+import engine.freeBody.Planet
+import engine.freeBody.Vehicle
+import engine.motion.Director
 import org.jbox2d.collision.shapes.CircleShape
 import org.jbox2d.collision.shapes.PolygonShape
-import org.jbox2d.collision.shapes.Shape
 import org.jbox2d.common.Vec2
-import org.jbox2d.dynamics.*
+import org.jbox2d.dynamics.World
 import org.lwjgl.glfw.GLFW
 import kotlin.math.PI
-import kotlin.math.pow
-import kotlin.streams.toList
+import kotlin.math.cos
+import kotlin.math.sin
 
 class AppLogic : IGameLogic {
 
@@ -28,102 +24,41 @@ class AppLogic : IGameLogic {
     private lateinit var pavement: Texture
     private lateinit var white_pixel: Texture
 
-    val gameState = GameState()
+    private val gameState = GameState()
 
-    val world: World
-    val timeStep = 1f / 60f
-    val velocityIterations = 8
-    val positionIterations = 3
+    private val world: World = World(Vec2(0f, 0f))
+    private val timeStep = 1f / 60f
+    private val velocityIterations = 8
+    private val positionIterations = 3
+//    var lastTime = System.currentTimeMillis()
 
     init {
-        val terra = Planet("terra", .0, .0, .0, 0.0, -40.0, -.1, 800.0, radius = 60.0, restitution = 0.3)
-        val luna = Planet("luna", -270.0, .0, .0, -60.0, 260.0, .5, 100.0, radius = 25.0, restitution = 0.5)
-        val alice = Vehicle("alice", 270.0, .0, .0, -60.0, 60.0, .5, 3.0)
+        val terra = Planet.create(world, "terra", 0f, 0f, 0f, -10f, -10f, -.1f, 1800f, 90f, .3f)
+        val luna = Planet.create(world, "luna", 500f, 0f, 0f, 0f, 230f, -2f, 100f, 25f, .5f)
+        val alice = Vehicle.create(world, "alice", 500f, -50f, 0f, -180f, 100f, 0f, 3f)
         gameState.vehicles.add(alice)
         gameState.planets.addAll(listOf(terra, luna))
-        gameState.planets.addAll((0..8).map {
-            Planet(
-                "$it body",
-                100.0 * it - 650.0,
-                100.0 * it - 250.0,
-                .0,
-                .0,
-                .0,
-                15.0,
-                0.5,
-                radius = 5.0
-            )
-        })
-
-        world = World(Vec2(0f, 0f))
-
-        val allFreeBodies = gameState.planets.union(gameState.vehicles)
-        allFreeBodies.forEach {
-            val bodyDef = BodyDef()
-            bodyDef.type = BodyType.DYNAMIC
-            bodyDef.position.set(it.motion.location.x.toFloat(), it.motion.location.y.toFloat())
-            val shapeBox = CircleShape()
-            shapeBox.radius = it.radius.toFloat()
-
-            val fixtureDef = FixtureDef()
-            fixtureDef.shape = shapeBox
-            fixtureDef.density = (it.mass / (PI * it.radius.pow(2))).toFloat()
-            fixtureDef.friction = .3f
-            fixtureDef.restitution = it.restitution.toFloat()
-
-            val worldBody = world.createBody(bodyDef)
-            worldBody.createFixture(fixtureDef)
-
-            worldBody.applyForceToCenter(
-                Vec2(
-                    it.motion.velocity.dx.toFloat() * worldBody.mass * 9.81f,
-                    it.motion.velocity.dy.toFloat() * worldBody.mass * 9.81f
+        gameState.planets.addAll((0..50)
+            .withIndex()
+            .map { (i, _) ->
+                val ratio = (2 * PI * 0.92 * i).toFloat()
+                val radius = 250
+                floatArrayOf(
+                    (i + radius) * cos(ratio),
+                    (i + radius) * sin(ratio),
+                    i.toFloat()
                 )
-            )
-
-            worldBody.applyAngularImpulse(it.motion.velocity.dh.toFloat() * worldBody.inertia)
-
-            it.shapeBox = shapeBox
-            it.worldBody = worldBody
-        }
-
-/*        val groundBodyDef = BodyDef()
-        groundBodyDef.position.set(0f, -100f)
-        groundBox = PolygonShape()
-        groundBox.setAsBox(250f, 10f)
-        groundBody = world.createBody(groundBodyDef)
-        groundBody.createFixture(groundBox, 0f)
-
-        val bodyDef = BodyDef()
-        bodyDef.type = BodyType.DYNAMIC
-        bodyDef.position.set(0f, 0f)
-        dynamicBox = PolygonShape()
-        dynamicBox.setAsBox(5f, 50f)
-        val fixtureDef1 = FixtureDef()
-        fixtureDef1.shape = dynamicBox
-        fixtureDef1.density = 1f
-        fixtureDef1.friction = .5f
-        fixtureDef1.restitution = .7f
-
-        body = world.createBody(bodyDef)
-        body.createFixture(fixtureDef1)
-        body.applyTorque(11000000f)
-
-        val circleDef = BodyDef()
-        circleDef.type = BodyType.DYNAMIC
-        circleDef.position.set(0f, 0f)
-        circleBox = CircleShape()
-        circleBox.radius = 30f
-
-        val fixtureDef = FixtureDef()
-        fixtureDef.shape = circleBox
-        fixtureDef.density = 1f
-        fixtureDef.friction = .9f
-        fixtureDef.restitution = .7f
-
-        circle = world.createBody(circleDef)
-        circle.createFixture(fixtureDef)
-        circle.applyTorque(-100000000f)*/
+            }
+            .map {
+                val direction = Director.getDirection(-it[0], -it[1]) + PI * .5f
+                val speed = 400f
+                Planet.create(
+                    world, "${it[2].toInt()}", it[0], it[1], 0f,
+                    cos(direction).toFloat() * speed,
+                    sin(direction).toFloat() * speed,
+                    .5f, 0.3f * it[2].rem(6f), 4f + it[2].rem(6f)
+                )
+            })
     }
 
     @Throws(Exception::class)
@@ -146,6 +81,7 @@ class AppLogic : IGameLogic {
         if (!paused) {
             gameState.tickClock(world, timeStep, velocityIterations, positionIterations)
         }
+
     }
 
     override fun render(window: Window) {
@@ -155,21 +91,24 @@ class AppLogic : IGameLogic {
         allFreeBodies.forEach { drawTrail(it) }
         allFreeBodies.forEach { drawFreeBody(it) }
 //        allFreeBodies.forEach { drawDebugForces(it) }
+
+//        val end = System.currentTimeMillis()
+//        renderer.drawText("${(1000f / (end - lastTime + 0.1)).roundToInt().toString().padStart(2, '0')}fps", 450f, 450f)
+//        lastTime = end
     }
 
     private fun drawDebugForces(freeBody: FreeBody) {
-        val location = freeBody.motion.location
-        val x = location.x.toFloat()
-        val y = location.y.toFloat()
-        val accelerationX = freeBody.motion.debugLastAcceleration.ddx.toFloat()
-        val accelerationY = freeBody.motion.debugLastAcceleration.ddy.toFloat()
+        val x = freeBody.worldBody.position.x
+        val y = freeBody.worldBody.position.y
+        val accelerationX = freeBody.worldBody.m_force.x
+        val accelerationY = freeBody.worldBody.m_force.y
 
         val multiplier = 2000f
         val linePoints = listOf(
             x,
             y,
-            x + multiplier * accelerationX,
-            y + multiplier * accelerationY
+            x + accelerationX * multiplier,
+            y + accelerationY * multiplier
         )
         val triangleStripPoints = BasicShapes.getTriangleStripPoints(linePoints, 2f)
         val arrowHeadPoints = BasicShapes.getArrowHeadPoints(linePoints)
@@ -179,24 +118,19 @@ class AppLogic : IGameLogic {
         ).toFloatArray()
 
         white_pixel.bind()
-        renderer.drawStrip(data)
+//        renderer.drawStrip(data)
 
-        renderer.drawText(
-            freeBody.id,
-            freeBody.motion.location.x.toFloat(),
-            freeBody.motion.location.y.toFloat(),
-            Color.WHITE
-        )
+        renderer.drawText(freeBody.id, x, y, Color.WHITE)
     }
 
     private fun drawTrail(freeBody: FreeBody) {
-        val linePoints = freeBody.motion.trailers.stream().toList()
+        val linePoints = freeBody.motion.trailers
+            .chunked(2)
             .chunked(2)
             .filter { it.size > 1 }
             .flatMap {
-                val a = it[0].location
-                val b = it[1].location
-                listOf(a.x.toFloat(), a.y.toFloat(), b.x.toFloat(), b.y.toFloat())
+                val (a, b) = it
+                listOf(a[0], a[1], b[0], b[1])
             }
         val data = getLineFromPoints(linePoints, Color(0.4f, 0.7f, 1f, 0.5f), Color.TRANSPARENT, 2f, 0f)
 
@@ -223,23 +157,40 @@ class AppLogic : IGameLogic {
             freeBody is Planet -> marble_earth.bind()
             else -> white_pixel.bind()
         }
-        val data3 = BasicShapes.polygon30.chunked(2)
-            .flatMap {
-                listOf(
-                    it[0], it[1], 0f,
-                    1f, 1f, 1f, 1f,
-                    it[0] / 2 - 0.5f, it[1] / 2 - 0.5f
-                )
-            }
-            .toFloatArray()
+
+        val textureScale = when {
+            freeBody.shapeBox is CircleShape && freeBody.radius <= 30f -> 1.2f
+            freeBody.shapeBox is CircleShape -> 1f
+            freeBody.shapeBox is PolygonShape -> .02f
+            else -> 1f
+        }
+
+        val data3 = when (freeBody.shapeBox) {
+            is CircleShape -> BasicShapes.polygon30.chunked(2)
+            is PolygonShape -> (freeBody.shapeBox as PolygonShape).vertices
+                .flatMap { listOf(it.x, it.y) }.chunked(2)
+            else -> listOf()
+        }.flatMap {
+            listOf(
+                it[0], it[1], 0f,
+                1f, 1f, 1f, 1f,
+                (it[0] / 2 - 0.5f) * textureScale, (it[1] / 2 - 0.5f) * textureScale
+            )
+        }.toFloatArray()
+
+        val scale = when {
+            freeBody.shapeBox is CircleShape -> freeBody.shapeBox.radius
+            freeBody.shapeBox is PolygonShape -> 1f
+            else -> 1f
+        }
 
         renderer.drawShape(
             data3,
-            freeBody.worldBody!!.position.x.toDouble(),
-            freeBody.worldBody!!.position.y.toDouble(),
-            freeBody.worldBody!!.angle.toDouble(),
-            freeBody.shapeBox!!.radius.toDouble(),
-            freeBody.shapeBox!!.radius.toDouble()
+            freeBody.worldBody.position.x,
+            freeBody.worldBody.position.y,
+            freeBody.worldBody.angle,
+            scale,
+            scale
         )
     }
 

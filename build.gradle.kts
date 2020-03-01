@@ -4,6 +4,12 @@ plugins {
     kotlin("jvm") version "1.3.41"
 }
 
+kotlin {
+    experimental {
+        coroutines = org.jetbrains.kotlin.gradle.dsl.Coroutines.ENABLE
+    }
+}
+
 group = "blaarkies"
 version = "0.0-SNAPSHOT"
 
@@ -24,6 +30,7 @@ tasks.test {
 
 dependencies {
     implementation(kotlin("stdlib-jdk8"))
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.3")
     testImplementation("org.junit.jupiter:junit-jupiter:5.5.2")
 
     implementation("org.jbox2d:jbox2d-library:2.2.1.1")

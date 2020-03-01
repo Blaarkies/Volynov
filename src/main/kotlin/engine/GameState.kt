@@ -1,8 +1,9 @@
 package engine
 
 import display.CameraView
+import engine.freeBody.Planet
+import engine.freeBody.Vehicle
 import engine.motion.Motion
-import engine.physics.Contact
 import engine.physics.Gravity
 import org.jbox2d.dynamics.World
 
@@ -20,23 +21,8 @@ class GameState {
     private val locationTickables
         get() = vehicles + planets
 
-    private fun tickLocationChanges() {
-        Motion.addLocationChanges(locationTickables)
-    }
-
-    private fun tickVelocityChanges() {
-        Motion.addVelocityChanges(locationTickables)
-    }
-
     private fun tickGravityChanges() {
         Gravity.addGravityForces(locationTickables)
-    }
-
-    private fun tickCollisionChanges() {
-        Contact.addCollisionForces(locationTickables)
-    }
-
-    private fun tickFrictionChanges() {
     }
 
     fun tickClock(
@@ -51,11 +37,5 @@ class GameState {
         world.step(timeStep, velocityIterations, positionIterations)
 
         Motion.addNewTrailers(locationTickables.filter { it.radius > 10 })
-
-//        tickLocationChanges()
-//        tickGravityChanges()
-//        tickCollisionChanges()
-//            tickFrictionChanges()
-//        tickVelocityChanges()
     }
 }

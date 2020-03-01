@@ -33,6 +33,11 @@ object Utils {
         return (value * multiplier).roundToInt() / multiplier
     }
 
+    fun roundFloat(value: Float, decimals: Int = 2): Float {
+        val multiplier = 10.0.pow(decimals.toDouble())
+        return (value * multiplier).roundToInt() / multiplier.toFloat()
+    }
+
     val radianToDegree = Math.toDegrees(1.0).toFloat()
 
 }

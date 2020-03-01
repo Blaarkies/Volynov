@@ -1,63 +1,35 @@
 package engine.motion
 
-import engine.FreeBody
-import java.util.*
+import engine.freeBody.FreeBody
 
+class Motion(val trailers: MutableList<Float> = mutableListOf(),
+             private var trailerQuantity: Int = 80) {
 
-class Motion(
-    var location: Location = Location(),
-    var velocity: Velocity = Velocity(),
-    var acceleration: Acceleration = Acceleration(),
-    var trailers: Queue<Trailer> = LinkedList(),
-    var trailerQuantity: Int = 80,
+    private var lastTrailer: Array<Float>? = null
 
-    var debugLastAcceleration: Acceleration = Acceleration(acceleration)
-) {
-
-    private var lastTrailer: Trailer = Trailer(location)
-
-    init {
-        trailers.add(lastTrailer)
-    }
-
-    fun updateLocationChanges() {
-        location.add(velocity.dx, velocity.dy, velocity.dh)
-        addNewTrailer()
-    }
-
-    fun updateVelocityChanges() {
-        velocity.add(acceleration.ddx, acceleration.ddy, acceleration.ddh)
-        debugLastAcceleration = Acceleration(acceleration)
-        acceleration.remove()
-    }
-
-    private fun addNewTrailer() {
-        val distance = location.getDistance(lastTrailer.location)
+    fun addNewTrailer(x: Float, y: Float) {
+        if (lastTrailer == null) {
+            lastTrailer = arrayOf(x, y)
+            return
+        }
+        val distance = Director.getDistance(x, y, lastTrailer!![0], lastTrailer!![1])
         if (distance > 5) {
-            val nowTrailer = Trailer(location)
+            val nowTrailer = arrayOf(x, y)
             lastTrailer = nowTrailer
+            trailers.addAll(nowTrailer)
 
-            trailers.add(nowTrailer)
             if (trailers.size > trailerQuantity) {
-                trailers.poll()
+                trailers.removeAt(0)
+                trailers.removeAt(0)
             }
         }
     }
 
     companion object {
 
-        fun addLocationChanges(freeBodies: List<FreeBody>) {
-            freeBodies.forEach { it.motion.updateLocationChanges() }
-        }
-
-        fun addVelocityChanges(freeBodies: List<FreeBody>) {
-            freeBodies.forEach { it.motion.updateVelocityChanges() }
-        }
-
         fun addNewTrailers(freeBodies: List<FreeBody>) {
             freeBodies.forEach {
-                it.motion.location = it.worldBody!!.position.let { Location(it.x.toDouble(), it.y.toDouble()) }
-                it.motion.addNewTrailer()
+                it.motion.addNewTrailer(it.worldBody.position.x, it.worldBody.position.y)
             }
         }
 
