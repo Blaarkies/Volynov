@@ -2,20 +2,20 @@ package utilities
 
 class CustomTimer {
 
-    var lastLoopTime = 0.0
+    var lastLoopTime = 0f
         private set
 
     fun init() {
         lastLoopTime = time
     }
 
-    val time: Double
-        get() = System.nanoTime() / 1000000000.0
+    val time: Float
+        get() = System.nanoTime() / 1_000_000_000f
 
     val elapsedTime: Float
         get() {
             val time = time
-            val elapsedTime = (time - lastLoopTime).toFloat()
+            val elapsedTime = (time - lastLoopTime)
             lastLoopTime = time
             return elapsedTime
         }

@@ -7,29 +7,23 @@ import kotlin.math.sin
 
 object BasicShapes {
 
-    val polygon9 = (0 until 9)
-        .flatMap {
-            val t = 2.0 * PI * (it.toFloat() / 9)
-            listOf(cos(t).toFloat(), sin(t).toFloat())
-        }
+    val polygon5 = getPolygonVertices(5)
 
-    val polygon15 = (0 until 15)
-        .flatMap {
-            val t = 2.0 * PI * (it.toFloat() / 15)
-            listOf(cos(t).toFloat(), sin(t).toFloat())
-        }
+    val polygon7 = getPolygonVertices(7)
 
-    val polygon30 = (0 until 30)
-        .flatMap {
-            val t = 2.0 * PI * (it.toFloat() / 30)
-            listOf(cos(t).toFloat(), sin(t).toFloat())
-        }
+    val polygon9 = getPolygonVertices(9)
+
+    val polygon15 = getPolygonVertices(15)
+
+    val polygon30 = getPolygonVertices(30)
+
+    private fun getPolygonVertices(corners: Int): List<Float> = (0 until corners).flatMap {
+        val t = 2 * PI * (it / corners.toFloat())
+        listOf(cos(t).toFloat(), sin(t).toFloat())
+    }
 
     fun getArrowHeadPoints(linePoints: List<Float>): List<Float> {
-        val ax = linePoints[0]
-        val ay = linePoints[1]
-        val bx = linePoints[2]
-        val by = linePoints[3]
+        val (ax, ay, bx, by) = linePoints
 
         val normalY = bx - ax
         val normalX = -by + ay
@@ -61,10 +55,7 @@ object BasicShapes {
             .chunked(4)
             .withIndex()
             .flatMap { (index, chunk) ->
-                val ax = chunk[0]
-                val ay = chunk[1]
-                val bx = chunk[2]
-                val by = chunk[3]
+                val (ax, ay, bx, by) = chunk
 
                 val normalY = bx - ax
                 val normalX = -by + ay

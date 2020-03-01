@@ -241,10 +241,10 @@ class Matrix4f {
             return translation
         }
 
-        fun rotate(angle: Float, x: Float, y: Float, z: Float): Matrix4f {
-            var x = x
-            var y = y
-            var z = z
+        fun rotate(angle: Float, _x: Float, _y: Float, _z: Float): Matrix4f {
+            var x = _x
+            var y = _y
+            var z = _z
             val rotation = Matrix4f()
             val c = Math.cos(Math.toRadians(angle.toDouble())).toFloat()
             val s = Math.sin(Math.toRadians(angle.toDouble())).toFloat()

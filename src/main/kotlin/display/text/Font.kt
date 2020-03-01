@@ -11,12 +11,15 @@ import java.awt.geom.AffineTransform
 import java.awt.image.AffineTransformOp
 import java.awt.image.BufferedImage
 import java.io.InputStream
+import kotlin.math.hypot
 import java.awt.Color as AwtColor
+
 
 class Font constructor(font: Font = Font(MONOSPACED, BOLD, 32), antiAlias: Boolean = true) {
 
     private val glyphs: MutableMap<Char, Glyph>
-    private val texture: Texture
+    private var fontBitMapShadow: Texture = Texture()
+    private val fontBitMap: Texture
     private var fontHeight = 0
 
     constructor(antiAlias: Boolean) : this(Font(MONOSPACED, PLAIN, 16), antiAlias)
@@ -25,49 +28,43 @@ class Font constructor(font: Font = Font(MONOSPACED, BOLD, 32), antiAlias: Boole
 
     constructor(size: Int, antiAlias: Boolean) : this(Font(MONOSPACED, PLAIN, size), antiAlias)
 
-    constructor(`in`: InputStream?, size: Int) : this(`in`, size, true)
+    constructor(inputStream: InputStream, size: Int) : this(inputStream, size, true)
 
-    constructor(`in`: InputStream?, size: Int, antiAlias: Boolean) : this(
-        createFont(TRUETYPE_FONT, `in`).deriveFont(
+    constructor(inputStream: InputStream, size: Int, antiAlias: Boolean) : this(
+        createFont(TRUETYPE_FONT, inputStream).deriveFont(
             PLAIN,
             size.toFloat()
         ), antiAlias
     )
 
-    private fun createFontTexture(font: Font, antiAlias: Boolean): Texture {
+    private fun createFontTexture(font: Font, antiAlias: Boolean): List<Texture> {
         var imageWidth = 0
         var imageHeight = 0
 
-        for (i in 32..255) {
-            if (i == 127) {
-                continue
+        (32..255).filter { it != 127 }
+            .mapNotNull { createCharImage(font, it.toChar(), antiAlias) }
+            .forEach {
+                imageWidth += it.width
+                imageHeight = imageHeight.coerceAtLeast(it.height)
             }
-            val c = i.toChar()
-            val ch = createCharImage(font, c, antiAlias)
-                ?: continue
-            imageWidth += ch.width
-            imageHeight = imageHeight.coerceAtLeast(ch.height)
-        }
         fontHeight = imageHeight
 
         var image = BufferedImage(imageWidth, imageHeight, BufferedImage.TYPE_INT_ARGB)
         val g = image.createGraphics()
         var x = 0
 
-        for (i in 32..255) {
-            if (i == 127) {
-                continue
-            }
-            val c = i.toChar()
-            val charImage = createCharImage(font, c, antiAlias) ?: continue
-            val charWidth = charImage.width
-            val charHeight = charImage.height
+        (32..255).filter { it != 127 }
+            .forEach {
+                val c = it.toChar()
+                val charImage = createCharImage(font, c, antiAlias) ?: return@forEach
+                val charWidth = charImage.width
+                val charHeight = charImage.height
 
-            val ch = Glyph(charWidth, charHeight, x, image.height - charHeight, 0f)
-            g.drawImage(charImage, x, 0, null)
-            x += ch.width
-            glyphs[c] = ch
-        }
+                val ch = Glyph(charWidth, charHeight, x, image.height - charHeight, 0f)
+                g.drawImage(charImage, x, 0, null)
+                x += ch.width
+                glyphs[c] = ch
+            }
 
         val transform = AffineTransform.getScaleInstance(1.0, -1.0)
         transform.translate(.0, -image.height.toDouble())
@@ -77,31 +74,70 @@ class Font constructor(font: Font = Font(MONOSPACED, BOLD, 32), antiAlias: Boole
         operation.filter(image, outImage)
         image = outImage
 
+        val shadowTexture = createShadowTexture(image)
+
+        val width = image.width
+        val height = image.height
+        val pixels = IntArray(width * height)
+        image.getRGB(0, 0, width, height, pixels, 0, width)
+        val buffer = MemoryUtil.memAlloc(width * height * 4)
+
+        val bytePixels = pixels.flatMap {
+            listOf(
+                (it shr 16 and 0xFF).toByte(),/* Red component 0xAARRGGBB >> 16 = 0x0000AARR */
+                (it shr 8 and 0xFF).toByte(),/* Green component 0xAARRGGBB >> 8 = 0x00AARRGG */
+                (it and 0xFF).toByte(),/* Blue component 0xAARRGGBB >> 0 = 0xAARRGGBB */
+                (it shr 24 and 0xFF).toByte()/* Alpha component 0xAARRGGBB >> 24 = 0x000000AA */
+            )
+        }.toByteArray()
+        buffer.put(bytePixels)
+        buffer.flip()
+
+        val fontTexture = Texture.createTexture(width, height, buffer)
+        MemoryUtil.memFree(buffer)
+        return listOf(fontTexture, shadowTexture)
+    }
+
+    private fun createShadowTexture(image: BufferedImage): Texture {
         val width = image.width
         val height = image.height
         val pixels = IntArray(width * height)
         image.getRGB(0, 0, width, height, pixels, 0, width)
 
-        val buffer = MemoryUtil.memAlloc(width * height * 4)
-        for (i in 0 until height) {
-            for (j in 0 until width) {
-                /* Pixel as RGBA: 0xAARRGGBB */
-                val pixel = pixels[i * width + j]
-                /* Red component 0xAARRGGBB >> 16 = 0x0000AARR */
-                buffer.put((pixel shr 16 and 0xFF).toByte())
-                /* Green component 0xAARRGGBB >> 8 = 0x00AARRGG */
-                buffer.put((pixel shr 8 and 0xFF).toByte())
-                /* Blue component 0xAARRGGBB >> 0 = 0xAARRGGBB */
-                buffer.put((pixel and 0xFF).toByte())
-                /* Alpha component 0xAARRGGBB >> 24 = 0x000000AA */
-                buffer.put((pixel shr 24 and 0xFF).toByte())
+        val imageLines = pixels.toList()
+            .chunked(width)
+            .map { it.map { pixel -> pixel shr 24 and 0xFF } }
+
+        val radius = 2
+        val kernel = (-radius until +radius).flatMap { i -> (-radius until +radius).map { arrayOf(it, i) } }
+            .filter { (i, j) -> hypot(i.toFloat(), j.toFloat()) <= radius }
+
+        val dilatedImage = (0 until height).flatMap { i -> (0 until width).map { arrayOf(it, i) } }
+            .map { (i, j) ->
+
+                val isInk = kernel.filter { (k, l) ->
+                    (i + k) > 0
+                            && (i + k) < width
+                            && (j + l) > 0
+                            && (j + l) < height
+                }.any { (k, l) -> imageLines[j + l][i + k] > 0 }
+                if (isInk) 255 else 0
             }
-        }
+        val buffer = MemoryUtil.memAlloc(width * height * 4)
+        val bytePixels = dilatedImage.flatMap {
+            listOf(
+                255.toByte(),/* Red component 0xAARRGGBB >> 16 = 0x0000AARR */
+                255.toByte(),/* Green component 0xAARRGGBB >> 8 = 0x00AARRGG */
+                255.toByte(),/* Blue component 0xAARRGGBB >> 0 = 0xAARRGGBB */
+                it.toByte()/* Alpha component 0xAARRGGBB >> 24 = 0x000000AA */
+            )
+        }.toByteArray()
+        buffer.put(bytePixels)
         buffer.flip()
 
-        val fontTexture = Texture.createTexture(width, height, buffer)
+        val shadowTexture = Texture.createTexture(width, height, buffer)
         MemoryUtil.memFree(buffer)
-        return fontTexture
+        return shadowTexture
     }
 
     private fun createCharImage(font: Font, c: Char, antiAlias: Boolean): BufferedImage? {
@@ -172,47 +208,61 @@ class Font constructor(font: Font = Font(MONOSPACED, BOLD, 32), antiAlias: Boole
 
     fun drawText(renderer: Renderer, text: CharSequence, x: Float, y: Float, c: Color) {
         val textHeight = getHeight(text)
+        drawLetters(fontBitMapShadow, x, y, textHeight, renderer, text, Color.BLACK)
+        drawLetters(fontBitMap, x, y, textHeight, renderer, text, c)
+    }
+
+    private fun drawLetters(
+        texture: Texture,
+        x: Float,
+        y: Float,
+        textHeight: Int,
+        renderer: Renderer,
+        text: CharSequence,
+        c: Color
+    ) {
         var drawX = x
         var drawY = y
         if (textHeight > fontHeight) {
             drawY += textHeight - fontHeight.toFloat()
         }
-        texture.bind()
+
         renderer.begin()
-        for (element in text) {
-            if (element == '\n') {
+        text.forEach {
+            if (it == '\n') {
                 drawY -= fontHeight.toFloat()
                 drawX = x
-                continue
+                return@forEach
             }
-            if (element == '\r' || element.isWhitespace()) {
-                continue
+            if (it == '\r' || it.isWhitespace()) {
+                return@forEach
             }
-            val g = glyphs[element]!!
-            renderer.drawTextureRegion(
-                texture,
-                drawX - g.width.toFloat() * 0.5f + 2f,
-                drawY - g.height.toFloat() * 0.5f + 2f,
-                g.x.toFloat(),
-                g.y.toFloat(),
-                g.width.toFloat(),
-                g.height.toFloat(),
-                Color.BLACK
-            )
-
-            renderer.drawTextureRegion(
-                texture,
-                drawX - g.width.toFloat() * 0.5f,
-                drawY - g.height.toFloat() * 0.5f,
-                g.x.toFloat(),
-                g.y.toFloat(),
-                g.width.toFloat(),
-                g.height.toFloat(),
-                c
-            )
-            drawX += g.width.toFloat()
+            val glyph = glyphs[it]!!
+            drawTextPosition(texture, renderer, drawX, drawY, glyph, c)
+            drawX += glyph.width.toFloat()
         }
         renderer.end()
+    }
+
+    private fun drawTextPosition(
+        texture: Texture,
+        renderer: Renderer,
+        drawX: Float,
+        drawY: Float,
+        glyph: Glyph,
+        c: Color
+    ) {
+        texture.bind()
+        renderer.drawTextureRegion(
+            texture,
+            drawX - glyph.width.toFloat() * 0.5f,
+            drawY - glyph.height.toFloat() * 0.5f,
+            glyph.x.toFloat(),
+            glyph.y.toFloat(),
+            glyph.width.toFloat(),
+            glyph.height.toFloat(),
+            c
+        )
     }
 
     fun drawText(renderer: Renderer, text: CharSequence, x: Float, y: Float) {
@@ -220,11 +270,25 @@ class Font constructor(font: Font = Font(MONOSPACED, BOLD, 32), antiAlias: Boole
     }
 
     fun dispose() {
-        texture.delete()
+        fontBitMap.delete()
     }
 
     init {
         glyphs = HashMap()
-        texture = createFontTexture(font, antiAlias)
+        val (texture, shadowTexture) = createFontTexture(font, antiAlias)
+        fontBitMap = texture
+        fontBitMapShadow = shadowTexture
+    }
+
+    companion object {
+
+        fun deepCopy(bufferedImage: BufferedImage): BufferedImage {
+            val raster = bufferedImage.copyData(null)
+            return BufferedImage(
+                bufferedImage.colorModel,
+                raster,
+                bufferedImage.colorModel.isAlphaPremultiplied, null
+            )
+        }
     }
 }

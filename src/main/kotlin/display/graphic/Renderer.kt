@@ -10,6 +10,7 @@ import org.lwjgl.opengl.GL20.GL_FRAGMENT_SHADER
 import org.lwjgl.opengl.GL20.GL_VERTEX_SHADER
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.system.MemoryUtil
+import utilities.Utils
 import java.awt.FontFormatException
 import java.io.FileInputStream
 import java.io.IOException
@@ -36,7 +37,7 @@ class Renderer {
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
         font = try {
-            Font(FileInputStream("src\\main\\resources\\Gothic3.ttf"), 16)
+            Font(FileInputStream("src\\main\\resources\\fonts\\ALBMT___.TTF"), 16)
         } catch (ex: FontFormatException) {
             Logger.getLogger(Renderer::class.java.name).log(Level.CONFIG, null, ex)
             Font()
@@ -180,33 +181,33 @@ class Renderer {
 
     fun drawShape(
         data: FloatArray,
-        x: Double = .0,
-        y: Double = .0,
-        h: Double = .0,
-        scaleX: Double = 1.0,
-        scaleY: Double = 1.0
+        x: Float = 0f,
+        y: Float = 0f,
+        h: Float = 0f,
+        vertexScaleX: Float = 1f,
+        vertexScaleY: Float = 1f
     ) {
-        drawEntity(data, x, y, h, scaleX, scaleY, GL_TRIANGLE_FAN)
+        drawEntity(data, x, y, h, vertexScaleX, vertexScaleY, drawType = GL_TRIANGLE_FAN)
     }
 
     fun drawStrip(
         data: FloatArray,
-        x: Double = .0,
-        y: Double = .0,
-        h: Double = .0,
-        scaleX: Double = 1.0,
-        scaleY: Double = 1.0
+        x: Float = 0f,
+        y: Float = 0f,
+        h: Float = 0f,
+        scaleX: Float = 1f,
+        scaleY: Float = 1f
     ) {
-        drawEntity(data, x, y, h, scaleX, scaleY, GL_TRIANGLE_STRIP)
+        drawEntity(data, x, y, h, scaleX, scaleY, drawType = GL_TRIANGLE_STRIP)
     }
 
     private fun drawEntity(
         data: FloatArray,
-        x: Double,
-        y: Double,
-        h: Double,
-        scaleX: Double,
-        scaleY: Double,
+        x: Float,
+        y: Float,
+        h: Float,
+        vertexScaleX: Float,
+        vertexScaleY: Float,
         drawType: Int
     ) {
         begin()
@@ -219,8 +220,8 @@ class Renderer {
 
         setUniformInputs(
             0f, 0f,
-            x.toFloat(), y.toFloat(), 0f, h.toFloat(),
-            scaleX.toFloat(), scaleY.toFloat()
+            x, y, 0f, h,
+            vertexScaleX, vertexScaleY
         )
         flush(drawType)
         end()
@@ -313,15 +314,15 @@ class Renderer {
         y: Float = 0f,
         z: Float = 0f,
         h: Float = 0f,
-        scaleX: Float = 1f,
-        scaleY: Float = 1f
+        vertexScaleX: Float = 1f,
+        vertexScaleY: Float = 1f
     ) {
-        val uniTex = program!!.getUniformLocation("texImage")
-        program!!.setUniform(uniTex, 0)
+//        val uniTex = program!!.getUniformLocation("texImage")
+//        program!!.setUniform(uniTex, 0)
 
         val model = Matrix4f.translate(x, y, z)
-            .multiply(Matrix4f.rotate(h, 0f, 0f, 1f))
-            .multiply(Matrix4f.scale(scaleX, scaleY, 1f))
+            .multiply(Matrix4f.rotate(h * Utils.radianToDegree, 0f, 0f, 1f))
+            .multiply(Matrix4f.scale(vertexScaleX, vertexScaleY, 1f))
         val uniModel = program!!.getUniformLocation("model")
         program!!.setUniform(uniModel, model)
 

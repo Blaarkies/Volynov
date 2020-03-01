@@ -2,6 +2,17 @@
 <h3>A space artillery game where players aim to destroy each other by firing missiles, high tech payloads, and sabotage equipment at the enemy. All spaceships, planets and warheads are influenced by realistic physics to produce n-body orbits and collisions.</h3>
 
 <br>
+<h6>2020 03 01, First contact, again 
+<br> <i>Added collision and friction physics</i></h6>
+<video width="600" height="600" controls>
+  <source src="https://github.com/Blaarkies/Volynov/blob/master/assets/first_contact.mp4" 
+  type="video/mp4"/>
+    <a href="https://github.com/Blaarkies/Volynov/blob/master/assets/first_contact.mp4">
+    https://github.com/Blaarkies/Volynov/blob/master/assets/first_contact.mp4</a>
+</video>
+<hr>
+
+<br>
 <h6>2020 02 02, Splash of color 
 <br> <i>Added colors, textures, rotations, arrow and text for debugging</i></h6>
 <code>Cyan lines are current acceleration vectors</code>
