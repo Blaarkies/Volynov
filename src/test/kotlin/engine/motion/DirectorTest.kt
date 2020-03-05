@@ -2,7 +2,7 @@ package engine.motion
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import utilities.Utils
+import utility.Common
 import kotlin.math.PI
 
 internal class DirectorTest {
@@ -10,10 +10,10 @@ internal class DirectorTest {
     @Test
     fun distance() {
         val rightPointed = Director.getDistance(0f, 0f, 1f, 1f)
-        assertEquals(1.414f, Utils.roundFloat(rightPointed, 3))
+        assertEquals(1.414f, Common.roundFloat(rightPointed, 3))
 
         val leftPointed = Director.getDistance(0f, 0f, -1f, -1f)
-        assertEquals(1.414f, Utils.roundFloat(leftPointed, 3))
+        assertEquals(1.414f, Common.roundFloat(leftPointed, 3))
     }
 
     @Test

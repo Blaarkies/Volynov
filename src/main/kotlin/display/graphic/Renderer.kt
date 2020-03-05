@@ -10,7 +10,7 @@ import org.lwjgl.opengl.GL20.GL_FRAGMENT_SHADER
 import org.lwjgl.opengl.GL20.GL_VERTEX_SHADER
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.system.MemoryUtil
-import utilities.Utils
+import utility.Common
 import java.awt.FontFormatException
 import java.io.FileInputStream
 import java.io.IOException
@@ -227,33 +227,6 @@ class Renderer {
         end()
     }
 
-    fun getColoredData(
-        points: List<Float>,
-        startColor: Color = Color.WHITE,
-        endColor: Color = startColor
-    ): List<Float> {
-        val pointsLastIndex = points.lastIndex.toFloat() / 2f
-
-        return points
-            .chunked(2)
-            .withIndex()
-            .flatMap { (index, chunk) ->
-                val interpolationDistance = index.toFloat() / pointsLastIndex
-                val color = startColor * interpolationDistance + endColor * (1f - interpolationDistance)
-                listOf(
-                    chunk[0],
-                    chunk[1],
-                    0f, /* pos*/
-                    color.red,
-                    color.green,
-                    color.blue,
-                    color.alpha, /* color*/
-                    0f,
-                    0f /* texture*/
-                )
-            }
-    }
-
     fun dispose() {
         MemoryUtil.memFree(vertices)
         if (vao != null) {
@@ -321,7 +294,7 @@ class Renderer {
 //        program!!.setUniform(uniTex, 0)
 
         val model = Matrix4f.translate(x, y, z)
-            .multiply(Matrix4f.rotate(h * Utils.radianToDegree, 0f, 0f, 1f))
+            .multiply(Matrix4f.rotate(h * Common.radianToDegree, 0f, 0f, 1f))
             .multiply(Matrix4f.scale(vertexScaleX, vertexScaleY, 1f))
         val uniModel = program!!.getUniformLocation("model")
         program!!.setUniform(uniModel, model)

@@ -1,7 +1,7 @@
 package display.graphic
 
 import org.lwjgl.opengl.GL20.*
-import utilities.Utils
+import utility.Common
 
 class Shader(type: Int) {
 
@@ -37,7 +37,7 @@ class Shader(type: Int) {
         }
 
         fun loadShader(type: Int, path: String): Shader {
-            val source = Utils.loadResource(path)
+            val source = Common.loadResource(path)
             return createShader(type, source)
         }
     }
