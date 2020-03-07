@@ -11,7 +11,6 @@ import org.jbox2d.dynamics.World
 
 class GameState {
 
-
     var camera = CameraView()
     var vehicles = mutableListOf<Vehicle>()
     var planets = mutableListOf<Planet>()

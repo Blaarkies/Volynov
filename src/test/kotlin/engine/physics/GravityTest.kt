@@ -1,5 +1,7 @@
 package engine.physics
 
+import display.draw.TextureConfig
+import display.graphic.Texture
 import engine.freeBody.Planet
 import org.jbox2d.common.Vec2
 import org.jbox2d.dynamics.World
@@ -34,8 +36,10 @@ internal class GravityTest {
     private fun getGravityForceBetweenPlanetSatellite(sx: Float = 0f, sy: Float = 0f): Vec2 {
         val world = World(Vec2(0f, 0f))
 
-        val terra = Planet.create(world, "terra", sx, sy, 0f, 0f, 0f, 0f, 100f, 10f)
-        val luna = Planet.create(world, "luna", 0f, 0f, 0f, 0f, 0f, 0f, 100f, 10f)
+        val terra = Planet.create(world, "terra", sx, sy, 0f, 0f, 0f, 0f, 100f, 10f,
+            textureConfig = TextureConfig(Texture()))
+        val luna = Planet.create(world, "luna", 0f, 0f, 0f, 0f, 0f, 0f, 100f, 10f,
+            textureConfig = TextureConfig(Texture()))
 
         return Gravity.gravitationalForce(luna, terra)
     }
