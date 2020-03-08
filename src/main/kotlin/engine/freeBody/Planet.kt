@@ -5,7 +5,6 @@ import engine.motion.Motion
 import org.jbox2d.collision.shapes.CircleShape
 import org.jbox2d.collision.shapes.Shape
 import org.jbox2d.dynamics.*
-import kotlin.math.PI
 
 class Planet(
     id: String,
@@ -36,8 +35,8 @@ class Planet(
             val shapeBox = CircleShape()
             shapeBox.radius = radius
 
-            val bodyDef = createBodyDef(BodyType.DYNAMIC, x, y, h)
-            val worldBody = createWorldBody(shapeBox, mass, radius, friction, restitution, world, bodyDef, dx, dy, dh)
+            val bodyDef = createBodyDef(BodyType.DYNAMIC, x, y, h, dx, dy, dh)
+            val worldBody = createWorldBody(shapeBox, mass, radius, friction, restitution, world, bodyDef)
 
             return Planet(id, Motion(), shapeBox, worldBody, radius, textureConfig)
         }

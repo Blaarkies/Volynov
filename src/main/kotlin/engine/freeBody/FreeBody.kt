@@ -26,10 +26,7 @@ open class FreeBody(
             friction: Float,
             restitution: Float,
             world: World,
-            bodyDef: BodyDef,
-            dx: Float,
-            dy: Float,
-            dh: Float
+            bodyDef: BodyDef
         ): Body {
             val fixtureDef = FixtureDef()
             fixtureDef.shape = shapeBox
@@ -40,19 +37,18 @@ open class FreeBody(
             val worldBody = world.createBody(bodyDef)
             worldBody.createFixture(fixtureDef)
 
-            worldBody.applyForceToCenter(
-                Vec2(dx, dy).mulLocal(worldBody.mass * 9.81f)
-            )
-
-            worldBody.applyAngularImpulse(dh * worldBody.inertia)
             return worldBody
         }
 
-        fun createBodyDef(bodyType: BodyType, x: Float, y: Float, h: Float): BodyDef {
+        fun createBodyDef(bodyType: BodyType,
+                          x: Float, y: Float, h: Float,
+                          dx: Float, dy: Float, dh: Float): BodyDef {
             val bodyDef = BodyDef()
             bodyDef.type = bodyType
             bodyDef.position.set(x, y)
             bodyDef.angle = h
+            bodyDef.linearVelocity = Vec2(dx, dy)
+            bodyDef.angularVelocity = dh
             return bodyDef
         }
 

@@ -47,7 +47,7 @@ class Drawer(private val renderer: Renderer, private val textures: TextureHolder
                 val (a, b) = it
                 listOf(a[0], a[1], b[0], b[1])
             }
-        val data = getLineFromPoints(linePoints, Color(0.4f, 0.7f, 1f, 0.5f), Color.TRANSPARENT, 2f, 0f)
+        val data = getLineFromPoints(linePoints, Color(0.4f, 0.7f, 1f, 0.5f), Color.TRANSPARENT, .1f, 0f)
 
         textures.white_pixel.bind()
         renderer.drawStrip(data)

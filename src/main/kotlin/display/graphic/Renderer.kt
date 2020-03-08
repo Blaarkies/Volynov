@@ -304,7 +304,15 @@ class Renderer {
         program!!.setUniform(uniView, view)
 
         if (width * height == 0f) return
-        val projection = Matrix4f.orthographic(-width / 2, width / 2, -height / 2, height / 2, -1f, 1f)
+        val box2dScale = .05f
+        val projection = Matrix4f.orthographic(
+            -width / 2 * box2dScale,
+            width / 2 * box2dScale,
+            -height / 2 * box2dScale,
+            height / 2 * box2dScale,
+            -1f,
+            1f
+        )
         val uniProjection = program!!.getUniformLocation("projection")
         program!!.setUniform(uniProjection, projection)
     }

@@ -13,7 +13,7 @@ class Motion(val trailers: MutableList<Float> = mutableListOf(),
             return
         }
         val distance = Director.getDistance(x, y, lastTrailer!![0], lastTrailer!![1])
-        if (distance > 5) {
+        if (distance > .25f) {
             val nowTrailer = arrayOf(x, y)
             lastTrailer = nowTrailer
             trailers.addAll(nowTrailer)

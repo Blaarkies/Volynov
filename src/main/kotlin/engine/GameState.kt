@@ -7,6 +7,7 @@ import engine.motion.Motion
 import engine.physics.CellLocation
 import engine.physics.Gravity
 import engine.physics.GravityCell
+import org.jbox2d.common.Vec2
 import org.jbox2d.dynamics.World
 
 class GameState {
@@ -43,6 +44,6 @@ class GameState {
         world.step(timeStep, velocityIterations, positionIterations)
 
         tickGravityChanges()
-        Motion.addNewTrailers(tickables.filter { it.radius > 10 })
+        Motion.addNewTrailers(tickables.filter { it.radius > .5f })
     }
 }
