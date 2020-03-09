@@ -1,5 +1,6 @@
 package engine.freeBody
 
+import display.draw.TextureConfig
 import display.graphic.BasicShapes
 import engine.motion.Motion
 import org.jbox2d.collision.shapes.PolygonShape
@@ -12,8 +13,9 @@ class Vehicle(
     motion: Motion,
     shapeBox: Shape,
     worldBody: Body,
-    radius: Float
-) : FreeBody(id, motion, shapeBox, worldBody, radius) {
+    radius: Float,
+    textureConfig: TextureConfig
+) : FreeBody(id, motion, shapeBox, worldBody, radius, textureConfig) {
 
     companion object {
 
@@ -27,20 +29,21 @@ class Vehicle(
             dy: Float,
             dh: Float,
             mass: Float,
-            radius: Float = 13F,
+            radius: Float = .7F,
             restitution: Float = .3f,
-            friction: Float = .6f
+            friction: Float = .6f,
+            textureConfig: TextureConfig
         ): Vehicle {
-            val bodyDef = BodyDef()
-            bodyDef.type = BodyType.DYNAMIC
-            bodyDef.position.set(x, y)
             val shapeBox = PolygonShape()
-            val vertices = BasicShapes.polygon5.chunked(2).map { Vec2(it[0]*radius, it[1]*radius) }.toTypedArray()
+            val vertices = BasicShapes.polygon4.chunked(2).map { Vec2(it[0] * radius, it[1] * radius) }.toTypedArray()
             shapeBox.set(vertices, vertices.size)
 
-            val worldBody = createWorldBody(shapeBox, mass, radius, friction, restitution, world, bodyDef, dx, dy, dh)
+            val bodyDef = createBodyDef(BodyType.DYNAMIC, x, y, h, dx, dy, dh)
+            val worldBody = createWorldBody(shapeBox, mass, radius, friction, restitution, world, bodyDef)
+            textureConfig.chunkedVertices =
+                shapeBox.vertices.flatMap { listOf(it.x / radius, it.y / radius) }.chunked(2)
 
-            return Vehicle(id, Motion(), shapeBox, worldBody, radius)
+            return Vehicle(id, Motion(), shapeBox, worldBody, radius, textureConfig)
         }
 
     }

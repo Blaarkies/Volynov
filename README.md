@@ -4,12 +4,9 @@
 <br>
 <h6>2020 03 01, First contact, again 
 <br> <i>Added collision and friction physics</i></h6>
-<video width="600" height="600" controls>
-  <source src="https://github.com/Blaarkies/Volynov/blob/master/assets/first_contact.mp4" 
-  type="video/mp4"/>
-    <a href="https://github.com/Blaarkies/Volynov/blob/master/assets/first_contact.mp4">
-    https://github.com/Blaarkies/Volynov/blob/master/assets/first_contact.mp4</a>
-</video>
+<a href="https://github.com/Blaarkies/Volynov/blob/master/assets/first_contact.mp4?raw=true">
+<img src="https://github.com/Blaarkies/Volynov/blob/master/assets/first_contact.png"/>
+</a>
 <hr>
 
 <br>

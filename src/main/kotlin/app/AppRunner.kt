@@ -1,6 +1,6 @@
 import app.IGameLogic
 import display.graphic.Window
-import utilities.CustomTimer
+import utility.CustomTimer
 
 class AppRunner(
     windowTitle: String,
@@ -18,7 +18,7 @@ class AppRunner(
 ) : Runnable {
 
     private val targetFps = 60
-    private val targetUps = 120
+    private val targetUps = 60
     private val interval = 1f / targetUps
 
     override fun run() {

@@ -4,7 +4,10 @@ import display.CameraView
 import engine.freeBody.Planet
 import engine.freeBody.Vehicle
 import engine.motion.Motion
+import engine.physics.CellLocation
 import engine.physics.Gravity
+import engine.physics.GravityCell
+import org.jbox2d.common.Vec2
 import org.jbox2d.dynamics.World
 
 class GameState {
@@ -18,11 +21,18 @@ class GameState {
 //    private var stars = mutableListOf<Planet>()
 //    private var warheads = mutableListOf<Planet>()
 
-    private val locationTickables
+    val tickables
         get() = vehicles + planets
 
+    var gravityMap = HashMap<CellLocation, GravityCell>()
+    var resolution = 0f
+
     private fun tickGravityChanges() {
-        Gravity.addGravityForces(locationTickables)
+        Gravity.addGravityForces(tickables)
+            .let { (gravityMap, resolution) ->
+                this.gravityMap = gravityMap
+                this.resolution = resolution
+            }
     }
 
     fun tickClock(
@@ -31,11 +41,9 @@ class GameState {
         velocityIterations: Int,
         positionIterations: Int
     ) {
-
-        tickGravityChanges()
-
         world.step(timeStep, velocityIterations, positionIterations)
 
-        Motion.addNewTrailers(locationTickables.filter { it.radius > 10 })
+        tickGravityChanges()
+        Motion.addNewTrailers(tickables.filter { it.radius > .5f })
     }
 }

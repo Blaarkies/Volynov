@@ -1,13 +1,10 @@
 package engine.freeBody
 
+import display.draw.TextureConfig
 import engine.motion.Motion
-import org.jbox2d.collision.shapes.CircleShape
 import org.jbox2d.collision.shapes.Shape
 import org.jbox2d.common.Vec2
-import org.jbox2d.dynamics.Body
-import org.jbox2d.dynamics.BodyDef
-import org.jbox2d.dynamics.FixtureDef
-import org.jbox2d.dynamics.World
+import org.jbox2d.dynamics.*
 import kotlin.math.PI
 import kotlin.math.pow
 
@@ -16,7 +13,8 @@ open class FreeBody(
     var motion: Motion,
     var shapeBox: Shape,
     var worldBody: Body,
-    var radius: Float
+    var radius: Float,
+    val textureConfig: TextureConfig
 ) {
 
     companion object {
@@ -28,10 +26,7 @@ open class FreeBody(
             friction: Float,
             restitution: Float,
             world: World,
-            bodyDef: BodyDef,
-            dx: Float,
-            dy: Float,
-            dh: Float
+            bodyDef: BodyDef
         ): Body {
             val fixtureDef = FixtureDef()
             fixtureDef.shape = shapeBox
@@ -42,15 +37,19 @@ open class FreeBody(
             val worldBody = world.createBody(bodyDef)
             worldBody.createFixture(fixtureDef)
 
-            worldBody.applyForceToCenter(
-                Vec2(
-                    dx * worldBody.mass * 9.81f,
-                    dy * worldBody.mass * 9.81f
-                )
-            )
-
-            worldBody.applyAngularImpulse(dh * worldBody.inertia)
             return worldBody
+        }
+
+        fun createBodyDef(bodyType: BodyType,
+                          x: Float, y: Float, h: Float,
+                          dx: Float, dy: Float, dh: Float): BodyDef {
+            val bodyDef = BodyDef()
+            bodyDef.type = bodyType
+            bodyDef.position.set(x, y)
+            bodyDef.angle = h
+            bodyDef.linearVelocity = Vec2(dx, dy)
+            bodyDef.angularVelocity = dh
+            return bodyDef
         }
 
     }

@@ -7,6 +7,8 @@ import kotlin.math.sin
 
 object BasicShapes {
 
+    val polygon4 = getPolygonVertices(4)
+
     val polygon5 = getPolygonVertices(5)
 
     val polygon7 = getPolygonVertices(7)
