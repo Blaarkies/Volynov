@@ -3,9 +3,11 @@ package display.draw
 import display.graphic.BasicShapes
 import display.graphic.Color
 import display.graphic.Renderer
+import display.graphic.Texture
 import engine.freeBody.FreeBody
 import engine.physics.CellLocation
 import engine.physics.GravityCell
+import org.jbox2d.common.Vec2
 import java.util.*
 import kotlin.math.PI
 import kotlin.math.sqrt
@@ -39,7 +41,7 @@ class Drawer(private val renderer: Renderer, private val textures: TextureHolder
     }
 
     fun drawTrail(freeBody: FreeBody) {
-        val linePoints = freeBody.motion.trailers
+        val linePoints = (freeBody.motion.trailers + listOf(freeBody.worldBody.position.x, freeBody.worldBody.position.y))
             .chunked(2)
             .chunked(2)
             .filter { it.size > 1 }
@@ -125,6 +127,27 @@ class Drawer(private val renderer: Renderer, private val textures: TextureHolder
                 resolution * sqrt1
             )
         }
+    }
+
+    fun drawPicture(texture: Texture, scale: Vec2 = Vec2(1f, 1f), offset: Vec2 = Vec2()) {
+        texture.bind()
+
+        val left = -texture.width / 2f
+        val right = texture.width / 2f
+        val top = texture.height / 2f
+        val bottom = -texture.height / 2f
+
+        val data = listOf(left, bottom, left, top, right, top, right, bottom).chunked(2)
+            .flatMap {
+                listOf(
+                    it[0], it[1], 0f,
+                    1f, 1f, 1f, 1f,
+                    (it[0] / 2 - 0.5f) * scale.x + offset.x,
+                    (it[1] / 2 - 0.5f) * scale.y + offset.y
+                )
+            }.toFloatArray()
+
+        renderer.drawShape(data, 0f, 0f, 0f, 45f, 45f)
     }
 
 }

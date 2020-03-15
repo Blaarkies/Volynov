@@ -1,6 +1,7 @@
 package engine
 
 import display.CameraView
+import display.Window
 import engine.freeBody.Planet
 import engine.freeBody.Vehicle
 import engine.motion.Motion
@@ -12,7 +13,9 @@ import org.jbox2d.dynamics.World
 
 class GameState {
 
-    var camera = CameraView()
+    lateinit var camera: CameraView
+
+    var world = World(Vec2(0f, 0f))
     var vehicles = mutableListOf<Vehicle>()
     var planets = mutableListOf<Planet>()
 
@@ -27,6 +30,10 @@ class GameState {
     var gravityMap = HashMap<CellLocation, GravityCell>()
     var resolution = 0f
 
+    fun init(window: Window) {
+        camera = CameraView(window)
+    }
+
     private fun tickGravityChanges() {
         Gravity.addGravityForces(tickables)
             .let { (gravityMap, resolution) ->
@@ -36,7 +43,6 @@ class GameState {
     }
 
     fun tickClock(
-        world: World,
         timeStep: Float,
         velocityIterations: Int,
         positionIterations: Int

@@ -1,25 +1,32 @@
-package display.graphic
+package display
 
+import io.reactivex.subjects.PublishSubject
+import org.jbox2d.common.Vec2
+import org.lwjgl.BufferUtils
 import org.lwjgl.glfw.GLFW
 import org.lwjgl.glfw.GLFWErrorCallback
 import org.lwjgl.opengl.GL
 import org.lwjgl.opengl.GL11
+import org.lwjgl.system.Callback
 import org.lwjgl.system.MemoryUtil
 
-class Window(
-    private val title: String,
-    var width: Int,
-    var height: Int,
-    private var vSync: Boolean
-) {
+class Window(private val title: String, var width: Int, var height: Int, private var vSync: Boolean) {
 
     private var windowHandle: Long = 0
-    private var isResized = false
+
+    private var callbacks: MutableList<Callback> = mutableListOf()
+
+    val keyboardEvent = PublishSubject.create<KeyboardEvent>()
+    val mouseButtonEvent = PublishSubject.create<MouseButtonEvent>()
+    val cursorPositionEvent = PublishSubject.create<Vec2>()
+    val mouseScrollEvent = PublishSubject.create<Vec2>()
 
     fun init() {
         // Setup an error callback. The default implementation
         // will print the error message in System.err.
-        GLFWErrorCallback.createPrint(System.err).set()
+        GLFW.glfwSetErrorCallback(GLFWErrorCallback.createPrint(System.err))
+            ?.let { callbacks.add(it) }
+
         // Initialize GLFW. Most GLFW functions will not work before doing this.
         check(GLFW.glfwInit()) { "Unable to initialize GLFW" }
         GLFW.glfwDefaultWindowHints() // optional, the current window hints are already the default
@@ -39,35 +46,54 @@ class Window(
         GLFW.glfwSetFramebufferSizeCallback(windowHandle) { _, width, height ->
             this.width = width
             this.height = height
-            isResized = true
+
+            println("FramebufferSizeCallback $width, $height")
         }
-        // Setup a key callback. It will be called every time a key is pressed, repeated or released.
-        GLFW.glfwSetKeyCallback(windowHandle) { window, key, _, action, _ ->
-            if (key == GLFW.GLFW_KEY_ESCAPE && action == GLFW.GLFW_RELEASE) {
-                GLFW.glfwSetWindowShouldClose(window, true) // We will detect this in the rendering loop
-            }
-        }
+
         // Get the resolution of the primary monitor
         val videoMode = GLFW.glfwGetVideoMode(GLFW.glfwGetPrimaryMonitor())!!
         // Center our window
         GLFW.glfwSetWindowPos(windowHandle, (videoMode.width() - width) / 2, (videoMode.height() - height) / 2)
-        // Make the OpenGL context current
-        GLFW.glfwMakeContextCurrent(windowHandle)
+        GLFW.glfwMakeContextCurrent(windowHandle) // Make the OpenGL context current
         if (isVSync()) { // Enable v-sync
             GLFW.glfwSwapInterval(1)
         }
-        // Make the window visible
         GLFW.glfwShowWindow(windowHandle)
         GL.createCapabilities()
-        // Set the clear color
-        GL11.glClearColor(0.0f, 0.0f, 0.0f, 0.0f)
+        GL11.glClearColor(0f, 0f, 0f, 0f)
+
+        setupInputCallbacks()
+    }
+
+    private fun setupInputCallbacks() {
+        GLFW.glfwSetKeyCallback(windowHandle) { window, key, scancode, action, mods ->
+            if (key == GLFW.GLFW_KEY_ESCAPE && action == GLFW.GLFW_PRESS) {
+                callbacks.forEach { it.free() }
+                GLFW.glfwSetWindowShouldClose(window, true)
+            } else {
+                keyboardEvent.onNext(KeyboardEvent(key, scancode, action, mods))
+            }
+        }?.let { callbacks.add(it) }
+
+        GLFW.glfwSetMouseButtonCallback(windowHandle) { window, button, action, mods ->
+            mouseButtonEvent.onNext(MouseButtonEvent(button, action, mods))
+        }?.let { callbacks.add(it) }
+
+        GLFW.glfwSetCursorPosCallback(windowHandle) { window, xPos, yPos ->
+            cursorPositionEvent.onNext(Vec2(xPos.toFloat(), yPos.toFloat()))
+        }?.let { callbacks.add(it) }
+
+        GLFW.glfwSetScrollCallback(windowHandle) { window, xOffset, yOffset ->
+            mouseScrollEvent.onNext(Vec2(xOffset.toFloat(), yOffset.toFloat()))
+        }?.let { callbacks.add(it) }
+
+//        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+//        glfwSetCharCallback(window, character_callback);
     }
 
     fun setClearColor(r: Float, g: Float, b: Float, alpha: Float) {
         GL11.glClearColor(r, g, b, alpha)
     }
-
-    fun isKeyPressed(keyCode: Int): Boolean = GLFW.glfwGetKey(windowHandle, keyCode) == GLFW.GLFW_PRESS
 
     fun windowShouldClose(): Boolean = GLFW.glfwWindowShouldClose(windowHandle)
 
@@ -82,4 +108,13 @@ class Window(
         GLFW.glfwPollEvents()
     }
 
+    fun getCursorPosition(): Vec2 {
+        val x = BufferUtils.createDoubleBuffer(1)
+        val y = BufferUtils.createDoubleBuffer(1)
+        GLFW.glfwGetCursorPos(windowHandle, x, y)
+
+        return Vec2(x.get().toFloat(), y.get().toFloat())
+    }
+
 }
+

@@ -1,5 +1,5 @@
 import app.IGameLogic
-import display.graphic.Window
+import display.Window
 import utility.CustomTimer
 
 class AppRunner(
@@ -36,7 +36,7 @@ class AppRunner(
     private fun init() {
         window.init()
         customTimer.init()
-        gameLogic.init()
+        gameLogic.init(window)
     }
 
     private fun gameLoop() {

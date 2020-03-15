@@ -1,14 +1,13 @@
 package display.graphic
 
 import Matrix4f
+import display.CameraView
 import display.text.Font
-import org.lwjgl.glfw.GLFW
 import org.lwjgl.opengl.GL11.*
 import org.lwjgl.opengl.GL15.GL_ARRAY_BUFFER
 import org.lwjgl.opengl.GL15.GL_DYNAMIC_DRAW
 import org.lwjgl.opengl.GL20.GL_FRAGMENT_SHADER
 import org.lwjgl.opengl.GL20.GL_VERTEX_SHADER
-import org.lwjgl.system.MemoryStack
 import org.lwjgl.system.MemoryUtil
 import utility.Common
 import java.awt.FontFormatException
@@ -25,12 +24,14 @@ class Renderer {
     private var program: ShaderProgram? = null
     private var vertices: FloatBuffer? = null
     private var numVertices = 0
-    private var drawing = false
+    private var isDrawing = false
     private var font: Font? = null
     private var debugFont: Font? = null
     private var vertexDimensionCount = 9
+    private lateinit var cameraView: CameraView
 
-    fun init() {
+    fun init(gameStateCamera: CameraView) {
+        cameraView = gameStateCamera
         setupShaderProgram()
 
         glEnable(GL_BLEND)
@@ -53,14 +54,14 @@ class Renderer {
     }
 
     fun begin() {
-        check(!drawing) { "Renderer is already drawing!" }
-        drawing = true
+        check(!isDrawing) { "Renderer is already drawing!" }
+        isDrawing = true
         numVertices = 0
     }
 
     fun end() {
-        check(drawing) { "Renderer isn't drawing!" }
-        drawing = false
+        check(isDrawing) { "Renderer isn't drawing!" }
+        isDrawing = false
         flush(GL_TRIANGLES)
     }
 
@@ -213,15 +214,15 @@ class Renderer {
         begin()
         if (vertices!!.remaining() < data.size) {
             flush(GL_TRIANGLES)
+            println("Flushed some triangles")
         }
 
         vertices!!.put(data)
         numVertices += data.size / vertexDimensionCount
 
         setUniformInputs(
-            0f, 0f,
-            x, y, 0f, h,
-            vertexScaleX, vertexScaleY
+            x, y,
+            0f, h, vertexScaleX, vertexScaleY
         )
         flush(drawType)
         end()
@@ -251,7 +252,7 @@ class Renderer {
         vbo!!.uploadData(GL_ARRAY_BUFFER, size, GL_DYNAMIC_DRAW)
 
         numVertices = 0
-        drawing = false
+        isDrawing = false
 
         val vertexShader = Shader.loadShader(GL_VERTEX_SHADER, "/shaders/vertexBasicPosition.glsl")
         val fragmentShader = Shader.loadShader(GL_FRAGMENT_SHADER, "/shaders/fragmentBasicColor.glsl")
@@ -265,28 +266,12 @@ class Renderer {
         vertexShader.delete()
         fragmentShader.delete()
 
-        val window: Long = GLFW.glfwGetCurrentContext()
-        var width = 0f
-        var height = 0f
-        MemoryStack.stackPush().use { stack ->
-            val widthBuffer = stack.mallocInt(1)
-            val heightBuffer = stack.mallocInt(1)
-            GLFW.glfwGetFramebufferSize(window, widthBuffer, heightBuffer)
-            width = widthBuffer.get().toFloat()
-            height = heightBuffer.get().toFloat()
-        }
-
         specifyVertexAttributes()
-
-        setUniformInputs(width, height)
+        setUniformInputs()
     }
 
     private fun setUniformInputs(
-        width: Float = 0f, height: Float = 0f,
-        x: Float = 0f,
-        y: Float = 0f,
-        z: Float = 0f,
-        h: Float = 0f,
+        x: Float = 0f, y: Float = 0f, z: Float = 0f, h: Float = 0f,
         vertexScaleX: Float = 1f,
         vertexScaleY: Float = 1f
     ) {
@@ -299,19 +284,19 @@ class Renderer {
         val uniModel = program!!.getUniformLocation("model")
         program!!.setUniform(uniModel, model)
 
-        val view = Matrix4f()
+        val zoomScale = 1f / cameraView.z
+        val view = Matrix4f.scale(zoomScale, zoomScale, 1f)
+            .multiply(Matrix4f.translate(-cameraView.location.x, -cameraView.location.y, 0f))
         val uniView = program!!.getUniformLocation("view")
         program!!.setUniform(uniView, view)
 
-        if (width * height == 0f) return
-        val box2dScale = .05f
+        val widthSide = cameraView.windowWidth * .5f
+        val heightSide = cameraView.windowHeight * .5f
+        val depthSide = 100f
         val projection = Matrix4f.orthographic(
-            -width / 2 * box2dScale,
-            width / 2 * box2dScale,
-            -height / 2 * box2dScale,
-            height / 2 * box2dScale,
-            -1f,
-            1f
+            -widthSide, widthSide,
+            -heightSide, heightSide,
+            -depthSide, depthSide
         )
         val uniProjection = program!!.getUniformLocation("projection")
         program!!.setUniform(uniProjection, projection)
