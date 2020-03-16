@@ -31,9 +31,10 @@ tasks.test {
 dependencies {
     implementation(kotlin("stdlib-jdk8"))
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.3")
-    testImplementation("org.junit.jupiter:junit-jupiter:5.5.2")
-
+    implementation("io.reactivex.rxjava2:rxkotlin:2.4.0")
     implementation("org.jbox2d:jbox2d-library:2.2.1.1")
+
+    testImplementation("org.junit.jupiter:junit-jupiter:5.5.2")
 
     implementation(platform("org.lwjgl:lwjgl-bom:$lwjglVersion"))
     val lwjglList = listOf(

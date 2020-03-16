@@ -1,8 +1,7 @@
 package utility
 
 import java.util.*
-import kotlin.math.pow
-import kotlin.math.roundToInt
+import kotlin.math.*
 
 object Common {
 
@@ -39,5 +38,15 @@ object Common {
     }
 
     val radianToDegree = Math.toDegrees(1.0).toFloat()
+
+    fun getTimingFunctionEaseOut(interpolateStep: Float) = getTimingFunctionFullSine(sqrt(interpolateStep))
+
+    fun getTimingFunctionSineEaseIn(interpolateStep: Float) = 1f - getTimingFunctionEaseOut(1f - interpolateStep)
+
+    fun getTimingFunctionFullSine(interpolateStep: Float) = (sin(interpolateStep * PI - PI * .5) * .5 + .5).toFloat()
+
+    fun getTimingFunctionSigmoid(interpolateStep: Float, centerGradient: Float = 1f) =
+        (1f / (1f + exp((-(interpolateStep - .5f) * 10f)) * centerGradient))
+
 
 }

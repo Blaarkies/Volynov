@@ -45,7 +45,7 @@ object Gravity {
     fun addGravityForces(freeBodies: List<FreeBody>): Pair<HashMap<CellLocation, GravityCell>, Float> = runBlocking {
         val gravityMap = HashMap<CellLocation, GravityCell>()
 
-        val resolution = 40f
+        val resolution = 2f
         freeBodies.forEach {
             val x = it.worldBody.position.x
             val y = it.worldBody.position.y

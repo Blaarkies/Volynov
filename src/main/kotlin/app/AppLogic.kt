@@ -3,61 +3,55 @@ package app
 import display.draw.Drawer
 import display.draw.TextureHolder
 import display.graphic.Renderer
-import display.graphic.Window
+import display.Window
 import engine.GameState
+import engine.freeBody.FreeBody
+import game.GamePhaseHandler
 import game.MapGenerator
-import org.jbox2d.common.Vec2
-import org.jbox2d.dynamics.World
-import org.lwjgl.glfw.GLFW
+import input.InputHandler
 
 class AppLogic : IGameLogic {
 
-    private var paused = false
     private val renderer = Renderer()
 
     private val gameState = GameState()
     private val textures = TextureHolder()
     private val drawer = Drawer(renderer, textures)
-
-    private val world: World = World(Vec2(0f, 0f))
-    private val timeStep = 1f / 60f
-    private val velocityIterations = 8
-    private val positionIterations = 3
-//    var lastTime = System.currentTimeMillis()
+    private val gamePhaseHandler = GamePhaseHandler(gameState, drawer, textures)
+    private val inputHandler = InputHandler(gamePhaseHandler)
 
     @Throws(Exception::class)
-    override fun init() {
-        renderer.init()
+    override fun init(window: Window) {
+        gameState.init(window)
+        renderer.init(gameState.camera)
         textures.init()
+        inputHandler.init(window)
 
-        MapGenerator.populateTestMap(gameState, world, textures)
+        MapGenerator.populateTestMap(gameState, textures)
+        gameState.camera.trackFreeBody(gameState.tickables.find { it.id == "terra" } as FreeBody)
     }
 
     override fun input(window: Window) {
-        if (window.isKeyPressed(GLFW.GLFW_KEY_SPACE)) {
-            paused = !paused
-        }
     }
 
     override fun update(interval: Float) {
-        if (!paused) {
-            gameState.tickClock(world, timeStep, velocityIterations, positionIterations)
-        }
-
+        gamePhaseHandler.update()
     }
 
     override fun render(window: Window) {
         renderer.clear()
 
-        val allFreeBodies = gameState.planets.union(gameState.vehicles)
+        drawer.drawPicture(textures.stars_2k)
+
+        val allFreeBodies = gameState.tickables
         allFreeBodies.forEach { drawer.drawTrail(it) }
         allFreeBodies.forEach { drawer.drawFreeBody(it) }
 //        allFreeBodies.forEach { drawDebugForces(it) }
-
 //        drawer.drawGravityCells(gameState.gravityMap, gameState.resolution)
     }
 
     override fun cleanup() {
         renderer.dispose()
+        inputHandler.dispose()
     }
 }
