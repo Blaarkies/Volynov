@@ -27,7 +27,7 @@ class Drawer(private val renderer: Renderer, private val textures: TextureHolder
             x + accelerationX * multiplier,
             y + accelerationY * multiplier
         )
-        val triangleStripPoints = BasicShapes.getTriangleStripPoints(linePoints, 2f)
+        val triangleStripPoints = BasicShapes.getLineTriangleStrip(linePoints, 2f)
         val arrowHeadPoints = BasicShapes.getArrowHeadPoints(linePoints)
         val data = getColoredData(
             triangleStripPoints + arrowHeadPoints,
@@ -37,32 +37,30 @@ class Drawer(private val renderer: Renderer, private val textures: TextureHolder
         textures.white_pixel.bind()
 //        renderer.drawStrip(data)
 
-        renderer.drawText(freeBody.id, x, y, Color.WHITE)
+        renderer.drawText(freeBody.id, freeBody.worldBody.position, Vec2(1f, 1f), Color.WHITE)
     }
 
     fun drawTrail(freeBody: FreeBody) {
-        val linePoints = (freeBody.motion.trailers + listOf(freeBody.worldBody.position.x, freeBody.worldBody.position.y))
-            .chunked(2)
-            .chunked(2)
-            .filter { it.size > 1 }
-            .flatMap {
-                val (a, b) = it
-                listOf(a[0], a[1], b[0], b[1])
-            }
-        val data = getLineFromPoints(linePoints, Color(0.4f, 0.7f, 1f, 0.5f), Color.TRANSPARENT, .1f, 0f)
+        val position = freeBody.worldBody.position
+        val linePoints = (freeBody.motion.trailers + listOf(position.x, position.y))
+        if (linePoints.size < 4) {
+            return
+        }
+        val data = getLine(linePoints, Color(0.4f, 0.7f, 1f, 0.5f), Color.TRANSPARENT, .1f, 0f)
 
         textures.white_pixel.bind()
         renderer.drawStrip(data)
     }
 
-    private fun getLineFromPoints(
+    private fun getLine(
         points: List<Float>,
         startColor: Color = Color.WHITE,
         endColor: Color = startColor,
         startWidth: Float = 1f,
-        endWidth: Float = startWidth
+        endWidth: Float = startWidth,
+        wrapAround: Boolean = false
     ): FloatArray {
-        val triangleStripPoints = BasicShapes.getTriangleStripPoints(points, startWidth, endWidth)
+        val triangleStripPoints = BasicShapes.getLineTriangleStrip(points, startWidth, endWidth, wrapAround)
         return getColoredData(triangleStripPoints, startColor, endColor).toFloatArray()
     }
 
@@ -148,6 +146,22 @@ class Drawer(private val renderer: Renderer, private val textures: TextureHolder
             }.toFloatArray()
 
         renderer.drawShape(data, 0f, 0f, 0f, 45f, 45f)
+    }
+
+    fun drawMainMenu() {
+        val xScale = 20f
+        val yScale = 5f
+        val linePoints = BasicShapes.polygon4
+            .chunked(2)
+            .flatMap { listOf(it[0] * xScale, it[1] * yScale) }
+        val data = getLine(linePoints, Color(.5f, 1f, .8f, .5f), startWidth = 1f, wrapAround = true)
+
+        textures.white_pixel.bind()
+        renderer.drawStrip(data)
+
+//        renderer.drawText("""New game
+//            |here
+//        """.trimMargin(), Vec2(0f, 0f), Vec2(.5f, .5f), Color.WHITE)
     }
 
 }

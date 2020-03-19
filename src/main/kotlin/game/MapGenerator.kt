@@ -17,7 +17,7 @@ object MapGenerator {
 
     fun populateTestMap(gameState: GameState, textures: TextureHolder) {
         val terra = Planet.create(
-            gameState.world, "terra", 10f, 10f, 0f, 0f, 0f, .1f, 1800f, 4.5f, .3f,
+            gameState.world, "terra", 0f, 0f, 0f, 0f, 0f, .1f, 1800f, 4.5f, .3f,
             textureConfig = TextureConfig(
                 textures.marble_earth,
                 Vector2f(1f, 1f),

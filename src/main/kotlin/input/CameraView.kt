@@ -5,6 +5,9 @@ import org.jbox2d.common.Vec2
 import utility.Common.getTimingFunctionFullSine
 import utility.Common.getTimingFunctionSigmoid
 import utility.Common.getTimingFunctionSineEaseIn
+import java.lang.Math.pow
+import kotlin.math.pow
+import kotlin.math.sqrt
 
 class CameraView(private val window: Window) {
 
@@ -59,7 +62,7 @@ class CameraView(private val window: Window) {
     }
 
     fun moveZoom(movement: Float) {
-        z = (z + movement).coerceAtLeast(.0001f)
+        z = (z + movement * z.pow(1.2f) * 50f).coerceIn(.0001f, 1f)
     }
 
 

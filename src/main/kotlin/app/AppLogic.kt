@@ -40,14 +40,7 @@ class AppLogic : IGameLogic {
 
     override fun render(window: Window) {
         renderer.clear()
-
-        drawer.drawPicture(textures.stars_2k)
-
-        val allFreeBodies = gameState.tickables
-        allFreeBodies.forEach { drawer.drawTrail(it) }
-        allFreeBodies.forEach { drawer.drawFreeBody(it) }
-//        allFreeBodies.forEach { drawDebugForces(it) }
-//        drawer.drawGravityCells(gameState.gravityMap, gameState.resolution)
+        gamePhaseHandler.render()
     }
 
     override fun cleanup() {

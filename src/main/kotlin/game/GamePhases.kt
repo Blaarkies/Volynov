@@ -5,6 +5,7 @@ enum class GamePhases {
     PAUSING,
     PAUSED,
     UNPAUSING,
-    UNPAUSED
+    UNPAUSED,
+    MAIN_MENU
 
 }

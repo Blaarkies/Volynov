@@ -18,7 +18,7 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer, val
     private val camera
         get() = gameState.camera
 
-    private var currentPhase = GamePhases.NONE
+    private var currentPhase = GamePhases.MAIN_MENU
     private var lastPhaseTimestamp = System.currentTimeMillis()
     private val pauseDownDuration = 1000f
 
@@ -47,8 +47,30 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer, val
             GamePhases.PAUSING -> tickGamePausing()
             GamePhases.PAUSED -> return
             GamePhases.UNPAUSING -> tickGameUnpausing()
+            GamePhases.MAIN_MENU -> return
             else -> gameState.tickClock(timeStep, velocityIterations, positionIterations)
         }
+    }
+
+    fun render() {
+        when (currentPhase) {
+            GamePhases.MAIN_MENU -> drawMainMenu()
+            else -> drawPlayPhase()
+        }
+    }
+
+    private fun drawMainMenu() {
+        drawer.drawMainMenu()
+    }
+
+    private fun drawPlayPhase() {
+        drawer.drawPicture(textures.stars_2k)
+
+        val allFreeBodies = gameState.tickables
+        allFreeBodies.forEach { drawer.drawTrail(it) }
+        allFreeBodies.forEach { drawer.drawFreeBody(it) }
+        //        allFreeBodies.forEach { drawDebugForces(it) }
+        //        drawer.drawGravityCells(gameState.gravityMap, gameState.resolution)
     }
 
     private fun tickGameUnpausing() {

@@ -3,6 +3,7 @@ package display.text
 import display.graphic.Color
 import display.graphic.Renderer
 import display.graphic.Texture
+import org.jbox2d.common.Vec2
 import org.lwjgl.system.MemoryUtil
 import java.awt.Font
 import java.awt.Font.*
@@ -187,42 +188,44 @@ class Font constructor(font: Font = Font(MONOSPACED, BOLD, 32), antiAlias: Boole
         return width
     }
 
-    fun getHeight(text: CharSequence): Int {
+    private fun getHeight(text: CharSequence): Int {
         var height = 0
         var lineHeight = 0
-        for (element in text) {
-            if (element == '\n') {
-                height += lineHeight
-                lineHeight = 0
-                continue
-            }
-            if (element == '\r' || element.isWhitespace()) {
-                continue
-            }
-            val g = glyphs[element]
-            lineHeight = lineHeight.coerceAtLeast(g!!.height)
-        }
-        height += lineHeight
-        return height
+        val a =text.split('\n')
+            .map { sentence -> sentence.maxBy { letter -> glyphs[letter]!!.height } }
+
+//            .forEach {
+//            if (it == '\n') {
+//                height += lineHeight
+//                lineHeight = 0
+//                return@forEach
+//            }
+//            if (it == '\r' || it.isWhitespace()) {
+//                return@forEach
+//            }
+//            val g = glyphs[it]
+//            lineHeight = lineHeight.coerceAtLeast(g!!.height)
+//        }
+
+        return height + lineHeight
     }
 
-    fun drawText(renderer: Renderer, text: CharSequence, x: Float, y: Float, c: Color) {
+    fun drawText(renderer: Renderer, text: CharSequence, offset: Vec2, scale: Vec2, c: Color) {
         val textHeight = getHeight(text)
-        drawLetters(fontBitMapShadow, x, y, textHeight, renderer, text, Color.BLACK)
-        drawLetters(fontBitMap, x, y, textHeight, renderer, text, c)
+        drawLetters(fontBitMapShadow, offset, scale, textHeight, renderer, text, Color.BLACK)
+        drawLetters(fontBitMap, offset, scale, textHeight, renderer, text, c)
     }
 
     private fun drawLetters(
         texture: Texture,
-        x: Float,
-        y: Float,
+        offset: Vec2, scale: Vec2,
         textHeight: Int,
         renderer: Renderer,
         text: CharSequence,
         c: Color
     ) {
-        var drawX = x
-        var drawY = y
+        var drawX = offset.x
+        var drawY = offset.y
         if (textHeight > fontHeight) {
             drawY += textHeight - fontHeight.toFloat()
         }
@@ -231,14 +234,14 @@ class Font constructor(font: Font = Font(MONOSPACED, BOLD, 32), antiAlias: Boole
         text.forEach {
             if (it == '\n') {
                 drawY -= fontHeight.toFloat()
-                drawX = x
+                drawX = offset.x
                 return@forEach
             }
             if (it == '\r' || it.isWhitespace()) {
                 return@forEach
             }
             val glyph = glyphs[it]!!
-            drawTextPosition(texture, renderer, drawX, drawY, glyph, c)
+            drawTextPosition(texture, renderer, drawX, drawY, scale, glyph, c)
             drawX += glyph.width.toFloat()
         }
         renderer.end()
@@ -249,6 +252,7 @@ class Font constructor(font: Font = Font(MONOSPACED, BOLD, 32), antiAlias: Boole
         renderer: Renderer,
         drawX: Float,
         drawY: Float,
+        scale: Vec2,
         glyph: Glyph,
         c: Color
     ) {
@@ -263,10 +267,6 @@ class Font constructor(font: Font = Font(MONOSPACED, BOLD, 32), antiAlias: Boole
             glyph.height.toFloat(),
             c
         )
-    }
-
-    fun drawText(renderer: Renderer, text: CharSequence, x: Float, y: Float) {
-        drawText(renderer, text, x, y, Color.WHITE)
     }
 
     fun dispose() {
