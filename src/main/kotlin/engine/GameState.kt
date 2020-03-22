@@ -1,6 +1,6 @@
 package engine
 
-import display.CameraView
+import input.CameraView
 import display.Window
 import engine.freeBody.Planet
 import engine.freeBody.Vehicle
@@ -15,7 +15,7 @@ class GameState {
 
     lateinit var camera: CameraView
 
-    var world = World(Vec2(0f, 0f))
+    var world = World(Vec2())
     var vehicles = mutableListOf<Vehicle>()
     var planets = mutableListOf<Planet>()
 
@@ -51,5 +51,12 @@ class GameState {
 
         tickGravityChanges()
         Motion.addNewTrailers(tickables.filter { it.radius > .5f })
+    }
+
+    fun reset() {
+        camera.reset()
+        world = World(Vec2())
+        vehicles.clear()
+        planets.clear()
     }
 }

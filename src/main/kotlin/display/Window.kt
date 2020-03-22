@@ -1,5 +1,6 @@
 package display
 
+import display.events.MouseButtonEvent
 import io.reactivex.subjects.PublishSubject
 import org.jbox2d.common.Vec2
 import org.lwjgl.BufferUtils
@@ -67,25 +68,22 @@ class Window(private val title: String, var width: Int, var height: Int, private
 
     private fun setupInputCallbacks() {
         GLFW.glfwSetKeyCallback(windowHandle) { window, key, scancode, action, mods ->
-
-            when {
-                key == GLFW.GLFW_KEY_ESCAPE && action == GLFW.GLFW_PRESS -> {
-                    callbacks.forEach { it.free() }
-                    GLFW.glfwSetWindowShouldClose(window, true)
-                }
-                key == GLFW.GLFW_KEY_F12 && action == GLFW.GLFW_PRESS -> {
-                    when (glGetInteger(GL_POLYGON_MODE)) {
-                        GL_LINE -> glPolygonMode( GL_FRONT_AND_BACK, GL_FILL )
-                        GL_POINT -> glPolygonMode( GL_FRONT_AND_BACK, GL_LINE )
-                        else -> glPolygonMode( GL_FRONT_AND_BACK, GL_POINT )
+            if (action == GLFW.GLFW_PRESS) {
+                when {
+                    key == GLFW.GLFW_KEY_F12 -> {
+                        when (glGetInteger(GL_POLYGON_MODE)) {
+                            GL_LINE -> glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+                            GL_POINT -> glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
+                            else -> glPolygonMode(GL_FRONT_AND_BACK, GL_POINT)
+                        }
                     }
+                    else -> keyboardEvent.onNext(KeyboardEvent(key, scancode, action, mods))
                 }
-                else -> keyboardEvent.onNext(KeyboardEvent(key, scancode, action, mods))
             }
         }?.let { callbacks.add(it) }
 
         GLFW.glfwSetMouseButtonCallback(windowHandle) { window, button, action, mods ->
-            mouseButtonEvent.onNext(MouseButtonEvent(button, action, mods))
+            mouseButtonEvent.onNext(MouseButtonEvent(button, action, mods, getCursorPosition()))
         }?.let { callbacks.add(it) }
 
         GLFW.glfwSetCursorPosCallback(windowHandle) { window, xPos, yPos ->
@@ -123,6 +121,11 @@ class Window(private val title: String, var width: Int, var height: Int, private
         GLFW.glfwGetCursorPos(windowHandle, x, y)
 
         return Vec2(x.get().toFloat(), y.get().toFloat())
+    }
+
+    fun exit() {
+        callbacks.forEach { it.free() }
+        GLFW.glfwSetWindowShouldClose(windowHandle, true)
     }
 
 }

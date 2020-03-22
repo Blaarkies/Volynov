@@ -3,8 +3,11 @@ package game
 import display.draw.Drawer
 import display.draw.TextureHolder
 import display.KeyboardEvent
-import display.MouseButtonEvent
+import display.Window
+import display.events.MouseButtonEvent
+import display.gui.GuiController
 import engine.GameState
+import engine.freeBody.FreeBody
 import org.jbox2d.common.Vec2
 import utility.Common.getTimingFunctionEaseOut
 import utility.Common.getTimingFunctionSineEaseIn
@@ -21,6 +24,25 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer, val
     private var currentPhase = GamePhases.MAIN_MENU
     private var lastPhaseTimestamp = System.currentTimeMillis()
     private val pauseDownDuration = 1000f
+
+    private val guiController = GuiController(drawer)
+    private lateinit var exitCall: () -> Unit
+
+    fun init(window: Window) {
+        exitCall = { window.exit() }
+
+        currentPhase = GamePhases.MAIN_MENU
+        guiController.createMainMenu(
+            onClickNewGame = {
+                currentPhase = GamePhases.UNPAUSING
+                gameState.reset()
+                MapGenerator.populateTestMap(gameState, textures)
+                gameState.camera.trackFreeBody(gameState.tickables.find { it.id == "terra" } as FreeBody)
+            },
+            onClickSettings = {},
+            onClickQuit = { window.exit() }
+        )
+    }
 
     fun dragMouseRightClick(movement: Vec2) {
         gameState.camera.moveLocation(movement.mulLocal(-gameState.camera.z))
@@ -54,13 +76,9 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer, val
 
     fun render() {
         when (currentPhase) {
-            GamePhases.MAIN_MENU -> drawMainMenu()
+            GamePhases.MAIN_MENU -> guiController.render()
             else -> drawPlayPhase()
         }
-    }
-
-    private fun drawMainMenu() {
-        drawer.drawMainMenu()
     }
 
     private fun drawPlayPhase() {
@@ -116,6 +134,37 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer, val
 
     fun keyPressArrowRight(event: KeyboardEvent) {
         drawer.renderer.debugOffset.addLocal(Vec2(0.005f, 0f))
+    }
+
+    fun moveMouse(location: Vec2) {
+        val transformedLocation = location.add(Vec2(-camera.windowWidth * .5f, -camera.windowHeight * .5f))
+            .let {
+                it.y *= -1f
+                it
+            }
+
+        when (currentPhase) {
+            GamePhases.MAIN_MENU -> guiController.checkHover(transformedLocation)
+        }
+    }
+
+    fun leftClickMouse(event: MouseButtonEvent) {
+        val transformedLocation = event.location.add(Vec2(-camera.windowWidth * .5f, -camera.windowHeight * .5f))
+            .let {
+                it.y *= -1f
+                it
+            }
+
+        when (currentPhase) {
+            GamePhases.MAIN_MENU -> guiController.checkLeftClick(transformedLocation)
+        }
+    }
+
+    fun keyPressEscape(event: KeyboardEvent) {
+        when (currentPhase) {
+            GamePhases.MAIN_MENU -> exitCall()
+            else -> currentPhase = GamePhases.MAIN_MENU
+        }
     }
 
 }

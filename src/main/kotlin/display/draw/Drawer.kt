@@ -11,9 +11,7 @@ import org.jbox2d.common.Vec2
 import java.util.*
 import kotlin.math.sqrt
 
-class Drawer(val renderer: Renderer, private val textures: TextureHolder) {
-
-//    private val
+class Drawer(val renderer: Renderer, val textures: TextureHolder) {
 
     fun drawDebugForces(freeBody: FreeBody) {
         val x = freeBody.worldBody.position.x
@@ -53,18 +51,6 @@ class Drawer(val renderer: Renderer, private val textures: TextureHolder) {
         renderer.drawStrip(data)
     }
 
-    private fun getLine(
-        points: List<Float>,
-        startColor: Color = Color.WHITE,
-        endColor: Color = startColor,
-        startWidth: Float = 1f,
-        endWidth: Float = startWidth,
-        wrapAround: Boolean = false
-    ): FloatArray {
-        val triangleStripPoints = BasicShapes.getLineTriangleStrip(points, startWidth, endWidth, wrapAround)
-        return getColoredData(triangleStripPoints, startColor, endColor).toFloatArray()
-    }
-
     fun drawFreeBody(freeBody: FreeBody) {
         freeBody.textureConfig.texture.bind()
         renderer.drawShape(
@@ -73,33 +59,6 @@ class Drawer(val renderer: Renderer, private val textures: TextureHolder) {
             freeBody.worldBody.angle,
             Vec2(freeBody.radius, freeBody.radius)
         )
-    }
-
-    private fun getColoredData(
-        points: List<Float>,
-        startColor: Color = Color.WHITE,
-        endColor: Color = startColor
-    ): List<Float> {
-        val pointsLastIndex = points.lastIndex.toFloat() / 2f
-
-        return points
-            .chunked(2)
-            .withIndex()
-            .flatMap { (index, chunk) ->
-                val interpolationDistance = index.toFloat() / pointsLastIndex
-                val color = startColor * interpolationDistance + endColor * (1f - interpolationDistance)
-                listOf(
-                    chunk[0],
-                    chunk[1],
-                    0f, /* pos*/
-                    color.red,
-                    color.green,
-                    color.blue,
-                    color.alpha, /* color*/
-                    0f,
-                    0f /* texture*/
-                )
-            }
     }
 
     fun drawGravityCells(gravityMap: HashMap<CellLocation, GravityCell>, resolution: Float) {
@@ -155,6 +114,42 @@ class Drawer(val renderer: Renderer, private val textures: TextureHolder) {
         renderer.drawText("New Game", Vec2(0f, 200f), Vec2(1f, 1f).mul(.6f), buttonLine, false)
 
         renderer.drawText("Volynov", Vec2(0f, 300f), Vec2(1f, 1f).mul(.8f), buttonLine, false)
+    }
+
+    companion object {
+
+        fun getColoredData(
+            points: List<Float>,
+            startColor: Color = Color.WHITE,
+            endColor: Color = startColor
+        ): List<Float> {
+            val pointsLastIndex = points.lastIndex.toFloat() / 2f
+
+            return points
+                .chunked(2)
+                .withIndex()
+                .flatMap { (index, chunk) ->
+                    val interpolationDistance = index.toFloat() / pointsLastIndex
+                    val color = startColor * interpolationDistance + endColor * (1f - interpolationDistance)
+                    listOf(
+                        chunk[0], chunk[1], 0f, /* pos*/
+                        color.red, color.green, color.blue, color.alpha, /* color*/
+                        0f, 0f /* texture*/
+                    ) }
+        }
+
+        fun getLine(
+            points: List<Float>,
+            startColor: Color = Color.WHITE,
+            endColor: Color = startColor,
+            startWidth: Float = 1f,
+            endWidth: Float = startWidth,
+            wrapAround: Boolean = false
+        ): FloatArray {
+            val triangleStripPoints = BasicShapes.getLineTriangleStrip(points, startWidth, endWidth, wrapAround)
+            return getColoredData(triangleStripPoints, startColor, endColor).toFloatArray()
+        }
+
     }
 
 }

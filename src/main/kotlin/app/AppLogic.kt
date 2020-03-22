@@ -5,9 +5,7 @@ import display.draw.TextureHolder
 import display.graphic.Renderer
 import display.Window
 import engine.GameState
-import engine.freeBody.FreeBody
 import game.GamePhaseHandler
-import game.MapGenerator
 import input.InputHandler
 
 class AppLogic : IGameLogic {
@@ -25,13 +23,8 @@ class AppLogic : IGameLogic {
         gameState.init(window)
         renderer.init(gameState.camera)
         textures.init()
+        gamePhaseHandler.init(window)
         inputHandler.init(window)
-
-        MapGenerator.populateTestMap(gameState, textures)
-        gameState.camera.trackFreeBody(gameState.tickables.find { it.id == "terra" } as FreeBody)
-    }
-
-    override fun input(window: Window) {
     }
 
     override fun update(interval: Float) {

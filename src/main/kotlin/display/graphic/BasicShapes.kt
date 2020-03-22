@@ -5,6 +5,7 @@ import org.jbox2d.common.Vec2
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
+import kotlin.math.sqrt
 
 object BasicShapes {
 
@@ -19,6 +20,8 @@ object BasicShapes {
     val polygon15 = getPolygonVertices(15)
 
     val polygon30 = getPolygonVertices(30)
+
+    val square = polygon4.map { it * sqrt(2f) }
 
     private fun getPolygonVertices(corners: Int): List<Float> = (0 until corners).flatMap {
         val t = 2 * PI * (it / corners.toFloat()) + PI * .25

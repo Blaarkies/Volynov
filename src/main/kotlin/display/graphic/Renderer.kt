@@ -1,7 +1,7 @@
 package display.graphic
 
 import Matrix4f
-import display.CameraView
+import input.CameraView
 import display.text.Font
 import org.jbox2d.common.Vec2
 import org.lwjgl.opengl.GL11.*
@@ -40,7 +40,7 @@ class Renderer {
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
         font = try {
-            Font(FileInputStream("src\\main\\resources\\fonts\\ALBMT___.TTF"), 32)
+            Font(FileInputStream("src\\main\\resources\\fonts\\ALBMT___.TTF"), 80)
         } catch (ex: FontFormatException) {
             Logger.getLogger(Renderer::class.java.name).log(Level.CONFIG, null, ex)
             Font()
@@ -88,7 +88,7 @@ class Renderer {
         offset: Vec2 = Vec2(),
         h: Float = 0f,
         scale: Vec2 = Vec2(1f, 1f),
-        useCamera: Boolean = false
+        useCamera: Boolean = true
     ) = drawEntity(data, offset, h, scale, GL_TRIANGLE_FAN, useCamera)
 
     fun drawStrip(
@@ -96,7 +96,7 @@ class Renderer {
         offset: Vec2 = Vec2(),
         h: Float = 0f,
         scale: Vec2 = Vec2(1f, 1f),
-        useCamera: Boolean = false
+        useCamera: Boolean = true
     ) =
         drawEntity(data, offset, h, scale, GL_TRIANGLE_STRIP, useCamera)
 
@@ -106,7 +106,7 @@ class Renderer {
         h: Float,
         scale: Vec2,
         drawType: Int,
-        useCamera: Boolean = false
+        useCamera: Boolean
     ) {
         begin()
         if (vertices.remaining() < data.size) {

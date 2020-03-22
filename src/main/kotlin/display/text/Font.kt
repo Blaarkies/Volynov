@@ -1,6 +1,5 @@
 package display.text
 
-import display.draw.TextureHolder
 import display.graphic.BasicShapes
 import display.graphic.Color
 import display.graphic.Renderer
@@ -20,19 +19,11 @@ import java.awt.Color as AwtColor
 
 class Font constructor(font: Font = Font(MONOSPACED, BOLD, 32), antiAlias: Boolean = true) {
 
-    val glyphs: MutableMap<Char, Glyph>
+    private val glyphs: MutableMap<Char, Glyph>
     private var fontBitMapShadow: Texture = Texture()
-    val fontBitMap: Texture
+    private val fontBitMap: Texture
     private var fontHeight = 0
     private var fontWidth = 0
-
-//    private val textures = TextureHolder()
-
-    constructor(antiAlias: Boolean) : this(Font(MONOSPACED, PLAIN, 16), antiAlias)
-
-    constructor(size: Int) : this(Font(MONOSPACED, PLAIN, size), true)
-
-    constructor(size: Int, antiAlias: Boolean) : this(Font(MONOSPACED, PLAIN, size), antiAlias)
 
     constructor(inputStream: InputStream, size: Int) : this(inputStream, size, true)
 
@@ -44,8 +35,6 @@ class Font constructor(font: Font = Font(MONOSPACED, BOLD, 32), antiAlias: Boole
     )
 
     init {
-//        textures.init()
-
         glyphs = HashMap()
         val (texture, shadowTexture) = createFontTexture(font, antiAlias)
         fontBitMap = texture
@@ -227,7 +216,7 @@ class Font constructor(font: Font = Font(MONOSPACED, BOLD, 32), antiAlias: Boole
         }
     }
 
-    fun drawTextPosition(
+    private fun drawTextPosition(
         texture: Texture,
         renderer: Renderer,
         offset: Vec2,
@@ -240,7 +229,7 @@ class Font constructor(font: Font = Font(MONOSPACED, BOLD, 32), antiAlias: Boole
         val glyphOffset = Vec2((glyph.x + glyph.width) / texture.width.toFloat(), glyph.y / texture.height.toFloat())
         val debug = renderer.debugOffset
 
-        val data = BasicShapes.polygon4.map { it / 0.707106781f }
+        val data = BasicShapes.square
             .chunked(2)
             .flatMap {
                 val (x, y) = it
