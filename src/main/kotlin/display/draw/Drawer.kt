@@ -9,10 +9,11 @@ import engine.physics.CellLocation
 import engine.physics.GravityCell
 import org.jbox2d.common.Vec2
 import java.util.*
-import kotlin.math.PI
 import kotlin.math.sqrt
 
-class Drawer(private val renderer: Renderer, private val textures: TextureHolder) {
+class Drawer(val renderer: Renderer, private val textures: TextureHolder) {
+
+//    private val
 
     fun drawDebugForces(freeBody: FreeBody) {
         val x = freeBody.worldBody.position.x
@@ -68,11 +69,9 @@ class Drawer(private val renderer: Renderer, private val textures: TextureHolder
         freeBody.textureConfig.texture.bind()
         renderer.drawShape(
             freeBody.textureConfig.gpuBufferData,
-            freeBody.worldBody.position.x,
-            freeBody.worldBody.position.y,
+            freeBody.worldBody.position,
             freeBody.worldBody.angle,
-            freeBody.radius,
-            freeBody.radius
+            Vec2(freeBody.radius, freeBody.radius)
         )
     }
 
@@ -106,7 +105,7 @@ class Drawer(private val renderer: Renderer, private val textures: TextureHolder
     fun drawGravityCells(gravityMap: HashMap<CellLocation, GravityCell>, resolution: Float) {
         textures.white_pixel.bind()
         val maxMass = gravityMap.maxBy { (_, cell) -> cell.totalMass }!!.value.totalMass
-        val sqrt1 = 0.707106781f
+        val scale = 0.707106781f * resolution
         gravityMap.forEach { (key, cell) ->
             val data = BasicShapes.polygon4.chunked(2)
                 .flatMap {
@@ -116,14 +115,7 @@ class Drawer(private val renderer: Renderer, private val textures: TextureHolder
                         (it[0] / 2 - 0.5f), (it[1] / 2 - 0.5f)
                     )
                 }.toFloatArray()
-            renderer.drawShape(
-                data,
-                key.x * resolution,
-                key.y * resolution,
-                PI.toFloat() * .25f,
-                resolution * sqrt1,
-                resolution * sqrt1
-            )
+            renderer.drawShape(data, Vec2(key.x * resolution, key.y * resolution), 0f, Vec2(scale, scale))
         }
     }
 
@@ -145,23 +137,24 @@ class Drawer(private val renderer: Renderer, private val textures: TextureHolder
                 )
             }.toFloatArray()
 
-        renderer.drawShape(data, 0f, 0f, 0f, 45f, 45f)
+        renderer.drawShape(data, scale = Vec2(1f, 1f).mul(45f))
     }
 
     fun drawMainMenu() {
-        val xScale = 20f
-        val yScale = 5f
+        val buttonLine = Color.WHITE.setAlpha(.7f)
+
+        val xScale = 200f
+        val yScale = 50f
         val linePoints = BasicShapes.polygon4
             .chunked(2)
             .flatMap { listOf(it[0] * xScale, it[1] * yScale) }
-        val data = getLine(linePoints, Color(.5f, 1f, .8f, .5f), startWidth = 1f, wrapAround = true)
+        val data = getLine(linePoints, buttonLine, startWidth = 1f, wrapAround = true)
 
         textures.white_pixel.bind()
-        renderer.drawStrip(data)
+        renderer.drawStrip(data, Vec2(0f, 200f), useCamera = false)
+        renderer.drawText("New Game", Vec2(0f, 200f), Vec2(1f, 1f).mul(.6f), buttonLine, false)
 
-//        renderer.drawText("""New game
-//            |here
-//        """.trimMargin(), Vec2(0f, 0f), Vec2(.5f, .5f), Color.WHITE)
+        renderer.drawText("Volynov", Vec2(0f, 300f), Vec2(1f, 1f).mul(.8f), buttonLine, false)
     }
 
 }

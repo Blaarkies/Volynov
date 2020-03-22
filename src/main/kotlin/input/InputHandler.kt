@@ -16,7 +16,6 @@ class InputHandler(private val gamePhaseHandler: GamePhaseHandler) {
         val mouseButtonRelease = PublishSubject.create<Boolean>()
         window.mouseButtonEvent.takeUntil(unsubscribe).subscribe { click ->
             dragRightClick(click, window, mouseButtonRelease)
-//            doubleLeftClick()
         }
 
         getDoubleClick(window)
@@ -28,8 +27,14 @@ class InputHandler(private val gamePhaseHandler: GamePhaseHandler) {
         }
 
         window.keyboardEvent.takeUntil(unsubscribe).subscribe {
-            if (it.key == GLFW.GLFW_KEY_SPACE && it.action == GLFW.GLFW_PRESS) {
-                gamePhaseHandler.pauseGame(it)
+            when (it.action) {
+                GLFW.GLFW_PRESS -> {
+                    when (it.key) {
+                        GLFW.GLFW_KEY_SPACE -> gamePhaseHandler.pauseGame(it)
+                        GLFW.GLFW_KEY_LEFT -> gamePhaseHandler.keyPressArrowLeft(it)
+                        GLFW.GLFW_KEY_RIGHT -> gamePhaseHandler.keyPressArrowRight(it)
+                    }
+                }
             }
         }
     }

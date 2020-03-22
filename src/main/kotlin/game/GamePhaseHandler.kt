@@ -110,4 +110,12 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer, val
         gameState.camera.trackFreeBody(clickedBody)
     }
 
+    fun keyPressArrowLeft(event: KeyboardEvent) {
+        drawer.renderer.debugOffset.addLocal(Vec2(-0.005f, 0f))
+    }
+
+    fun keyPressArrowRight(event: KeyboardEvent) {
+        drawer.renderer.debugOffset.addLocal(Vec2(0.005f, 0f))
+    }
+
 }

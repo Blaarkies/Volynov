@@ -48,8 +48,6 @@ class Window(private val title: String, var width: Int, var height: Int, private
         GLFW.glfwSetFramebufferSizeCallback(windowHandle) { _, width, height ->
             this.width = width
             this.height = height
-
-            println("FramebufferSizeCallback $width, $height")
         }
 
         // Get the resolution of the primary monitor

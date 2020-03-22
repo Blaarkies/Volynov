@@ -20,14 +20,16 @@ import java.util.logging.Logger
 
 class Renderer {
 
+    var debugOffset: Vec2 = Vec2(1f, 1f)
+
     private lateinit var vao: VertexArrayObject
     private lateinit var vbo: VertexBufferObject
     private lateinit var program: ShaderProgram
     private lateinit var vertices: FloatBuffer
     private var numVertices = 0
     private var isDrawing = false
-    private lateinit var font: Font
-    private var vertexDimensionCount = 9
+    lateinit var font: Font
+    private val vertexDimensionCount = 9
     private lateinit var cameraView: CameraView
 
     fun init(gameStateCamera: CameraView) {
@@ -48,9 +50,7 @@ class Renderer {
         }
     }
 
-    fun clear() {
-        glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
-    }
+    fun clear() = glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
 
     fun begin() {
         check(!isDrawing) { "Renderer is already drawing!" }
@@ -58,10 +58,10 @@ class Renderer {
         numVertices = 0
     }
 
-    fun end() {
+    fun end(drawType: Int = GL_TRIANGLES) {
         check(isDrawing) { "Renderer isn't drawing!" }
         isDrawing = false
-        flush(GL_TRIANGLES)
+        flush(drawType)
     }
 
     private fun flush(drawType: Int) {
@@ -80,105 +80,45 @@ class Renderer {
         numVertices = 0
     }
 
-    fun drawText(text: CharSequence, offset: Vec2, scale: Vec2, c: Color) = font.drawText(this, text, offset, scale, c)
-
-    fun drawTextureRegion(
-        texture: Texture,
-        x: Float, y: Float,
-        regX: Float, regY: Float,
-        regWidth: Float, regHeight: Float,
-        c: Color = Color.WHITE
-    ) {
-        val x2 = x + regWidth
-        val y2 = y + regHeight
-
-        val s1 = regX / texture.width
-        val t1 = regY / texture.height
-        val s2 = (regX + regWidth) / texture.width
-        val t2 = (regY + regHeight) / texture.height
-
-        setUniformInputs()
-        drawTextureRegion(x, y, x2, y2, s1, t1, s2, t2, c)
-    }
-
-    fun drawTextureRegion(
-        x1: Float,
-        y1: Float,
-        x2: Float,
-        y2: Float,
-        s1: Float,
-        t1: Float,
-        s2: Float,
-        t2: Float,
-        c: Color = Color.WHITE
-    ) {
-        if (vertices.remaining() < 8 * 6) {
-            flush(GL_TRIANGLES)
-        }
-        val r = c.red
-        val g = c.green
-        val b = c.blue
-        val a = c.alpha
-
-        vertices.put(
-            floatArrayOf(
-                x1, y1, 0f, r, g, b, a, s1, t1,
-                x1, y2, 0f, r, g, b, a, s1, t2,
-                x2, y2, 0f, r, g, b, a, s2, t2,
-                x1, y1, 0f, r, g, b, a, s1, t1,
-                x2, y2, 0f, r, g, b, a, s2, t2,
-                x2, y1, 0f, r, g, b, a, s2, t1
-            )
-        )
-        numVertices += 6
-    }
+    fun drawText(text: CharSequence, offset: Vec2, scale: Vec2, color: Color, useCamera: Boolean = true) =
+        font.drawText(this, text, offset, scale, color, useCamera)
 
     fun drawShape(
         data: FloatArray,
-        x: Float = 0f,
-        y: Float = 0f,
+        offset: Vec2 = Vec2(),
         h: Float = 0f,
-        vertexScaleX: Float = 1f,
-        vertexScaleY: Float = 1f
-    ) {
-        drawEntity(data, x, y, h, vertexScaleX, vertexScaleY, drawType = GL_TRIANGLE_FAN)
-    }
+        scale: Vec2 = Vec2(1f, 1f),
+        useCamera: Boolean = false
+    ) = drawEntity(data, offset, h, scale, GL_TRIANGLE_FAN, useCamera)
 
     fun drawStrip(
         data: FloatArray,
-        x: Float = 0f,
-        y: Float = 0f,
+        offset: Vec2 = Vec2(),
         h: Float = 0f,
-        scaleX: Float = 1f,
-        scaleY: Float = 1f
-    ) {
-        drawEntity(data, x, y, h, scaleX, scaleY, drawType = GL_TRIANGLE_STRIP)
-    }
+        scale: Vec2 = Vec2(1f, 1f),
+        useCamera: Boolean = false
+    ) =
+        drawEntity(data, offset, h, scale, GL_TRIANGLE_STRIP, useCamera)
 
     private fun drawEntity(
         data: FloatArray,
-        x: Float,
-        y: Float,
+        offset: Vec2,
         h: Float,
-        vertexScaleX: Float,
-        vertexScaleY: Float,
-        drawType: Int
+        scale: Vec2,
+        drawType: Int,
+        useCamera: Boolean = false
     ) {
         begin()
         if (vertices.remaining() < data.size) {
             flush(GL_TRIANGLES)
-            println("Flushed some triangles")
+            println("👉  (vertices.remaining() < data.size) was true ✔ ")
         }
 
         vertices.put(data)
         numVertices += data.size / vertexDimensionCount
 
-        setUniformInputs(
-            x, y,
-            0f, h, vertexScaleX, vertexScaleY
-        )
-        flush(drawType)
-        end()
+        setUniformInputs(offset, 0f, h, scale, useCamera)
+        end(drawType)
     }
 
     fun dispose() {
@@ -197,12 +137,8 @@ class Renderer {
         val size = (vertices.capacity() * java.lang.Float.BYTES).toLong()
         vbo.uploadData(GL_ARRAY_BUFFER, size, GL_DYNAMIC_DRAW)
 
-        numVertices = 0
-        isDrawing = false
-
         val vertexShader = Shader.loadShader(GL_VERTEX_SHADER, "/shaders/vertexBasicPosition.glsl")
         val fragmentShader = Shader.loadShader(GL_FRAGMENT_SHADER, "/shaders/fragmentBasicColor.glsl")
-
         program = ShaderProgram()
         program.attachShader(vertexShader)
         program.attachShader(fragmentShader)
@@ -213,26 +149,30 @@ class Renderer {
         fragmentShader.delete()
 
         specifyVertexAttributes()
-        setUniformInputs()
     }
 
     private fun setUniformInputs(
-        x: Float = 0f, y: Float = 0f, z: Float = 0f, h: Float = 0f,
-        vertexScaleX: Float = 1f,
-        vertexScaleY: Float = 1f
+        offset: Vec2 = Vec2(),
+        z: Float = 0f,
+        h: Float = 0f,
+        scale: Vec2 = Vec2(1f, 1f),
+        useCamera: Boolean
     ) {
 //        val uniTex = program!!.getUniformLocation("texImage")
 //        program!!.setUniform(uniTex, 0)
 
-        val model = Matrix4f.translate(x, y, z)
+        val model = Matrix4f.translate(offset.x, offset.y, z)
             .multiply(Matrix4f.rotate(h * Common.radianToDegree, 0f, 0f, 1f))
-            .multiply(Matrix4f.scale(vertexScaleX, vertexScaleY, 1f))
+            .multiply(Matrix4f.scale(scale.x, scale.y, 1f))
         val uniModel = program.getUniformLocation("model")
         program.setUniform(uniModel, model)
 
         val zoomScale = 1f / cameraView.z
-        val view = Matrix4f.scale(zoomScale, zoomScale, 1f)
-            .multiply(Matrix4f.translate(-cameraView.location.x, -cameraView.location.y, 0f))
+        val view = when (useCamera) {
+            true -> Matrix4f.scale(zoomScale, zoomScale, 1f)
+                .multiply(Matrix4f.translate(-cameraView.location.x, -cameraView.location.y, 0f))
+            false -> Matrix4f()
+        }
         val uniView = program.getUniformLocation("view")
         program.setUniform(uniView, view)
 

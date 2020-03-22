@@ -1,5 +1,7 @@
 package display.text
 
+import display.draw.TextureHolder
+import display.graphic.BasicShapes
 import display.graphic.Color
 import display.graphic.Renderer
 import display.graphic.Texture
@@ -18,10 +20,13 @@ import java.awt.Color as AwtColor
 
 class Font constructor(font: Font = Font(MONOSPACED, BOLD, 32), antiAlias: Boolean = true) {
 
-    private val glyphs: MutableMap<Char, Glyph>
+    val glyphs: MutableMap<Char, Glyph>
     private var fontBitMapShadow: Texture = Texture()
-    private val fontBitMap: Texture
+    val fontBitMap: Texture
     private var fontHeight = 0
+    private var fontWidth = 0
+
+//    private val textures = TextureHolder()
 
     constructor(antiAlias: Boolean) : this(Font(MONOSPACED, PLAIN, 16), antiAlias)
 
@@ -37,6 +42,17 @@ class Font constructor(font: Font = Font(MONOSPACED, BOLD, 32), antiAlias: Boole
             size.toFloat()
         ), antiAlias
     )
+
+    init {
+//        textures.init()
+
+        glyphs = HashMap()
+        val (texture, shadowTexture) = createFontTexture(font, antiAlias)
+        fontBitMap = texture
+        fontBitMapShadow = shadowTexture
+
+        fontWidth = glyphs.map { it.value.width }.max()!!
+    }
 
     private fun createFontTexture(font: Font, antiAlias: Boolean): List<Texture> {
         var imageWidth = 0
@@ -61,7 +77,7 @@ class Font constructor(font: Font = Font(MONOSPACED, BOLD, 32), antiAlias: Boole
                 val charWidth = charImage.width
                 val charHeight = charImage.height
 
-                val ch = Glyph(charWidth, charHeight, x, image.height - charHeight, 0f)
+                val ch = Glyph(charWidth, charHeight, x, image.height - charHeight)
                 g.drawImage(charImage, x, 0, null)
                 x += ch.width
                 glyphs[c] = ch
@@ -168,116 +184,83 @@ class Font constructor(font: Font = Font(MONOSPACED, BOLD, 32), antiAlias: Boole
         return image
     }
 
-    fun getWidth(text: CharSequence): Int {
-        var width = 0
-        var lineWidth = 0
-        for (element in text) {
-            val c = element
-            if (c == '\n') {
-                width = width.coerceAtLeast(lineWidth)
-                lineWidth = 0
-                continue
-            }
-            if (c == '\r') {
-                continue
-            }
-            val g = glyphs[c]
-            lineWidth += g!!.width
-        }
-        width = width.coerceAtLeast(lineWidth)
-        return width
-    }
+    private fun getHeight(text: CharSequence): Int = text.split('\n')
+        .map { sentence -> sentence.map { letter -> glyphs[letter]!!.height }.max() ?: 0 }
+        .sumBy { it }
 
-    private fun getHeight(text: CharSequence): Int {
-        var height = 0
-        var lineHeight = 0
-        val a =text.split('\n')
-            .map { sentence -> sentence.maxBy { letter -> glyphs[letter]!!.height } }
+    private fun getTextTotalWidth(glyphs: List<Glyph>, scale: Vec2) = glyphs.map { it.width * scale.x }.sum()
 
-//            .forEach {
-//            if (it == '\n') {
-//                height += lineHeight
-//                lineHeight = 0
-//                return@forEach
-//            }
-//            if (it == '\r' || it.isWhitespace()) {
-//                return@forEach
-//            }
-//            val g = glyphs[it]
-//            lineHeight = lineHeight.coerceAtLeast(g!!.height)
-//        }
-
-        return height + lineHeight
-    }
-
-    fun drawText(renderer: Renderer, text: CharSequence, offset: Vec2, scale: Vec2, c: Color) {
-        val textHeight = getHeight(text)
-        drawLetters(fontBitMapShadow, offset, scale, textHeight, renderer, text, Color.BLACK)
-        drawLetters(fontBitMap, offset, scale, textHeight, renderer, text, c)
+    fun drawText(
+        renderer: Renderer,
+        text: CharSequence,
+        offset: Vec2,
+        scale: Vec2,
+        color: Color,
+        useCamera: Boolean
+    ) {
+        drawLetters(fontBitMapShadow, offset, scale, renderer, text, Color.BLACK, useCamera)
+        drawLetters(fontBitMap, offset, scale, renderer, text, color, useCamera)
     }
 
     private fun drawLetters(
         texture: Texture,
-        offset: Vec2, scale: Vec2,
-        textHeight: Int,
+        offset: Vec2,
+        scale: Vec2,
         renderer: Renderer,
         text: CharSequence,
-        c: Color
+        color: Color,
+        useCamera: Boolean
     ) {
-        var drawX = offset.x
-        var drawY = offset.y
-        if (textHeight > fontHeight) {
-            drawY += textHeight - fontHeight.toFloat()
-        }
+        val glyphs = text.map { glyphs[it]!! }
+        val centerText = Vec2(-getTextTotalWidth(glyphs, scale) * .75f, 0f)
 
-        renderer.begin()
-        text.forEach {
-            if (it == '\n') {
-                drawY -= fontHeight.toFloat()
-                drawX = offset.x
-                return@forEach
-            }
-            if (it == '\r' || it.isWhitespace()) {
-                return@forEach
-            }
-            val glyph = glyphs[it]!!
-            drawTextPosition(texture, renderer, drawX, drawY, scale, glyph, c)
-            drawX += glyph.width.toFloat()
+        var x = -glyphs[0].width * scale.x
+        var y = 0f
+        glyphs.forEach {
+            x += it.width * scale.x
+
+            drawTextPosition(
+                texture, renderer, Vec2(x, y).add(offset).add(centerText),
+                scale, it, color, useCamera
+            )
+            x += it.width * scale.x
         }
-        renderer.end()
     }
 
-    private fun drawTextPosition(
+    fun drawTextPosition(
         texture: Texture,
         renderer: Renderer,
-        drawX: Float,
-        drawY: Float,
+        offset: Vec2,
         scale: Vec2,
         glyph: Glyph,
-        c: Color
+        color: Color,
+        useCamera: Boolean
     ) {
+        val glyphScale = Vec2(glyph.width / texture.width.toFloat(), glyph.height / texture.height.toFloat())
+        val glyphOffset = Vec2((glyph.x + glyph.width) / texture.width.toFloat(), glyph.y / texture.height.toFloat())
+        val debug = renderer.debugOffset
+
+        val data = BasicShapes.polygon4.map { it / 0.707106781f }
+            .chunked(2)
+            .flatMap {
+                val (x, y) = it
+                listOf(
+                    x * glyph.width, y * glyph.height, 0f,
+                    color.red, color.green, color.blue, color.alpha,
+                    (x * .5f - 0.5f) * glyphScale.x + glyphOffset.x * debug.x,
+                    (y * .5f - 0.5f) * glyphScale.y + glyphOffset.y * debug.y
+                )
+            }.toFloatArray()
+
         texture.bind()
-        renderer.drawTextureRegion(
-            texture,
-            drawX - glyph.width.toFloat() * 0.5f,
-            drawY - glyph.height.toFloat() * 0.5f,
-            glyph.x.toFloat(),
-            glyph.y.toFloat(),
-            glyph.width.toFloat(),
-            glyph.height.toFloat(),
-            c
-        )
+        renderer.drawShape(data, offset, 0f, scale, useCamera)
+
+//        textures.white_pixel.bind()
+//        renderer.drawShape(data, offset, 0f, scale, useCamera)
     }
 
     fun dispose() {
         fontBitMap.delete()
-    }
-
-    init {
-        glyphs = HashMap()
-        val (texture, shadowTexture) = createFontTexture(font, antiAlias)
-        fontBitMap = texture
-        fontBitMapShadow = shadowTexture
     }
 
     companion object {
