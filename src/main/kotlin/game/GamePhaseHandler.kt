@@ -22,6 +22,7 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer, val
         get() = gameState.camera
 
     private var currentPhase = GamePhases.MAIN_MENU
+    private var isTransitioning = false
     private var lastPhaseTimestamp = System.currentTimeMillis()
     private val pauseDownDuration = 1000f
 
@@ -31,45 +32,89 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer, val
     fun init(window: Window) {
         exitCall = { window.exit() }
 
+        setupMainMenu()
+    }
+
+    private fun setupMainMenu() {
         currentPhase = GamePhases.MAIN_MENU
+        guiController.clear()
         guiController.createMainMenu(
-            onClickNewGame = {
-                currentPhase = GamePhases.UNPAUSING
-                gameState.reset()
-                MapGenerator.populateTestMap(gameState, textures)
-                gameState.camera.trackFreeBody(gameState.tickables.find { it.id == "terra" } as FreeBody)
-            },
+            onClickNewGame = { setupMainMenuSelectPlayers() },
             onClickSettings = {},
-            onClickQuit = { window.exit() }
+            onClickQuit = exitCall
         )
     }
 
+    private fun setupMainMenuSelectPlayers() {
+        currentPhase = GamePhases.MAIN_MENU_SELECT_PLAYERS
+        gameState.reset()
+        guiController.clear()
+        guiController.createMainMenuSelectPlayers(
+            onClickStart = { setupStartGame() },
+            onClickCancel = { setupMainMenu() },
+            onAddPlayer = { onAddPlayerButton() },
+            onRemovePlayer = { onRemovePlayerButton() },
+            playerList = gameState.gamePlayers
+        )
+    }
+
+    private fun onAddPlayerButton() {
+        gameState.gamePlayers.add(GamePlayer((gameState.gamePlayers.size + 1).toString()))
+        guiController.updateMainMenuSelectPlayers(gameState.gamePlayers, { onAddPlayerButton() },
+            { onRemovePlayerButton() })
+    }
+
+    private fun onRemovePlayerButton() {
+//        gameState.gamePlayers.add(GamePlayer(gameState.gamePlayers.size.toString()))
+        guiController.updateMainMenuSelectPlayers(gameState.gamePlayers, { onAddPlayerButton() },
+            { onRemovePlayerButton() })
+    }
+
+    private fun setupStartGame() {
+        currentPhase = GamePhases.NEW_GAME_INTRO
+
+        MapGenerator.populateNewGameMap(gameState, textures)
+        camera.trackFreeBody(gameState.tickables.maxBy { it.worldBody.mass } as FreeBody)
+
+        if (gameState.gamePlayers.size > 0) {
+            val startingPlayer = gameState.gamePlayers.random()
+            gameState.playerOnTurn = startingPlayer
+        }
+
+//        gameState.gamePlayers.
+    }
+
+
     fun dragMouseRightClick(movement: Vec2) {
-        gameState.camera.moveLocation(movement.mulLocal(-gameState.camera.z))
+        camera.moveLocation(movement.mulLocal(-camera.z))
     }
 
     fun scrollCamera(movement: Float) {
-        gameState.camera.moveZoom(movement * -.001f)
+        camera.moveZoom(movement * -.001f)
     }
 
     fun pauseGame(event: KeyboardEvent) {
-        currentPhase = when (currentPhase) {
-            GamePhases.NONE -> GamePhases.PAUSING
-            GamePhases.PAUSED -> GamePhases.UNPAUSING
-            GamePhases.UNPAUSED -> GamePhases.PAUSING
-            else -> currentPhase
+        when (currentPhase) {
+            GamePhases.PAUSE -> currentPhase = GamePhases.PLAY
+            GamePhases.PLAY -> currentPhase = GamePhases.PAUSE
         }
+        startTransition()
+    }
+
+    private fun startTransition() {
         lastPhaseTimestamp = System.currentTimeMillis()
+        isTransitioning = true
     }
 
     fun update() {
         camera.update()
 
-        when (currentPhase) {
-            GamePhases.PAUSING -> tickGamePausing()
-            GamePhases.PAUSED -> return
-            GamePhases.UNPAUSING -> tickGameUnpausing()
-            GamePhases.MAIN_MENU -> return
+        when {
+            currentPhase == GamePhases.PAUSE && isTransitioning -> tickGamePausing()
+            currentPhase == GamePhases.PAUSE -> return
+            currentPhase == GamePhases.PLAY && isTransitioning -> tickGameUnpausing()
+            currentPhase == GamePhases.MAIN_MENU -> return
+            currentPhase == GamePhases.MAIN_MENU_SELECT_PLAYERS -> return
             else -> gameState.tickClock(timeStep, velocityIterations, positionIterations)
         }
     }
@@ -77,6 +122,7 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer, val
     fun render() {
         when (currentPhase) {
             GamePhases.MAIN_MENU -> guiController.render()
+            GamePhases.MAIN_MENU_SELECT_PLAYERS -> guiController.render()
             else -> drawPlayPhase()
         }
     }
@@ -94,17 +140,17 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer, val
     private fun tickGameUnpausing() {
         val interpolateStep = (System.currentTimeMillis() - lastPhaseTimestamp) / pauseDownDuration
         if (interpolateStep >= 1f) {
-            currentPhase = GamePhases.UNPAUSED
+            currentPhase = GamePhases.PLAY
         } else {
             val timeFunctionStep = getTimingFunctionEaseOut(interpolateStep)
-            gameState.tickClock(timeStep * (timeFunctionStep), velocityIterations, positionIterations)
+            gameState.tickClock(timeStep * timeFunctionStep, velocityIterations, positionIterations)
         }
     }
 
     private fun tickGamePausing() {
         val interpolateStep = (System.currentTimeMillis() - lastPhaseTimestamp) / pauseDownDuration
         if (interpolateStep >= 1f) {
-            currentPhase = GamePhases.PAUSED
+            currentPhase = GamePhases.PAUSE
         } else {
             val timeFunctionStep = getTimingFunctionSineEaseIn(1f - interpolateStep)
             gameState.tickClock(timeStep * timeFunctionStep, velocityIterations, positionIterations)
@@ -112,11 +158,7 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer, val
     }
 
     fun doubleLeftClick(location: Vec2, click: MouseButtonEvent) {
-        val transformedLocation = location.add(Vec2(-camera.windowWidth * .5f, -camera.windowHeight * .5f))
-            .let {
-                it.y *= -1f
-                it.mul(camera.z).add(camera.location)
-            }
+        val transformedLocation = getScreenLocation(location).mul(camera.z).add(camera.location)
 
         val clickedBody = gameState.tickables.find {
             it.worldBody.position
@@ -125,7 +167,7 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer, val
         }
             ?: return
 
-        gameState.camera.trackFreeBody(clickedBody)
+        camera.trackFreeBody(clickedBody)
     }
 
     fun keyPressArrowLeft(event: KeyboardEvent) {
@@ -137,33 +179,34 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer, val
     }
 
     fun moveMouse(location: Vec2) {
-        val transformedLocation = location.add(Vec2(-camera.windowWidth * .5f, -camera.windowHeight * .5f))
-            .let {
-                it.y *= -1f
-                it
-            }
+        val transformedLocation = getScreenLocation(location)
 
         when (currentPhase) {
             GamePhases.MAIN_MENU -> guiController.checkHover(transformedLocation)
+            GamePhases.MAIN_MENU_SELECT_PLAYERS -> guiController.checkHover(transformedLocation)
         }
     }
 
     fun leftClickMouse(event: MouseButtonEvent) {
-        val transformedLocation = event.location.add(Vec2(-camera.windowWidth * .5f, -camera.windowHeight * .5f))
+        val transformedLocation = getScreenLocation(event.location)
+
+        when (currentPhase) {
+            GamePhases.MAIN_MENU -> guiController.checkLeftClick(transformedLocation)
+            GamePhases.MAIN_MENU_SELECT_PLAYERS -> guiController.checkLeftClick(transformedLocation)
+        }
+    }
+
+    private fun getScreenLocation(location: Vec2): Vec2 =
+        location.add(Vec2(-camera.windowWidth * .5f, -camera.windowHeight * .5f))
             .let {
                 it.y *= -1f
                 it
             }
 
-        when (currentPhase) {
-            GamePhases.MAIN_MENU -> guiController.checkLeftClick(transformedLocation)
-        }
-    }
-
     fun keyPressEscape(event: KeyboardEvent) {
         when (currentPhase) {
             GamePhases.MAIN_MENU -> exitCall()
-            else -> currentPhase = GamePhases.MAIN_MENU
+            else -> setupMainMenu()
         }
     }
 
