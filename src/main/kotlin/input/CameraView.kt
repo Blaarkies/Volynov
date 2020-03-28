@@ -1,10 +1,10 @@
-package display
+package input
 
+import display.Window
 import engine.freeBody.FreeBody
 import org.jbox2d.common.Vec2
-import utility.Common.getTimingFunctionFullSine
 import utility.Common.getTimingFunctionSigmoid
-import utility.Common.getTimingFunctionSineEaseIn
+import kotlin.math.pow
 
 class CameraView(private val window: Window) {
 
@@ -13,7 +13,7 @@ class CameraView(private val window: Window) {
     val windowHeight: Float
         get() = window.height.toFloat()
 
-    var location = Vec2(0f, 0f)
+    var location = Vec2()
     var z = .05f
 
     var currentPhase = CameraPhases.STATIC
@@ -25,20 +25,21 @@ class CameraView(private val window: Window) {
 
     fun update() {
         when (currentPhase) {
-            CameraPhases.TRANSITION_TO_TARGET -> {
-                val interpolateStep = (System.currentTimeMillis() - lastPhaseTimestamp) / transitionDuration
-                if (interpolateStep >= 1f) {
-                    location = trackFreeBody.worldBody.position
-                    currentPhase = CameraPhases.TRACKING_TARGET
-                } else {
-                    val timeFunctionStep = getTimingFunctionSigmoid(interpolateStep, 3f)
-                    setNewLocation(
-                        trackFreeBody.worldBody.position.mul(timeFunctionStep)
-                            .add(lastStaticLocation.mul(1f - timeFunctionStep))
-                    )
-                }
-            }
-            else -> return
+            CameraPhases.TRANSITION_TO_TARGET -> handleTransitionToTarget()
+        }
+    }
+
+    private fun handleTransitionToTarget() {
+        val interpolateStep = (System.currentTimeMillis() - lastPhaseTimestamp) / transitionDuration
+        if (interpolateStep >= 1f) {
+            location = trackFreeBody.worldBody.position
+            currentPhase = CameraPhases.TRACKING_TARGET
+        } else {
+            val timeFunctionStep = getTimingFunctionSigmoid(interpolateStep, 3f)
+            setNewLocation(
+                trackFreeBody.worldBody.position.mul(timeFunctionStep)
+                    .add(lastStaticLocation.mul(1f - timeFunctionStep))
+            )
         }
     }
 
@@ -59,9 +60,13 @@ class CameraView(private val window: Window) {
     }
 
     fun moveZoom(movement: Float) {
-        z = (z + movement).coerceAtLeast(.0001f)
+        z = (z + movement * z.pow(1.2f) * 50f).coerceIn(.0001f, 1f)
     }
 
+    fun reset() {
+        location = Vec2()
+        z = .05f
+    }
 
 }
 

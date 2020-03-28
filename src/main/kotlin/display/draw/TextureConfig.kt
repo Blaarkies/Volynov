@@ -10,11 +10,12 @@ class TextureConfig(
 
     fun updateGpuBufferData() {
         gpuBufferData = chunkedVertices.flatMap {
+            val (x, y) = it
             listOf(
-                it[0], it[1], 0f,
+                x, y, 0f,
                 1f, 1f, 1f, 1f,
-                (it[0] / 2 - 0.5f) * scale.x + offset.x,
-                (it[1] / 2 - 0.5f) * scale.y + offset.y
+                (x * .5f - 0.5f) * scale.x + offset.x,
+                (y * .5f - 0.5f) * scale.y + offset.y
             )
         }.toFloatArray()
     }

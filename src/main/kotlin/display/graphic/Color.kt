@@ -1,8 +1,5 @@
 package display.graphic
 
-import Vector3f
-import Vector4f
-
 class Color(val red: Float = 0f, val green: Float = 0f, val blue: Float = 0f, val alpha: Float = 0f) {
 
     operator fun times(value: Float) =
@@ -18,13 +15,7 @@ class Color(val red: Float = 0f, val green: Float = 0f, val blue: Float = 0f, va
         getIntToFloat(alpha)
     )
 
-    fun toVector3f(): Vector3f {
-        return Vector3f(red, green, blue)
-    }
-
-    fun toVector4f(): Vector4f {
-        return Vector4f(red, green, blue, alpha)
-    }
+    fun setAlpha(newValue: Float): Color = Color(red, green, blue, newValue)
 
     companion object {
         val WHITE = Color(1f, 1f, 1f, 1f)

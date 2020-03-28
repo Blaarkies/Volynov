@@ -1,5 +1,6 @@
 package display
 
+import display.events.MouseButtonEvent
 import io.reactivex.subjects.PublishSubject
 import org.jbox2d.common.Vec2
 import org.lwjgl.BufferUtils
@@ -7,6 +8,7 @@ import org.lwjgl.glfw.GLFW
 import org.lwjgl.glfw.GLFWErrorCallback
 import org.lwjgl.opengl.GL
 import org.lwjgl.opengl.GL11
+import org.lwjgl.opengl.GL11.*
 import org.lwjgl.system.Callback
 import org.lwjgl.system.MemoryUtil
 
@@ -37,6 +39,7 @@ class Window(private val title: String, var width: Int, var height: Int, private
         GLFW.glfwWindowHint(GLFW.GLFW_OPENGL_PROFILE, GLFW.GLFW_OPENGL_CORE_PROFILE)
         GLFW.glfwWindowHint(GLFW.GLFW_OPENGL_FORWARD_COMPAT, GL11.GL_TRUE)
         GLFW.glfwWindowHint(GLFW.GLFW_SAMPLES, 4) // anti-aliasing
+
         // Create the window
         windowHandle = GLFW.glfwCreateWindow(width, height, title, MemoryUtil.NULL, MemoryUtil.NULL)
         if (windowHandle == MemoryUtil.NULL) {
@@ -46,8 +49,6 @@ class Window(private val title: String, var width: Int, var height: Int, private
         GLFW.glfwSetFramebufferSizeCallback(windowHandle) { _, width, height ->
             this.width = width
             this.height = height
-
-            println("FramebufferSizeCallback $width, $height")
         }
 
         // Get the resolution of the primary monitor
@@ -60,23 +61,29 @@ class Window(private val title: String, var width: Int, var height: Int, private
         }
         GLFW.glfwShowWindow(windowHandle)
         GL.createCapabilities()
-        GL11.glClearColor(0f, 0f, 0f, 0f)
+        glClearColor(0f, 0f, 0f, 0f)
 
         setupInputCallbacks()
     }
 
     private fun setupInputCallbacks() {
         GLFW.glfwSetKeyCallback(windowHandle) { window, key, scancode, action, mods ->
-            if (key == GLFW.GLFW_KEY_ESCAPE && action == GLFW.GLFW_PRESS) {
-                callbacks.forEach { it.free() }
-                GLFW.glfwSetWindowShouldClose(window, true)
-            } else {
-                keyboardEvent.onNext(KeyboardEvent(key, scancode, action, mods))
+            if (action == GLFW.GLFW_PRESS) {
+                when {
+                    key == GLFW.GLFW_KEY_F12 -> {
+                        when (glGetInteger(GL_POLYGON_MODE)) {
+                            GL_LINE -> glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+                            GL_POINT -> glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
+                            else -> glPolygonMode(GL_FRONT_AND_BACK, GL_POINT)
+                        }
+                    }
+                    else -> keyboardEvent.onNext(KeyboardEvent(key, scancode, action, mods))
+                }
             }
         }?.let { callbacks.add(it) }
 
         GLFW.glfwSetMouseButtonCallback(windowHandle) { window, button, action, mods ->
-            mouseButtonEvent.onNext(MouseButtonEvent(button, action, mods))
+            mouseButtonEvent.onNext(MouseButtonEvent(button, action, mods, getCursorPosition()))
         }?.let { callbacks.add(it) }
 
         GLFW.glfwSetCursorPosCallback(windowHandle) { window, xPos, yPos ->
@@ -114,6 +121,11 @@ class Window(private val title: String, var width: Int, var height: Int, private
         GLFW.glfwGetCursorPos(windowHandle, x, y)
 
         return Vec2(x.get().toFloat(), y.get().toFloat())
+    }
+
+    fun exit() {
+        callbacks.forEach { it.free() }
+        GLFW.glfwSetWindowShouldClose(windowHandle, true)
     }
 
 }

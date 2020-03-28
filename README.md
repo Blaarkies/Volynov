@@ -1,5 +1,5 @@
 # <h1>Volynov</h1>
-<h3>A space artillery game where players aim to destroy each other by firing missiles, high tech payloads, and sabotage equipment at the enemy. All spaceships, planets and warheads are influenced by realistic physics to produce n-body orbits and collisions.</h3>
+<h3>A space artillery game designed for players that want to destroy each other and the planets around them. Fire missiles, bomb, high tech payloads, and sabotage equipment at the enemy and odge their attempts to do the same. All spaceships, planets and warheads are influenced by realistic physics to produce n-body orbits and collisions.</h3>
 
 <br>
 <h6>2020 03 01, First contact, again 
@@ -18,8 +18,8 @@
 
 <br>
 <h6>2019 12 31, Hindsight vision is 2020 
-<br> <i>Convert code to Kotlin and Java Swing to LWJGL</i></h6>
-<code>The simplest shape in OpenGL is a triangle, and if that is all you can draw...</code>
+<br> <i>Converted source code from Java to Kotlin, and converted visuals from Java Swing to LWJGL</i></h6>
+<code>The simplest shape in OpenGL is the triangle, and if that is all you can draw yet...</code>
 <img src="https://github.com/Blaarkies/Volynov/blob/master/assets/how_to_draw_triangles.gif"/>
 <hr>
 
@@ -31,7 +31,7 @@
 
 <br>
 <h6>2016 10 09, First contact 
-<br> <i>Added basic collision phycis</i></h6>
+<br> <i>Added basic collision physics</i></h6>
 <code>Cyan lines are current acceleration vectors</code>
 <img src="https://github.com/Blaarkies/Volynov/blob/master/assets/first_collisions.gif"/>
 <hr>

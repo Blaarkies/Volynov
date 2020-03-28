@@ -46,7 +46,7 @@ class AppRunner(
         while (running && !window.windowShouldClose()) {
             elapsedTime = customTimer.elapsedTime
             accumulator += elapsedTime
-            gameLogic.input(window)
+
             while (accumulator >= interval) {
                 gameLogic.update(interval)
                 accumulator -= interval

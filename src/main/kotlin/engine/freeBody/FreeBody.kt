@@ -30,7 +30,7 @@ open class FreeBody(
         ): Body {
             val fixtureDef = FixtureDef()
             fixtureDef.shape = shapeBox
-            fixtureDef.density = (mass / (PI.toFloat() * radius.pow(2)))
+            fixtureDef.density = mass / (PI.toFloat() * radius.pow(2f))
             fixtureDef.friction = friction
             fixtureDef.restitution = restitution
 
