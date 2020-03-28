@@ -99,23 +99,6 @@ class Drawer(val renderer: Renderer, val textures: TextureHolder) {
         renderer.drawShape(data, scale = Vec2(1f, 1f).mul(45f))
     }
 
-    fun drawMainMenu() {
-        val buttonLine = Color.WHITE.setAlpha(.7f)
-
-        val xScale = 200f
-        val yScale = 50f
-        val linePoints = BasicShapes.polygon4
-            .chunked(2)
-            .flatMap { listOf(it[0] * xScale, it[1] * yScale) }
-        val data = getLine(linePoints, buttonLine, startWidth = 1f, wrapAround = true)
-
-        textures.white_pixel.bind()
-        renderer.drawStrip(data, Vec2(0f, 200f), useCamera = false)
-        renderer.drawText("New Game", Vec2(0f, 200f), Vec2(1f, 1f).mul(.6f), buttonLine, false)
-
-        renderer.drawText("Volynov", Vec2(0f, 300f), Vec2(1f, 1f).mul(.8f), buttonLine, false)
-    }
-
     companion object {
 
         fun getColoredData(

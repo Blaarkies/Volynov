@@ -10,7 +10,7 @@ class GuiButton(
     offset: Vec2 = Vec2(),
     scale: Vec2 = Vec2(200f, 50f),
     title: String,
-    textSize: Float = 0f,
+    textSize: Float = .2f,
     color: Color = Color.WHITE.setAlpha(.7f),
     private val onClick: () -> Unit = {}
 ) : GuiElement(drawer, offset, scale, title, textSize, color) {
@@ -49,7 +49,7 @@ class GuiButton(
         super.render()
     }
 
-    fun handleClick(location: Vec2) {
+    override fun handleClick(location: Vec2) {
         when {
             isHover(location) -> {
                 currentPhase = GuiElementPhases.CLICKED

@@ -7,7 +7,7 @@ import utility.Common
 
 open class GuiElement(
     protected val drawer: Drawer,
-    override val offset: Vec2,
+    override var offset: Vec2,
     override val scale: Vec2 = Vec2(1f, 1f),
     override val title: String,
     override val textSize: Float,
@@ -17,21 +17,28 @@ open class GuiElement(
 
     protected var currentPhase = GuiElementPhases.IDLE
 
-    protected lateinit var topRight: Vec2
-    protected lateinit var bottomLeft: Vec2
+    protected var topRight: Vec2 = Vec2()
+    protected var bottomLeft: Vec2 = Vec2()
 
     override fun render() {
     }
 
-    fun setOffset(newOffset: Vec2) {
-        GuiElement.setOffset(this, newOffset)
+    override fun addOffset(newOffset: Vec2) {
+        GuiElement.addOffset(this, newOffset)
     }
 
-    fun handleHover(location: Vec2) {
+    override fun updateOffset(newOffset: Vec2) {
+        GuiElement.updateOffset(this, newOffset)
+    }
+
+    override fun handleHover(location: Vec2) {
         when {
             isHover(location) -> currentPhase = GuiElementPhases.HOVERED
             else -> currentPhase = GuiElementPhases.IDLE
         }
+    }
+
+    override fun handleClick(location: Vec2) {
     }
 
     protected fun isHover(location: Vec2): Boolean {
@@ -56,8 +63,12 @@ open class GuiElement(
             element.topRight = element.offset.add(element.scale)
         }
 
-        fun setOffset(element: GuiElement, newOffset: Vec2) {
-            element.offset.addLocal(newOffset)
+        fun addOffset(element: GuiElement, newOffset: Vec2) {
+            updateOffset(element, element.offset.add(newOffset))
+        }
+
+        fun updateOffset(element: GuiElement, newOffset: Vec2) {
+            element.offset = newOffset
             calculateElementRegion(element)
         }
 

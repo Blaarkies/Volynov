@@ -3,6 +3,7 @@ package engine.freeBody
 import display.draw.TextureConfig
 import display.graphic.BasicShapes
 import engine.motion.Motion
+import engine.shields.VehicleShield
 import game.GamePlayer
 import org.jbox2d.collision.shapes.PolygonShape
 import org.jbox2d.collision.shapes.Shape
@@ -17,6 +18,8 @@ class Vehicle(
     radius: Float,
     textureConfig: TextureConfig
 ) : FreeBody(id, motion, shapeBox, worldBody, radius, textureConfig) {
+
+    var shield: VehicleShield? = null
 
     companion object {
 
@@ -45,6 +48,10 @@ class Vehicle(
                 shapeBox.vertices.flatMap { listOf(it.x / radius, it.y / radius) }.chunked(2)
 
             return Vehicle(player.name, Motion(), shapeBox, worldBody, radius, textureConfig)
+                .let {
+                    player.vehicle = it
+                    it
+                }
         }
 
     }
