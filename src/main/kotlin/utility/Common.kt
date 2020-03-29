@@ -49,7 +49,7 @@ object Common {
     fun getTimingFunctionFullSine(interpolateStep: Float) = (sin(interpolateStep * PI - PI * .5) * .5 + .5).toFloat()
 
     fun getTimingFunctionSigmoid(interpolateStep: Float, centerGradient: Float = 1f) =
-        (1f / (1f + exp((-(interpolateStep - .5f) * 10f)) * centerGradient))
+        (1f / (1f + exp((-(interpolateStep - .5f) * 10f)) * centerGradient)) * 1.023f - 0.0022f
 
 
 }

@@ -28,14 +28,13 @@ object BasicShapes {
         listOf(cos(t).toFloat(), sin(t).toFloat())
     }
 
-    fun getArrowHeadPoints(linePoints: List<Float>): List<Float> {
+    fun getArrowHeadPoints(linePoints: List<Float>, headSize: Float = 1f): List<Float> {
         val (ax, ay, bx, by) = linePoints
 
         val normalY = bx - ax
         val normalX = -by + ay
         val magnitude = Director.getDistance(normalX, normalY)
 
-        val headSize = 5f
         val x = headSize * normalX / magnitude
         val y = headSize * normalY / magnitude
         return listOf(

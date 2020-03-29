@@ -80,7 +80,7 @@ object MapGenerator {
             .withIndex()
             .map { (i, _) ->
                 val ratio = (2 * PI * 0.07 * i).toFloat()
-                val radius = 10f
+                val radius = 15f
                 floatArrayOf(
                     (i * .04f + radius) * cos(ratio),
                     (i * .04f + radius) * sin(ratio),
@@ -89,7 +89,7 @@ object MapGenerator {
             }
             .map {
                 val direction = Director.getDirection(-it[0], -it[1]) + PI * .5f
-                val speed = 8f
+                val speed = 7f
                 Planet.create(
                     world, "${it[2].toInt()}", it[0], it[1], 0f,
                     cos(direction).toFloat() * speed,

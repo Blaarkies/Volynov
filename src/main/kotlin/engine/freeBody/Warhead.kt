@@ -3,15 +3,17 @@ package engine.freeBody
 import display.draw.TextureConfig
 import display.graphic.BasicShapes
 import engine.motion.Motion
-import engine.shields.VehicleShield
 import game.GamePlayer
 import org.jbox2d.collision.shapes.PolygonShape
 import org.jbox2d.collision.shapes.Shape
 import org.jbox2d.common.Vec2
-import org.jbox2d.dynamics.*
+import org.jbox2d.dynamics.Body
+import org.jbox2d.dynamics.BodyType
+import org.jbox2d.dynamics.World
 
-class Vehicle(
+class Warhead(
     id: String,
+    firedBy: GamePlayer,
     motion: Motion,
     shapeBox: Shape,
     worldBody: Body,
@@ -19,14 +21,12 @@ class Vehicle(
     textureConfig: TextureConfig
 ) : FreeBody(id, motion, shapeBox, worldBody, radius, textureConfig) {
 
-    var shield: VehicleShield? = null
-    var hitPoints: Float = 100f
 
     companion object {
 
         fun create(
             world: World,
-            player: GamePlayer,
+            firedBy: GamePlayer,
             x: Float,
             y: Float,
             h: Float,
@@ -38,10 +38,10 @@ class Vehicle(
             restitution: Float = .3f,
             friction: Float = .6f,
             textureConfig: TextureConfig
-        ): Vehicle {
+        ): Warhead {
             val shapeBox = PolygonShape()
             val vertices = BasicShapes.polygon4.chunked(2)
-                .map { Vec2(it[0] * radius, it[1] * radius) }
+                .map { Vec2(it[0] * radius * 2f, it[1] * radius) }
                 .toTypedArray()
             shapeBox.set(vertices, vertices.size)
 
@@ -50,9 +50,20 @@ class Vehicle(
             textureConfig.chunkedVertices =
                 shapeBox.vertices.map { listOf(it.x / radius, it.y / radius) }
 
-            return Vehicle(player.name, Motion(), shapeBox, worldBody, radius, textureConfig)
+            return Warhead("1", firedBy, Motion(), shapeBox, worldBody, radius, textureConfig)
                 .let {
-                    player.vehicle = it
+//                    it.textureConfig.updateGpuBufferData()
+                    it.textureConfig.gpuBufferData = it.textureConfig.chunkedVertices.flatMap {
+                        val (x, y) = it
+                        listOf(
+                            x, y, 0f,
+                            1f, .3f, .3f, 1f,
+                            (x * .5f - 0.5f) * .100f,
+                            (y * .5f - 0.5f) * .100f
+                        )
+                    }.toFloatArray()
+
+                    firedBy.warheads.add(it)
                     it
                 }
         }

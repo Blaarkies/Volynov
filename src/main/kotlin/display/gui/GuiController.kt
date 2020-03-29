@@ -22,6 +22,7 @@ class GuiController(private val drawer: Drawer) {
         onClickSettings: () -> Unit,
         onClickQuit: () -> Unit
     ) {
+        clear()
         val buttonScale = Vec2(200f, 44f)
         val menuButtons = listOf(
             GuiButton(drawer, scale = buttonScale, title = "New Game", textSize = .27f, onClick = onClickNewGame),
@@ -44,6 +45,7 @@ class GuiController(private val drawer: Drawer) {
         onRemovePlayer: () -> Unit,
         playerList: MutableList<GamePlayer>
     ) {
+        clear()
         elements.add(GuiLabel(drawer, Vec2(-10f, 250f), "Select Players", .2f))
 
         updateMainMenuSelectPlayers(playerList, onAddPlayer, onRemovePlayer)
@@ -100,6 +102,7 @@ class GuiController(private val drawer: Drawer) {
     }
 
     fun createPlayersPickShields(player: GamePlayer, onClickShield: (player: GamePlayer) -> Unit) {
+        clear()
         val shieldPickerWindow =
             GuiWindow(
                 drawer, Vec2(200f, -200f), Vec2(150f, 150f), title = "Player ${player.name} to pick a shield",
@@ -111,14 +114,23 @@ class GuiController(private val drawer: Drawer) {
         elements.add(shieldPickerWindow)
     }
 
-    fun createPlayerCommandPanel(player: GamePlayer, onClickFire: (player: GamePlayer) -> Unit) {
-        val commandPanelWindow =
-            GuiWindow(
-                drawer, Vec2(200f, -200f), Vec2(150f, 150f), title = "Player ${player.name}",
-                draggable = true
+    fun createPlayerCommandPanel(
+        player: GamePlayer,
+        onClickAim: (player: GamePlayer) -> Unit,
+        onClickPower: (player: GamePlayer) -> Unit,
+        onClickFire: (player: GamePlayer) -> Unit
+    ) {
+        clear()
+        val commandPanelWindow = GuiWindow(
+            drawer, Vec2(350f, -350f), Vec2(150f, 150f),
+            title = "Player ${player.name}", draggable = true
+        )
+        commandPanelWindow.addChildren(
+            listOf(
+                GuiButton(drawer, Vec2(-100f, 0f), Vec2(50f, 25f), title = "Aim", onClick = { onClickAim(player) }),
+                GuiButton(drawer, Vec2(-100f, -50f), Vec2(50f, 25f), title = "Power", onClick = { onClickPower(player) }),
+                GuiButton(drawer, Vec2(-100f, -100f), Vec2(50f, 25f), title = "Fire", onClick = { onClickFire(player) })
             )
-        commandPanelWindow.addChild(
-            GuiButton(drawer, scale = Vec2(100f, 25f), title = "Fire all guns!", onClick = { onClickFire(player) })
         )
         elements.add(commandPanelWindow)
     }

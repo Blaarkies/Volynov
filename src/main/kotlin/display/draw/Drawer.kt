@@ -7,8 +7,11 @@ import display.graphic.Texture
 import engine.freeBody.FreeBody
 import engine.physics.CellLocation
 import engine.physics.GravityCell
+import game.GamePlayer
+import org.jbox2d.common.MathUtils.sin
 import org.jbox2d.common.Vec2
 import java.util.*
+import kotlin.math.cos
 import kotlin.math.sqrt
 
 class Drawer(val renderer: Renderer, val textures: TextureHolder) {
@@ -26,7 +29,7 @@ class Drawer(val renderer: Renderer, val textures: TextureHolder) {
             x + accelerationX * multiplier,
             y + accelerationY * multiplier
         )
-        val triangleStripPoints = BasicShapes.getLineTriangleStrip(linePoints, 2f)
+        val triangleStripPoints = BasicShapes.getLineTriangleStrip(linePoints, .2f)
         val arrowHeadPoints = BasicShapes.getArrowHeadPoints(linePoints)
         val data = getColoredData(
             triangleStripPoints + arrowHeadPoints,
@@ -99,6 +102,27 @@ class Drawer(val renderer: Renderer, val textures: TextureHolder) {
         renderer.drawShape(data, scale = Vec2(1f, 1f).mul(45f))
     }
 
+    fun drawPlayerAimingPointer(player: GamePlayer) {
+        val playerLocation = player.vehicle!!.worldBody.position
+        val angle = player.playerAim.angle
+        val aimLocation = Vec2(cos(angle), sin(angle)).mul(player.playerAim.power / 10f)
+
+        val linePoints = listOf(
+            playerLocation.x,
+            playerLocation.y,
+            playerLocation.x + aimLocation.x,
+            playerLocation.y + aimLocation.y
+        )
+        val triangleStripPoints = BasicShapes.getLineTriangleStrip(linePoints, .2f)
+        val arrowHeadPoints = BasicShapes.getArrowHeadPoints(linePoints, .5f)
+        val data = getColoredData(
+            triangleStripPoints + arrowHeadPoints, Color.RED.setAlpha(.5f), Color.RED.setAlpha(.1f)
+        ).toFloatArray()
+
+        textures.white_pixel.bind()
+        renderer.drawStrip(data)
+    }
+
     companion object {
 
         fun getColoredData(
@@ -118,7 +142,8 @@ class Drawer(val renderer: Renderer, val textures: TextureHolder) {
                         chunk[0], chunk[1], 0f, /* pos*/
                         color.red, color.green, color.blue, color.alpha, /* color*/
                         0f, 0f /* texture*/
-                    ) }
+                    )
+                }
         }
 
         fun getLine(

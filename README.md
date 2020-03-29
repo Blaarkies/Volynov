@@ -1,5 +1,5 @@
 # <h1>Volynov</h1>
-<h3>A space artillery game designed for players that want to destroy each other and the planets around them. Fire missiles, bomb, high tech payloads, and sabotage equipment at the enemy and odge their attempts to do the same. All spaceships, planets and warheads are influenced by realistic physics to produce n-body orbits and collisions.</h3>
+<h3>A space artillery game designed for players that want to destroy each other and the planets around them. Fire missiles, bombs, high tech payloads, and sabotage equipment at the enemy and dodge their attempts to do the same. All spaceships, planets and warheads are influenced by realistic physics to produce n-body orbits and collisions.</h3>
 
 <br>
 <h6>2020 03 01, First contact, again 
