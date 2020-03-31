@@ -9,9 +9,10 @@ open class GuiElement(
     protected val drawer: Drawer,
     override var offset: Vec2,
     override val scale: Vec2 = Vec2(1f, 1f),
-    override val title: String,
+    override var title: String,
     override val textSize: Float,
     override val color: Color,
+    override val updateCallback: (GuiElement) -> Unit,
     override var id: GuiElementIdentifierType = GuiElementIdentifierType.DEFAULT
 ) : GuiElementInterface {
 
@@ -20,33 +21,26 @@ open class GuiElement(
     protected var topRight: Vec2 = Vec2()
     protected var bottomLeft: Vec2 = Vec2()
 
-    override fun render() {
+    override fun render() = Unit
+
+    override fun update() = updateCallback(this)
+
+    override fun addOffset(newOffset: Vec2) = GuiElement.addOffset(this, newOffset)
+
+    override fun updateOffset(newOffset: Vec2) = GuiElement.updateOffset(this, newOffset)
+
+    override fun handleHover(location: Vec2) = when {
+        isHover(location) -> currentPhase = GuiElementPhases.HOVERED
+        else -> currentPhase = GuiElementPhases.IDLE
     }
 
-    override fun addOffset(newOffset: Vec2) {
-        GuiElement.addOffset(this, newOffset)
-    }
+    override fun handleClick(location: Vec2) = Unit
 
-    override fun updateOffset(newOffset: Vec2) {
-        GuiElement.updateOffset(this, newOffset)
-    }
-
-    override fun handleHover(location: Vec2) {
-        when {
-            isHover(location) -> currentPhase = GuiElementPhases.HOVERED
-            else -> currentPhase = GuiElementPhases.IDLE
-        }
-    }
-
-    override fun handleClick(location: Vec2) {
-    }
-
-    protected fun isHover(location: Vec2): Boolean {
-        return location.x > bottomLeft.x
-                && location.x < topRight.x
-                && location.y > bottomLeft.y
-                && location.y < topRight.y
-    }
+    protected fun isHover(location: Vec2): Boolean =
+        location.x > bottomLeft.x
+            && location.x < topRight.x
+            && location.y > bottomLeft.y
+            && location.y < topRight.y
 
     companion object {
 
@@ -63,9 +57,7 @@ open class GuiElement(
             element.topRight = element.offset.add(element.scale)
         }
 
-        fun addOffset(element: GuiElement, newOffset: Vec2) {
-            updateOffset(element, element.offset.add(newOffset))
-        }
+        fun addOffset(element: GuiElement, newOffset: Vec2) = updateOffset(element, element.offset.add(newOffset))
 
         fun updateOffset(element: GuiElement, newOffset: Vec2) {
             element.offset = newOffset

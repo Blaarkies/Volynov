@@ -10,11 +10,14 @@ interface GuiElementInterface {
     val title: String
     val textSize: Float
     val color: Color
+    val updateCallback: (GuiElement) -> Unit
     var id: GuiElementIdentifierType
     fun render()
+    fun update()
     fun addOffset(newOffset: Vec2)
     fun updateOffset(newOffset: Vec2)
     fun handleHover(location: Vec2)
     fun handleClick(location: Vec2)
+
 
 }

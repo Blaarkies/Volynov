@@ -14,8 +14,9 @@ class GuiWindow(
     textSize: Float = .3f,
     color: Color = Color.BLACK.setAlpha(.5f),
     private val childElements: MutableList<GuiElement> = mutableListOf(),
-    private val draggable: Boolean = true
-) : GuiElement(drawer, offset, scale, title, textSize, color) {
+    private val draggable: Boolean = true,
+    updateCallback: (GuiElement) -> Unit = {}
+) : GuiElement(drawer, offset, scale, title, textSize, color, updateCallback) {
 
     private val childElementOffsets = HashMap<GuiElement, Vec2>()
 
@@ -44,33 +45,29 @@ class GuiWindow(
         super.render()
     }
 
+    override fun update() = childElements.forEach { it.update() }
+
     override fun addOffset(newOffset: Vec2) {
         GuiElement.addOffset(this, newOffset)
-        update()
+        calculateNewOffsets()
     }
 
-    override fun handleHover(location: Vec2) {
-        childElements.forEach { it.handleHover(location) }
-    }
+    override fun handleHover(location: Vec2) = childElements.forEach { it.handleHover(location) }
 
-    override fun handleClick(location: Vec2) {
-        childElements.forEach { it.handleClick(location) }
-    }
+    override fun handleClick(location: Vec2) = childElements.forEach { it.handleClick(location) }
 
-    fun update() {
-        childElements.forEach { it.updateOffset(childElementOffsets[it]!!.add(offset)) }
-    }
+    fun calculateNewOffsets() = childElements.forEach { it.updateOffset(childElementOffsets[it]!!.add(offset)) }
 
     fun addChildren(elements: List<GuiElement>) {
         childElements.addAll(elements)
         childElementOffsets.putAll(elements.map { Pair(it, it.offset.clone()) })
-        update()
+        calculateNewOffsets()
     }
 
     fun addChild(element: GuiElement) {
         childElements.add(element)
         childElementOffsets[element] = element.offset.clone()
-        update()
+        calculateNewOffsets()
     }
 
 }

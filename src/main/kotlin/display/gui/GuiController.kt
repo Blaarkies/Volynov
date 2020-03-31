@@ -2,14 +2,19 @@ package display.gui
 
 import display.draw.Drawer
 import display.graphic.Color
+import engine.GameState
 import game.GamePlayer
 import org.jbox2d.common.Vec2
+import utility.Common
+import utility.Common.roundFloat
 
 class GuiController(private val drawer: Drawer) {
 
     private val elements = mutableListOf<GuiElement>()
 
     fun render() = elements.forEach { it.render() }
+
+    fun update() = elements.forEach { it.update() }
 
     fun clear() = elements.clear()
 
@@ -127,13 +132,25 @@ class GuiController(private val drawer: Drawer) {
         )
         commandPanelWindow.addChildren(
             listOf(
-                GuiButton(drawer, Vec2(-100f, 0f), Vec2(50f, 25f), title = "Aim", onClick = { onClickAim(player) }),
-                GuiButton(drawer, Vec2(-100f, -50f), Vec2(50f, 25f), title = "Power", onClick = { onClickPower(player) }),
-                GuiButton(drawer, Vec2(-100f, -100f), Vec2(50f, 25f), title = "Fire", onClick = { onClickFire(player) })
+                GuiButton(drawer, Vec2(-100f, 0f), Vec2(50f, 25f), title = "Aim",
+                    onClick = { onClickAim(player) }),
+                GuiButton(drawer, Vec2(-100f, -50f), Vec2(50f, 25f), title = "Power",
+                    onClick = { onClickPower(player) }),
+                GuiButton(drawer, Vec2(-100f, -100f), Vec2(50f, 25f), title = "Fire",
+                    onClick = { onClickFire(player) }),
+
+                GuiLabel(drawer,
+                    Vec2(0f, 90f),
+                    player.playerAim.getDegreesAngle().let { displayNumber(it, 2) }, .15f, updateCallback =
+                    { it.title = player.playerAim.getDegreesAngle().let { displayNumber(it, 2) } }),
+                GuiLabel(drawer, Vec2(0f, 70f), player.playerAim.power.let { displayNumber(it, 2) }, .15f,
+                    updateCallback = { it.title = player.playerAim.power.let { displayNumber(it, 2) } })
             )
         )
         elements.add(commandPanelWindow)
     }
+
+    private fun displayNumber(value: Float, decimals: Int): String = roundFloat(value, decimals).toString()
 
     private fun setElementsInColumns(elements: List<GuiElement>, gap: Float = 0f, centered: Boolean = true) {
         val totalWidth = elements.map { it.scale.x * 2f }.sum() + gap * (elements.size - 1)
@@ -162,6 +179,5 @@ class GuiController(private val drawer: Drawer) {
                 element.addOffset(Vec2(element.offset.x, newYOffset))
             }
     }
-
 
 }

@@ -35,8 +35,10 @@ object Common {
 
     fun roundFloat(value: Float, decimals: Int = 2): Float {
         val multiplier = 10f.pow(decimals)
-        return (value * multiplier).roundToInt() / multiplier
+        return value.times(multiplier).roundToInt().div(multiplier)
     }
+
+    const val Pi2 = 2f * PI.toFloat()
 
     val vectorUnit = Vec2(1f, 1f)
 

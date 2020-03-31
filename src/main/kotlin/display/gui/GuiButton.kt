@@ -12,8 +12,9 @@ class GuiButton(
     title: String,
     textSize: Float = .2f,
     color: Color = Color.WHITE.setAlpha(.7f),
-    private val onClick: () -> Unit = {}
-) : GuiElement(drawer, offset, scale, title, textSize, color) {
+    private val onClick: () -> Unit = {},
+    updateCallback: (GuiElement) -> Unit = {}
+) : GuiElement(drawer, offset, scale, title, textSize, color, updateCallback) {
 
     private var buttonOutline: FloatArray
     private var buttonBackground: FloatArray
@@ -58,7 +59,5 @@ class GuiButton(
             else -> currentPhase = GuiElementPhases.IDLE
         }
     }
-
-
 
 }

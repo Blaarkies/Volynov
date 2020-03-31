@@ -8,7 +8,6 @@ import display.events.MouseButtonEvent
 import display.graphic.Color
 import display.gui.GuiController
 import engine.GameState
-import engine.freeBody.Warhead
 import engine.motion.Director
 import engine.shields.VehicleShield
 import org.jbox2d.common.Vec2
@@ -323,6 +322,7 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer, val
                     transformedLocation.x, transformedLocation.y, playerLocation.x, playerLocation.y
                 )
                 playerOnTurn.playerAim.angle = aimDirection
+                guiController.update()
             }
             currentPhase == GamePhases.PLAYERS_TURN_POWERING -> {
                 checkNotNull(gameState.playerOnTurn) { "No player is on turn." }
@@ -334,6 +334,7 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer, val
                     transformedLocation.x, transformedLocation.y, playerLocation.x, playerLocation.y
                 )
                 playerOnTurn.playerAim.power = distance * 10f
+                guiController.update()
             }
         }
 
