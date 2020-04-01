@@ -1,18 +1,19 @@
 package game
 
-import display.draw.Drawer
-import display.draw.TextureHolder
 import display.KeyboardEvent
 import display.Window
+import display.draw.Drawer
+import display.draw.TextureHolder
 import display.events.MouseButtonEvent
+import display.graphic.BasicShapes
 import display.graphic.Color
 import display.gui.GuiController
 import engine.GameState
 import engine.motion.Director
 import engine.shields.VehicleShield
 import org.jbox2d.common.Vec2
+import utility.Common.getTimingFunctionEaseIn
 import utility.Common.getTimingFunctionEaseOut
-import utility.Common.getTimingFunctionSineEaseIn
 import utility.Common.vectorUnit
 import kotlin.math.roundToInt
 
@@ -63,9 +64,10 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer, val
     }
 
     fun pauseGame(event: KeyboardEvent) {
-        when (currentPhase) {
-            GamePhases.PAUSE -> currentPhase = GamePhases.PLAY
-            GamePhases.PLAY -> currentPhase = GamePhases.PAUSE
+        currentPhase = when (currentPhase) {
+            GamePhases.PAUSE -> GamePhases.PLAY
+            GamePhases.PLAY -> GamePhases.PAUSE
+            else -> GamePhases.PAUSE
         }
         startTransition()
     }
@@ -77,6 +79,15 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer, val
 
     fun update() {
         camera.update()
+
+        gameState.particles.filter { it.textureConfig.texture == null }
+            .forEach { it.textureConfig.texture = textures.white_pixel }
+        gameState.particles.forEach { particle ->
+            val scale = getTimingFunctionEaseOut(particle.ageTime / 1000f)
+            particle.textureConfig.chunkedVertices = BasicShapes.polygon15.chunked(2)
+                .map { listOf(it[0] * scale, it[1] * scale) }
+            particle.textureConfig.updateGpuBufferData()
+        }
 
         val cp = currentPhase
         when {
@@ -96,8 +107,8 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer, val
             cp == GamePhases.PLAYERS_TURN_FIRED -> handlePlayerShot()
             cp == GamePhases.PLAYERS_TURN_AIMING -> return
             cp == GamePhases.PLAYERS_TURN_POWERING -> return
-            cp == GamePhases.END_ROUND && isTransitioning -> tickGamePausing(endSpeed = .3f)
-            cp == GamePhases.END_ROUND -> gameState.tickClock(timeStep * .3f, velocityIterations, positionIterations)
+            cp == GamePhases.END_ROUND && isTransitioning -> tickGamePausing(endSpeed = .1f)
+            cp == GamePhases.END_ROUND -> gameState.tickClock(timeStep * .1f, velocityIterations, positionIterations)
 
             else -> gameState.tickClock(timeStep, velocityIterations, positionIterations)
         }
@@ -105,6 +116,10 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer, val
 
     private fun handlePlayerShot() {
         when {
+            gameState.warheads.none()
+                    && gameState.particles.none()
+                    && gameState.vehicles
+                .all { it.worldBody.contactList != null && it.worldBody.contactList.other.mass > 5f }  -> setupNextPlayersTurn()
             // if (no active warheads && all players in contact with a moon or bigger) setupNextPlayersTurn()
             elapsedTime > maxTurnDuration -> setupNextPlayersTurn()
             elapsedTime > (maxTurnDuration - pauseTime) -> tickGamePausing(
@@ -141,6 +156,17 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer, val
     }
 
     private fun setupNextPlayersTurn() {
+        val vehiclesDestroyed = gameState.gamePlayers
+            .count { it.vehicle!!.hitPoints <= 0f } >= gameState.gamePlayers.size - 1
+        if (vehiclesDestroyed) {
+            currentPhase = GamePhases.END_ROUND
+            startTransition()
+            return
+        }
+
+        gameState.gamePlayers.map { "Player ${it.name} HP:${it.vehicle!!.hitPoints.toInt()}" }
+            .joinToString().let { println(it) }
+
         setNextPlayerOnTurn()
         setupPlayerCommandPanel()
 
@@ -168,19 +194,6 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer, val
     }
 
     private fun playerFires(player: GamePlayer) {
-        println("Player ${player.name} fired a gun!")
-        gameState.gamePlayers.filter { it != gameState.playerOnTurn }.forEach { it.vehicle!!.hitPoints -= 10f }
-        gameState.gamePlayers.forEach { println("Player ${it.name} has <${it.vehicle?.hitPoints}> hitPoints left") }
-
-        val vehiclesDestroyed =
-            gameState.gamePlayers.count { it.vehicle!!.hitPoints <= 0f } >= gameState.gamePlayers.size - 1
-        if (vehiclesDestroyed) {
-            currentPhase = GamePhases.END_ROUND
-            startTransition()
-            return
-        }
-        ///////////
-
         // check() {} player has enough funds && in stable position to fire large warheads
 
         val firedWarhead = gameState.fireWarhead(textures, player, "boom small")
@@ -245,9 +258,21 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer, val
     private fun drawPlayPhase() {
         drawer.drawPicture(textures.stars_2k)
 
-        val allFreeBodies = gameState.tickables
+        val allFreeBodies = gameState.gravityBodies
         allFreeBodies.forEach { drawer.drawTrail(it) }
+
+        gameState.particles.forEach {
+            it.textureConfig.texture?.bind()
+            drawer.renderer.drawShape(
+                it.textureConfig.gpuBufferData,
+                it.worldBody.position,
+                it.worldBody.angle,
+                vectorUnit.mul(it.radius)
+            )
+        }
+
         allFreeBodies.forEach { drawer.drawFreeBody(it) }
+
         //        allFreeBodies.forEach { drawDebugForces(it) }
         //        drawer.drawGravityCells(gameState.gravityMap, gameState.resolution)
     }
@@ -278,20 +303,16 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer, val
             currentPhase = endPhase ?: currentPhase
             isTransitioning = false
         } else {
-            val timeFunctionStep = getTimingFunctionSineEaseIn((1f - endSpeed) - interpolateStep)
+            val timeFunctionStep = getTimingFunctionEaseIn(1f - interpolateStep) * (1f - endSpeed) + endSpeed
             gameState.tickClock(timeStep * timeFunctionStep, velocityIterations, positionIterations)
-
-//            println(
-//                "${interpolateStep.toString().padEnd(4, '0').substring(1, 4)} <> ${timeFunctionStep.toString()
-//                    .padEnd(4, '0').substring(1, 4)}"
-//            )
+//            println("${roundFloat(interpolateStep, 2).toString().padEnd(4, '0')} <> " + roundFloat(timeFunctionStep, 2).toString().padEnd(4, '0'))
         }
     }
 
     fun doubleLeftClick(location: Vec2, click: MouseButtonEvent) {
         val transformedLocation = getScreenLocation(location).mul(camera.z).add(camera.location)
 
-        val clickedBody = gameState.tickables.find {
+        val clickedBody = gameState.gravityBodies.find {
             it.worldBody.position
                 .add(transformedLocation.mul(-1f))
                 .length() <= it.radius
@@ -313,11 +334,7 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer, val
         when {
             mouseElementPhases.any { currentPhase == it } -> guiController.checkHover(getScreenLocation(location))
             currentPhase == GamePhases.PLAYERS_TURN_AIMING -> {
-                checkNotNull(gameState.playerOnTurn) { "No player is on turn." }
-                val playerOnTurn = gameState.playerOnTurn!!
-
-                val transformedLocation = getScreenLocation(location).mul(camera.z).add(camera.location)
-                val playerLocation = playerOnTurn.vehicle!!.worldBody.position
+                val (playerOnTurn, transformedLocation, playerLocation) = getPlayerAndMouseLocations(location)
                 val aimDirection = Director.getDirection(
                     transformedLocation.x, transformedLocation.y, playerLocation.x, playerLocation.y
                 )
@@ -325,19 +342,23 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer, val
                 guiController.update()
             }
             currentPhase == GamePhases.PLAYERS_TURN_POWERING -> {
-                checkNotNull(gameState.playerOnTurn) { "No player is on turn." }
-                val playerOnTurn = gameState.playerOnTurn!!
-
-                val transformedLocation = getScreenLocation(location).mul(camera.z).add(camera.location)
-                val playerLocation = playerOnTurn.vehicle!!.worldBody.position
+                val (playerOnTurn, transformedLocation, playerLocation) = getPlayerAndMouseLocations(location)
                 val distance = Director.getDistance(
                     transformedLocation.x, transformedLocation.y, playerLocation.x, playerLocation.y
                 )
-                playerOnTurn.playerAim.power = distance * 10f
+                playerOnTurn.playerAim.power = (distance - 1f) * 10f
                 guiController.update()
             }
         }
 
+    }
+
+    private fun getPlayerAndMouseLocations(location: Vec2): Triple<GamePlayer, Vec2, Vec2> {
+        checkNotNull(gameState.playerOnTurn) { "No player is on turn." }
+        val playerOnTurn = gameState.playerOnTurn!!
+        val transformedLocation = getScreenLocation(location).mul(camera.z).add(camera.location)
+        val playerLocation = playerOnTurn.vehicle!!.worldBody.position
+        return Triple(playerOnTurn, transformedLocation, playerLocation)
     }
 
     fun leftClickMouse(event: MouseButtonEvent) {
@@ -412,7 +433,7 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer, val
         private const val pauseTime = 1000f
         private const val introDuration = 3500f
         private const val introStartSlowdown = 2000f
-        private const val maxTurnDuration = 5000f
+        private const val maxTurnDuration = 30000f
         private const val quickStartTime = 300f
 
         private val mouseElementPhases = listOf(

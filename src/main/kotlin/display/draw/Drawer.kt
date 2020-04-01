@@ -10,6 +10,8 @@ import engine.physics.GravityCell
 import game.GamePlayer
 import org.jbox2d.common.MathUtils.sin
 import org.jbox2d.common.Vec2
+import utility.Common
+import utility.Common.vectorUnit
 import java.util.*
 import kotlin.math.cos
 import kotlin.math.sqrt
@@ -55,12 +57,12 @@ class Drawer(val renderer: Renderer, val textures: TextureHolder) {
     }
 
     fun drawFreeBody(freeBody: FreeBody) {
-        freeBody.textureConfig.texture.bind()
+        freeBody.textureConfig.texture?.bind()
         renderer.drawShape(
             freeBody.textureConfig.gpuBufferData,
             freeBody.worldBody.position,
             freeBody.worldBody.angle,
-            Vec2(freeBody.radius, freeBody.radius)
+            vectorUnit.mul(freeBody.radius)
         )
     }
 

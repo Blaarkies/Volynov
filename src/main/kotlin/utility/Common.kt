@@ -46,7 +46,7 @@ object Common {
 
     fun getTimingFunctionEaseOut(interpolateStep: Float) = getTimingFunctionFullSine(sqrt(interpolateStep))
 
-    fun getTimingFunctionSineEaseIn(interpolateStep: Float) = 1f - getTimingFunctionEaseOut(1f - interpolateStep)
+    fun getTimingFunctionEaseIn(interpolateStep: Float) = 1f - getTimingFunctionEaseOut(1f - interpolateStep)
 
     fun getTimingFunctionFullSine(interpolateStep: Float) = (sin(interpolateStep * PI - PI * .5) * .5 + .5).toFloat()
 

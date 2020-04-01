@@ -37,7 +37,7 @@ object MapGenerator {
         gameState.planets.addAll(listOf(terra, luna))
         gameState.planets.addAll(createPlanets(gameState.world, 5, textures))
 
-        gameState.tickables.forEach { it.textureConfig.updateGpuBufferData() }
+        gameState.gravityBodies.forEach { it.textureConfig.updateGpuBufferData() }
     }
 
     fun populateTestMap(gameState: GameState, textures: TextureHolder) {
@@ -72,7 +72,7 @@ object MapGenerator {
         gameState.planets.addAll(listOf(terra, luna))
         gameState.planets.addAll(createPlanets(gameState.world, 20, textures))
 
-        gameState.tickables.forEach { it.textureConfig.updateGpuBufferData() }
+        gameState.gravityBodies.forEach { it.textureConfig.updateGpuBufferData() }
     }
 
     private fun createPlanets(world: World, count: Int, textures: TextureHolder): List<Planet> {

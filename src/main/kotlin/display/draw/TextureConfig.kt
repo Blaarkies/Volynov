@@ -4,7 +4,7 @@ import Vector2f
 import display.graphic.Texture
 
 class TextureConfig(
-    val texture: Texture, val scale: Vector2f = Vector2f(1f, 1f), val offset: Vector2f = Vector2f(),
+    var texture: Texture? = null, val scale: Vector2f = Vector2f(1f, 1f), val offset: Vector2f = Vector2f(),
     var chunkedVertices: List<List<Float>> = listOf(), var gpuBufferData: FloatArray = floatArrayOf()
 ) {
 

@@ -4,6 +4,7 @@ import display.draw.TextureConfig
 import display.graphic.BasicShapes
 import engine.motion.Motion
 import game.GamePlayer
+import org.jbox2d.collision.shapes.CircleShape
 import org.jbox2d.collision.shapes.PolygonShape
 import org.jbox2d.collision.shapes.Shape
 import org.jbox2d.common.Vec2
@@ -21,6 +22,27 @@ class Warhead(
     textureConfig: TextureConfig
 ) : FreeBody(id, motion, shapeBox, worldBody, radius, textureConfig) {
 
+    fun createParticles(
+        particles: MutableList<Particle>,
+        world: World,
+        other: Body
+    ): Particle {
+        val shapeBox = CircleShape()
+        shapeBox.radius = 2f
+
+        val location = worldBody.position
+        val velocity = other.linearVelocity
+        val bodyDef = createBodyDef(BodyType.STATIC, location.x, location.y, 0f, velocity.x, velocity.y, 0f)
+        val worldBody = world.createBody(bodyDef)
+//            createWorldBody(shapeBox, 0f, radius, 0f, 0f, world, bodyDef)
+
+        val textureConfig = TextureConfig(chunkedVertices = BasicShapes.polygon30.chunked(2))
+        return Particle(id, worldBody, shapeBox.radius, textureConfig).let {
+            particles.add(it)
+            it
+        }
+
+    }
 
     companion object {
 
