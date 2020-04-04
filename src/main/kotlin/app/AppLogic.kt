@@ -13,16 +13,15 @@ class AppLogic : IGameLogic {
     private val renderer = Renderer()
 
     private val gameState = GameState()
-    private val textures = TextureHolder()
-    private val drawer = Drawer(renderer, textures)
-    private val gamePhaseHandler = GamePhaseHandler(gameState, drawer, textures)
+    private val drawer = Drawer(renderer)
+    private val gamePhaseHandler = GamePhaseHandler(gameState, drawer)
     private val inputHandler = InputHandler(gamePhaseHandler)
 
     @Throws(Exception::class)
     override fun init(window: Window) {
         gameState.init(window)
         renderer.init(gameState.camera)
-        textures.init()
+        drawer.init()
         gamePhaseHandler.init(window)
         inputHandler.init(window)
     }

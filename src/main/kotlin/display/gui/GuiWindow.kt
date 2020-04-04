@@ -1,6 +1,7 @@
 package display.gui
 
 import display.draw.Drawer
+import display.draw.TextureEnum
 import display.graphic.BasicShapes
 import display.graphic.Color
 import org.jbox2d.common.Vec2
@@ -25,7 +26,7 @@ class GuiWindow(
     }
 
     override fun render() {
-        drawer.textures.white_pixel.bind()
+        drawer.textures.getTexture(TextureEnum.white_pixel).bind()
         drawer.renderer.drawShape(BasicShapes.square
             .let { Drawer.getColoredData(it, color) }
             .toFloatArray(),

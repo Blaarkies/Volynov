@@ -23,8 +23,19 @@ object BasicShapes {
 
     val square = polygon4.map { it * sqrt(2f) }
 
-    private fun getPolygonVertices(corners: Int): List<Float> = (0 until corners).flatMap {
-        val t = 2 * PI * (it / corners.toFloat()) + PI * .25
+    val squareStar = makeSquareStar()
+
+    private fun makeSquareStar(): List<Float> {
+        return polygon4.chunked(2)
+            .zip(getPolygonVertices(4, .5).chunked(2)
+                .map { listOf(it[0] * .6f, it[1] * .6f) }
+            )
+            .flatMap { listOf(it.first, it.second.toList()) }
+            .flatten()
+    }
+
+    private fun getPolygonVertices(corners: Int, rotate: Double = .25): List<Float> = (0 until corners).flatMap {
+        val t = 2 * PI * (it / corners.toFloat()) + PI * rotate
         listOf(cos(t).toFloat(), sin(t).toFloat())
     }
 

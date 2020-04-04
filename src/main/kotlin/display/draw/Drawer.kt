@@ -3,20 +3,25 @@ package display.draw
 import display.graphic.BasicShapes
 import display.graphic.Color
 import display.graphic.Renderer
-import display.graphic.Texture
 import engine.freeBody.FreeBody
+import engine.freeBody.Particle
 import engine.physics.CellLocation
 import engine.physics.GravityCell
 import game.GamePlayer
 import org.jbox2d.common.MathUtils.sin
 import org.jbox2d.common.Vec2
-import utility.Common
 import utility.Common.vectorUnit
 import java.util.*
 import kotlin.math.cos
 import kotlin.math.sqrt
 
-class Drawer(val renderer: Renderer, val textures: TextureHolder) {
+class Drawer(val renderer: Renderer) {
+
+    val textures = TextureHolder()
+
+    fun init() {
+        textures.init()
+    }
 
     fun drawDebugForces(freeBody: FreeBody) {
         val x = freeBody.worldBody.position.x
@@ -38,7 +43,7 @@ class Drawer(val renderer: Renderer, val textures: TextureHolder) {
             Color(0f, 1f, 1f, 1f), Color(0f, 1f, 1f, 0.0f)
         ).toFloatArray()
 
-        textures.white_pixel.bind()
+        textures.getTexture(TextureEnum.white_pixel).bind()
 //        renderer.drawStrip(data)
 
         renderer.drawText(freeBody.id, freeBody.worldBody.position, Vec2(1f, 1f), Color.WHITE)
@@ -52,12 +57,12 @@ class Drawer(val renderer: Renderer, val textures: TextureHolder) {
         }
         val data = getLine(linePoints, Color(0.4f, 0.7f, 1f, 0.5f), Color.TRANSPARENT, .1f, 0f)
 
-        textures.white_pixel.bind()
+        textures.getTexture(TextureEnum.white_pixel).bind()
         renderer.drawStrip(data)
     }
 
     fun drawFreeBody(freeBody: FreeBody) {
-        freeBody.textureConfig.texture?.bind()
+        textures.getTexture(freeBody.textureConfig.texture).bind()
         renderer.drawShape(
             freeBody.textureConfig.gpuBufferData,
             freeBody.worldBody.position,
@@ -67,7 +72,7 @@ class Drawer(val renderer: Renderer, val textures: TextureHolder) {
     }
 
     fun drawGravityCells(gravityMap: HashMap<CellLocation, GravityCell>, resolution: Float) {
-        textures.white_pixel.bind()
+        textures.getTexture(TextureEnum.white_pixel).bind()
         val maxMass = gravityMap.maxBy { (_, cell) -> cell.totalMass }!!.value.totalMass
         val scale = 0.707106781f * resolution
         gravityMap.forEach { (key, cell) ->
@@ -83,8 +88,8 @@ class Drawer(val renderer: Renderer, val textures: TextureHolder) {
         }
     }
 
-    fun drawPicture(texture: Texture, scale: Vec2 = Vec2(1f, 1f), offset: Vec2 = Vec2()) {
-        texture.bind()
+    fun drawPicture(textureEnum: TextureEnum, scale: Vec2 = Vec2(1f, 1f), offset: Vec2 = Vec2()) {
+        val texture = textures.getTexture(textureEnum).bind()
 
         val left = -texture.width / 2f
         val right = texture.width / 2f
@@ -121,8 +126,18 @@ class Drawer(val renderer: Renderer, val textures: TextureHolder) {
             triangleStripPoints + arrowHeadPoints, Color.RED.setAlpha(.5f), Color.RED.setAlpha(.1f)
         ).toFloatArray()
 
-        textures.white_pixel.bind()
+        textures.getTexture(TextureEnum.white_pixel).bind()
         renderer.drawStrip(data)
+    }
+
+    fun drawParticle(particle: Particle) {
+        textures.getTexture(particle.textureConfig.texture).bind()
+        renderer.drawShape(
+            particle.textureConfig.gpuBufferData,
+            particle.worldBody.position,
+            particle.worldBody.angle,
+            vectorUnit.mul(particle.radius)
+        )
     }
 
     companion object {

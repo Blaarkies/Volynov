@@ -1,6 +1,7 @@
 package engine.freeBody
 
 import display.draw.TextureConfig
+import display.draw.TextureEnum
 import display.graphic.BasicShapes
 import engine.motion.Motion
 import game.GamePlayer
@@ -22,21 +23,33 @@ class Warhead(
     textureConfig: TextureConfig
 ) : FreeBody(id, motion, shapeBox, worldBody, radius, textureConfig) {
 
+    private val currentTime
+        get() = System.currentTimeMillis()
+
+    val ageTime
+        get() = (currentTime - createdAt)
+
+    private val createdAt = currentTime
+    val selfDestructTime = 45000f
+
+    val damage = 100f
+
     fun createParticles(
         particles: MutableList<Particle>,
         world: World,
-        other: Body
+        impacted: Body
     ): Particle {
         val shapeBox = CircleShape()
         shapeBox.radius = 2f
 
         val location = worldBody.position
-        val velocity = other.linearVelocity
+        val velocity = impacted.linearVelocity
         val bodyDef = createBodyDef(BodyType.STATIC, location.x, location.y, 0f, velocity.x, velocity.y, 0f)
         val worldBody = world.createBody(bodyDef)
 //            createWorldBody(shapeBox, 0f, radius, 0f, 0f, world, bodyDef)
 
-        val textureConfig = TextureConfig(chunkedVertices = BasicShapes.polygon30.chunked(2))
+        val textureConfig = TextureConfig(TextureEnum.white_pixel, chunkedVertices = BasicShapes.polygon30.chunked(2))
+            .updateGpuBufferData()
         return Particle(id, worldBody, shapeBox.radius, textureConfig).let {
             particles.add(it)
             it
@@ -80,8 +93,8 @@ class Warhead(
                         listOf(
                             x, y, 0f,
                             1f, .3f, .3f, 1f,
-                            (x * .5f - 0.5f) * .100f,
-                            (y * .5f - 0.5f) * .100f
+                            (x * .5f - 0.5f) * .1f,
+                            (y * .5f - 0.5f) * .1f
                         )
                     }.toFloatArray()
 

@@ -2,10 +2,8 @@ package display.gui
 
 import display.draw.Drawer
 import display.graphic.Color
-import engine.GameState
 import game.GamePlayer
 import org.jbox2d.common.Vec2
-import utility.Common
 import utility.Common.roundFloat
 
 class GuiController(private val drawer: Drawer) {
@@ -139,15 +137,42 @@ class GuiController(private val drawer: Drawer) {
                 GuiButton(drawer, Vec2(-100f, -100f), Vec2(50f, 25f), title = "Fire",
                     onClick = { onClickFire(player) }),
 
-                GuiLabel(drawer,
-                    Vec2(0f, 90f),
-                    player.playerAim.getDegreesAngle().let { displayNumber(it, 2) }, .15f, updateCallback =
-                    { it.title = player.playerAim.getDegreesAngle().let { displayNumber(it, 2) } }),
-                GuiLabel(drawer, Vec2(0f, 70f), player.playerAim.power.let { displayNumber(it, 2) }, .15f,
-                    updateCallback = { it.title = player.playerAim.power.let { displayNumber(it, 2) } })
+                GuiLabel(drawer, Vec2(0f, 90f), getPlayerAimAngleDisplay(player), .15f,
+                    updateCallback = { it.title = getPlayerAimAngleDisplay(player) }),
+                GuiLabel(drawer, Vec2(0f, 70f), getPlayerAimPowerDisplay(player), .15f,
+                    updateCallback = { it.title = getPlayerAimPowerDisplay(player) })
             )
         )
         elements.add(commandPanelWindow)
+    }
+
+    private fun getPlayerAimPowerDisplay(player: GamePlayer): String =
+        player.playerAim.power.let { displayNumber(it, 2) + "%" }
+
+    private fun getPlayerAimAngleDisplay(player: GamePlayer): String =
+        player.playerAim.getDegreesAngle().let { displayNumber(it, 2) + "º" }
+
+
+    fun createRoundLeaderboard(players: MutableList<GamePlayer>, onClickNextRound: () -> Unit) {
+        clear()
+        val leaderBoardWindow = GuiWindow(drawer, Vec2(), Vec2(200f, 300f), "Leaderboard", draggable = true)
+        val playerLines = players.map {
+            GuiLabel(
+                drawer,
+                title = "${it.name}           ${Math.random().times(100f).toInt()}".padStart(15, ' '),
+                textSize = .2f
+            )
+        }
+        setElementsInRows(playerLines, 10f)
+
+        leaderBoardWindow.addChildren(playerLines)
+        leaderBoardWindow.addChild(
+            GuiButton(
+                drawer, Vec2(0f, -280f), Vec2(100f, 25f), "Next Round",
+                onClick = onClickNextRound
+            )
+        )
+        elements.add(leaderBoardWindow)
     }
 
     private fun displayNumber(value: Float, decimals: Int): String = roundFloat(value, decimals).toString()
@@ -179,5 +204,6 @@ class GuiController(private val drawer: Drawer) {
                 element.addOffset(Vec2(element.offset.x, newYOffset))
             }
     }
+
 
 }

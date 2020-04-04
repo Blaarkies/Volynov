@@ -11,7 +11,15 @@ class GuiLabel(
     textSize: Float = 0f,
     color: Color = Color.WHITE.setAlpha(.7f),
     updateCallback: (GuiElement) -> Unit = {}
-) : GuiElement(drawer, offset, title = title, textSize = textSize, color = color, updateCallback = updateCallback) {
+) : GuiElement(
+    drawer,
+    offset,
+    Vec2(title.length * 16f, textSize * 100f),
+    title = title,
+    textSize = textSize,
+    color = color,
+    updateCallback = updateCallback
+) {
 
     override fun render() {
         super.render()
