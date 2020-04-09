@@ -11,7 +11,6 @@ import kotlin.math.pow
 open class FreeBody(
     val id: String,
     var motion: Motion,
-    var shapeBox: Shape,
     var worldBody: Body,
     var radius: Float,
     val textureConfig: TextureConfig

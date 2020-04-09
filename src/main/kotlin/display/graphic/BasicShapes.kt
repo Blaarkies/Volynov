@@ -23,20 +23,20 @@ object BasicShapes {
 
     val square = polygon4.map { it * sqrt(2f) }
 
-    val squareStar = makeSquareStar()
-
-    private fun makeSquareStar(): List<Float> {
-        return polygon4.chunked(2)
-            .zip(getPolygonVertices(4, .5).chunked(2)
-                .map { listOf(it[0] * .6f, it[1] * .6f) }
-            )
-            .flatMap { listOf(it.first, it.second.toList()) }
-            .flatten()
-    }
+    val polygon4Spiked = getSpikedPolygon(8)
 
     private fun getPolygonVertices(corners: Int, rotate: Double = .25): List<Float> = (0 until corners).flatMap {
         val t = 2 * PI * (it / corners.toFloat()) + PI * rotate
         listOf(cos(t).toFloat(), sin(t).toFloat())
+    }
+
+    private fun getSpikedPolygon(corners: Int, smoothness: Float = .6f): List<Float> {
+        return getPolygonVertices(corners).chunked(2)
+            .withIndex()
+            .flatMap { (index, vertex) ->
+                val scale = (if (index.rem(2) == 0) 1f else smoothness)
+                listOf(vertex[0] * scale, vertex[1] * scale)
+            }
     }
 
     fun getArrowHeadPoints(linePoints: List<Float>, headSize: Float = 1f): List<Float> {

@@ -12,6 +12,7 @@ import org.lwjgl.opengl.GL20.GL_VERTEX_SHADER
 import org.lwjgl.system.MemoryUtil
 import utility.Common
 import utility.Common.getSafePath
+import utility.Common.vectorUnit
 import java.awt.FontFormatException
 import java.io.FileInputStream
 import java.io.IOException
@@ -21,7 +22,7 @@ import java.util.logging.Logger
 
 class Renderer {
 
-    var debugOffset: Vec2 = Vec2(1f, 1f)
+    var debugOffset: Vec2 = vectorUnit
 
     private lateinit var vao: VertexArrayObject
     private lateinit var vbo: VertexBufferObject
@@ -89,7 +90,7 @@ class Renderer {
         data: FloatArray,
         offset: Vec2 = Vec2(),
         h: Float = 0f,
-        scale: Vec2 = Vec2(1f, 1f),
+        scale: Vec2 = vectorUnit,
         useCamera: Boolean = true
     ) = drawEntity(data, offset, h, scale, GL_TRIANGLE_FAN, useCamera)
 
@@ -97,7 +98,7 @@ class Renderer {
         data: FloatArray,
         offset: Vec2 = Vec2(),
         h: Float = 0f,
-        scale: Vec2 = Vec2(1f, 1f),
+        scale: Vec2 = vectorUnit,
         useCamera: Boolean = true
     ) =
         drawEntity(data, offset, h, scale, GL_TRIANGLE_STRIP, useCamera)
@@ -157,7 +158,7 @@ class Renderer {
         offset: Vec2 = Vec2(),
         z: Float = 0f,
         h: Float = 0f,
-        scale: Vec2 = Vec2(1f, 1f),
+        scale: Vec2 = vectorUnit,
         useCamera: Boolean
     ) {
         //        val uniTex = program!!.getUniformLocation("texImage")

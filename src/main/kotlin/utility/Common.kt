@@ -1,7 +1,9 @@
 package utility
 
+import org.jbox2d.common.MathUtils
 import org.jbox2d.common.Vec2
 import java.io.File
+import java.nio.DoubleBuffer
 import java.util.*
 import kotlin.math.*
 
@@ -50,6 +52,16 @@ object Common {
     const val Pi2 = 2f * PI.toFloat()
 
     val vectorUnit = Vec2(1f, 1f)
+
+    fun makeVec2(list: List<Float>): Vec2 = Vec2(list[0], list[1])
+
+    fun makeVec2(x: Number, y: Number): Vec2 = Vec2(x.toFloat(), y.toFloat())
+
+    fun makeVec2(x: DoubleBuffer, y: DoubleBuffer): Vec2 = makeVec2(x.get(), y.get())
+
+    fun makeVec2(duplicate: Number): Vec2 = makeVec2(duplicate, duplicate)
+
+    fun makeVec2Circle(angle: Float): Vec2 = Vec2(cos(angle), sin(angle))
 
     val radianToDegree = Math.toDegrees(1.0).toFloat()
 

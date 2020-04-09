@@ -4,11 +4,12 @@ import display.draw.Drawer
 import display.graphic.Color
 import org.jbox2d.common.Vec2
 import utility.Common
+import utility.Common.vectorUnit
 
 open class GuiElement(
     protected val drawer: Drawer,
     override var offset: Vec2,
-    override val scale: Vec2 = Vec2(1f, 1f),
+    override val scale: Vec2 = vectorUnit,
     override var title: String,
     override val textSize: Float,
     override val color: Color,

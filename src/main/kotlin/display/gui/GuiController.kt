@@ -5,6 +5,7 @@ import display.graphic.Color
 import game.GamePlayer
 import org.jbox2d.common.Vec2
 import utility.Common.roundFloat
+import kotlin.math.roundToInt
 
 class GuiController(private val drawer: Drawer) {
 
@@ -39,7 +40,6 @@ class GuiController(private val drawer: Drawer) {
         elements.add(GuiLabel(drawer, Vec2(-10f, 250f), "Volynov", .6f))
         elements.addAll(menuButtons)
     }
-
 
     fun createMainMenuSelectPlayers(
         onClickStart: () -> Unit,
@@ -152,14 +152,13 @@ class GuiController(private val drawer: Drawer) {
     private fun getPlayerAimAngleDisplay(player: GamePlayer): String =
         player.playerAim.getDegreesAngle().let { displayNumber(it, 2) + "º" }
 
-
     fun createRoundLeaderboard(players: MutableList<GamePlayer>, onClickNextRound: () -> Unit) {
         clear()
         val leaderBoardWindow = GuiWindow(drawer, Vec2(), Vec2(200f, 300f), "Leaderboard", draggable = true)
-        val playerLines = players.map {
+        val playerLines = players.sortedByDescending { it.score }.map {
             GuiLabel(
                 drawer,
-                title = "${it.name}           ${Math.random().times(100f).toInt()}".padStart(15, ' '),
+                title = "${it.name.padEnd(10, ' ')}${it.score.roundToInt()}".padStart(10, ' '),
                 textSize = .2f
             )
         }
@@ -204,6 +203,5 @@ class GuiController(private val drawer: Drawer) {
                 element.addOffset(Vec2(element.offset.x, newYOffset))
             }
     }
-
 
 }

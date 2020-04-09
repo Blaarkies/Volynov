@@ -16,7 +16,6 @@ import java.io.InputStream
 import kotlin.math.hypot
 import java.awt.Color as AwtColor
 
-
 class Font constructor(font: Font = Font(MONOSPACED, BOLD, 32), antiAlias: Boolean = true) {
 
     private val glyphs: MutableMap<Char, Glyph>
@@ -225,8 +224,10 @@ class Font constructor(font: Font = Font(MONOSPACED, BOLD, 32), antiAlias: Boole
         color: Color,
         useCamera: Boolean
     ) {
-        val glyphScale = Vec2(glyph.width / texture.width.toFloat(), glyph.height / texture.height.toFloat())
-        val glyphOffset = Vec2((glyph.x + glyph.width) / texture.width.toFloat(), glyph.y / texture.height.toFloat())
+        val textureWidth = texture.width.toFloat()
+        val textureHeight = texture.height.toFloat()
+        val glyphScale = Vec2(glyph.width / textureWidth, glyph.height / textureHeight)
+        val glyphOffset = Vec2((glyph.x + glyph.width) / textureWidth, glyph.y / textureHeight)
         val debug = renderer.debugOffset
 
         val data = BasicShapes.square
@@ -244,8 +245,8 @@ class Font constructor(font: Font = Font(MONOSPACED, BOLD, 32), antiAlias: Boole
         texture.bind()
         renderer.drawShape(data, offset, 0f, scale, useCamera)
 
-//        textures.white_pixel.bind()
-//        renderer.drawShape(data, offset, 0f, scale, useCamera)
+        //        textures.white_pixel.bind()
+        //        renderer.drawShape(data, offset, 0f, scale, useCamera)
     }
 
     fun dispose() {

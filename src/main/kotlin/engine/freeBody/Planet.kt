@@ -3,17 +3,15 @@ package engine.freeBody
 import display.draw.TextureConfig
 import engine.motion.Motion
 import org.jbox2d.collision.shapes.CircleShape
-import org.jbox2d.collision.shapes.Shape
 import org.jbox2d.dynamics.*
 
 class Planet(
     id: String,
     motion: Motion,
-    shapeBox: Shape,
     worldBody: Body,
     radius: Float,
     textureConfig: TextureConfig
-) : FreeBody(id, motion, shapeBox, worldBody, radius, textureConfig) {
+) : FreeBody(id, motion, worldBody, radius, textureConfig) {
 
     companion object {
 
@@ -38,7 +36,7 @@ class Planet(
             val bodyDef = createBodyDef(BodyType.DYNAMIC, x, y, h, dx, dy, dh)
             val worldBody = createWorldBody(shapeBox, mass, radius, friction, restitution, world, bodyDef)
 
-            return Planet(id, Motion(), shapeBox, worldBody, radius, textureConfig)
+            return Planet(id, Motion(), worldBody, radius, textureConfig)
         }
 
     }

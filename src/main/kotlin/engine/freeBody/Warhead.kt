@@ -3,11 +3,11 @@ package engine.freeBody
 import display.draw.TextureConfig
 import display.draw.TextureEnum
 import display.graphic.BasicShapes
+import engine.FreeBodyCallback
 import engine.motion.Motion
 import game.GamePlayer
 import org.jbox2d.collision.shapes.CircleShape
 import org.jbox2d.collision.shapes.PolygonShape
-import org.jbox2d.collision.shapes.Shape
 import org.jbox2d.common.Vec2
 import org.jbox2d.dynamics.Body
 import org.jbox2d.dynamics.BodyType
@@ -15,13 +15,12 @@ import org.jbox2d.dynamics.World
 
 class Warhead(
     id: String,
-    firedBy: GamePlayer,
+    val firedBy: GamePlayer,
     motion: Motion,
-    shapeBox: Shape,
     worldBody: Body,
     radius: Float,
     textureConfig: TextureConfig
-) : FreeBody(id, motion, shapeBox, worldBody, radius, textureConfig) {
+) : FreeBody(id, motion, worldBody, radius, textureConfig) {
 
     private val currentTime
         get() = System.currentTimeMillis()
@@ -31,6 +30,7 @@ class Warhead(
 
     private val createdAt = currentTime
     val selfDestructTime = 45000f
+    // TODO: player in current aiming phase could just wait out this time if they wanted to
 
     val damage = 100f
 
@@ -72,7 +72,8 @@ class Warhead(
             radius: Float = .7F,
             restitution: Float = .3f,
             friction: Float = .6f,
-            textureConfig: TextureConfig
+            textureConfig: TextureConfig,
+            onWarheadCollision: (FreeBody, Body) -> Unit
         ): Warhead {
             val shapeBox = PolygonShape()
             val vertices = BasicShapes.polygon4.chunked(2)
@@ -82,10 +83,12 @@ class Warhead(
 
             val bodyDef = createBodyDef(BodyType.DYNAMIC, x, y, h, dx, dy, dh)
             val worldBody = createWorldBody(shapeBox, mass, radius, friction, restitution, world, bodyDef)
+            worldBody.isBullet = true
+
             textureConfig.chunkedVertices =
                 shapeBox.vertices.map { listOf(it.x / radius, it.y / radius) }
 
-            return Warhead("1", firedBy, Motion(), shapeBox, worldBody, radius, textureConfig)
+            return Warhead("1", firedBy, Motion(), worldBody, radius, textureConfig)
                 .let {
 //                    it.textureConfig.updateGpuBufferData()
                     it.textureConfig.gpuBufferData = it.textureConfig.chunkedVertices.flatMap {
@@ -99,6 +102,7 @@ class Warhead(
                     }.toFloatArray()
 
                     firedBy.warheads.add(it)
+                    worldBody.userData = FreeBodyCallback(it, onWarheadCollision)
                     it
                 }
         }

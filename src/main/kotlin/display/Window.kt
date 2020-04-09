@@ -11,6 +11,8 @@ import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL11.*
 import org.lwjgl.system.Callback
 import org.lwjgl.system.MemoryUtil
+import utility.Common.makeVec2
+import java.nio.DoubleBuffer
 
 class Window(private val title: String, var width: Int, var height: Int, private var vSync: Boolean) {
 
@@ -87,15 +89,15 @@ class Window(private val title: String, var width: Int, var height: Int, private
         }?.let { callbacks.add(it) }
 
         GLFW.glfwSetCursorPosCallback(windowHandle) { window, xPos, yPos ->
-            cursorPositionEvent.onNext(Vec2(xPos.toFloat(), yPos.toFloat()))
+            cursorPositionEvent.onNext(makeVec2(xPos, yPos))
         }?.let { callbacks.add(it) }
 
         GLFW.glfwSetScrollCallback(windowHandle) { window, xOffset, yOffset ->
-            mouseScrollEvent.onNext(Vec2(xOffset.toFloat(), yOffset.toFloat()))
+            mouseScrollEvent.onNext(makeVec2(xOffset, yOffset))
         }?.let { callbacks.add(it) }
 
-//        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-//        glfwSetCharCallback(window, character_callback);
+        //        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        //        glfwSetCharCallback(window, character_callback);
     }
 
     fun setClearColor(r: Float, g: Float, b: Float, alpha: Float) {
@@ -120,7 +122,7 @@ class Window(private val title: String, var width: Int, var height: Int, private
         val y = BufferUtils.createDoubleBuffer(1)
         GLFW.glfwGetCursorPos(windowHandle, x, y)
 
-        return Vec2(x.get().toFloat(), y.get().toFloat())
+        return makeVec2(x, y)
     }
 
     fun exit() {

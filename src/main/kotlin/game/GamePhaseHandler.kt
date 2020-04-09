@@ -8,9 +8,9 @@ import display.events.MouseButtonEvent
 import display.graphic.Color
 import display.gui.GuiController
 import engine.GameState
+import engine.GameState.Companion.getContactBodies
 import engine.motion.Director
 import engine.shields.VehicleShield
-import kotlinx.coroutines.yield
 import org.jbox2d.common.Vec2
 import org.jbox2d.dynamics.Body
 import org.jbox2d.dynamics.contacts.ContactEdge
@@ -166,17 +166,6 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
                 pauseTime, calculatedElapsedTime = (elapsedTime - maxTurnDuration + pauseTime)
             )
             else -> gameState.tickClock(timeStep, velocityIterations, positionIterations)
-        }
-
-    }
-
-    private fun getContactBodies(contactEdge: ContactEdge): Sequence<Body> = sequence {
-        var currentContact = contactEdge
-        yield(currentContact.other)
-
-        while (currentContact.next != null) {
-            yield(currentContact.other)
-            currentContact = currentContact.next
         }
     }
 
@@ -373,7 +362,7 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
     }
 
     private fun getScreenLocation(location: Vec2): Vec2 =
-        location.add(Vec2(-camera.windowWidth * .5f, -camera.windowHeight * .5f))
+        location.add(Vec2(-camera.windowWidth, -camera.windowHeight).mul(.5f))
             .let {
                 it.y *= -1f
                 it
@@ -435,7 +424,7 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
         private const val pauseTime = 1000f
         private const val introDuration = 3500f
         private const val introStartSlowdown = 2000f
-        private const val maxTurnDuration = 30000f
+        private const val maxTurnDuration = 20000f
         private const val quickStartTime = 300f
         private const val outroDuration = 5000f
 

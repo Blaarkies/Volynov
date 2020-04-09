@@ -3,7 +3,6 @@ package game
 import Vector2f
 import display.draw.TextureConfig
 import display.draw.TextureEnum
-import display.draw.TextureHolder
 import display.graphic.BasicShapes
 import engine.GameState
 import engine.freeBody.Planet
@@ -28,7 +27,7 @@ object MapGenerator {
 
         val vehicles = gameState.gamePlayers.withIndex().map { (index, player) ->
             Vehicle.create(
-                gameState.world, player, -10f * index + .5f * gameState.gamePlayers.size,
+                gameState.world, player,-10f * index + .5f * gameState.gamePlayers.size,
                 10f, index * 1f, 0f, 0f, 1f, 3f, radius = .75f,
                 textureConfig = TextureConfig(TextureEnum.metal, Vector2f(.7f, .7f), Vector2f(0f, 0f))
             )

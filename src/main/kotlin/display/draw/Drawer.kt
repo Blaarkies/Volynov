@@ -10,6 +10,8 @@ import engine.physics.GravityCell
 import game.GamePlayer
 import org.jbox2d.common.MathUtils.sin
 import org.jbox2d.common.Vec2
+import utility.Common.makeVec2
+import utility.Common.makeVec2Circle
 import utility.Common.vectorUnit
 import java.util.*
 import kotlin.math.cos
@@ -44,9 +46,9 @@ class Drawer(val renderer: Renderer) {
         ).toFloatArray()
 
         textures.getTexture(TextureEnum.white_pixel).bind()
-//        renderer.drawStrip(data)
+        //        renderer.drawStrip(data)
 
-        renderer.drawText(freeBody.id, freeBody.worldBody.position, Vec2(1f, 1f), Color.WHITE)
+        renderer.drawText(freeBody.id, freeBody.worldBody.position, vectorUnit, Color.WHITE)
     }
 
     fun drawTrail(freeBody: FreeBody) {
@@ -84,11 +86,11 @@ class Drawer(val renderer: Renderer) {
                         (it[0] / 2 - 0.5f), (it[1] / 2 - 0.5f)
                     )
                 }.toFloatArray()
-            renderer.drawShape(data, Vec2(key.x * resolution, key.y * resolution), 0f, Vec2(scale, scale))
+            renderer.drawShape(data, makeVec2(key.x, key.y).mul(resolution), 0f, makeVec2(scale))
         }
     }
 
-    fun drawPicture(textureEnum: TextureEnum, scale: Vec2 = Vec2(1f, 1f), offset: Vec2 = Vec2()) {
+    fun drawPicture(textureEnum: TextureEnum, scale: Vec2 = vectorUnit, offset: Vec2 = Vec2()) {
         val texture = textures.getTexture(textureEnum).bind()
 
         val left = -texture.width / 2f
@@ -106,13 +108,13 @@ class Drawer(val renderer: Renderer) {
                 )
             }.toFloatArray()
 
-        renderer.drawShape(data, scale = Vec2(1f, 1f).mul(45f))
+        renderer.drawShape(data, scale = vectorUnit.mul(45f))
     }
 
     fun drawPlayerAimingPointer(player: GamePlayer) {
         val playerLocation = player.vehicle!!.worldBody.position
         val angle = player.playerAim.angle
-        val aimLocation = Vec2(cos(angle), sin(angle)).mul(player.playerAim.power / 10f)
+        val aimLocation = makeVec2Circle(angle).mul(player.playerAim.power / 10f)
 
         val linePoints = listOf(
             playerLocation.x,
