@@ -45,16 +45,16 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
     fun init(window: Window) {
         exitCall = { window.exit() }
 
-//        setupMainMenu()
+        setupMainMenu()
 
-                currentPhase = GamePhases.PLAYERS_PICK_SHIELDS
-                isTransitioning = false
-                gameState.gamePlayers.addAll((1..3).map { GamePlayer(it.toString()) })
-                MapGenerator.populateNewGameMap(gameState)
-                gameState.gamePlayers.forEach { it.vehicle?.shield = VehicleShield() }
-                gameState.playerOnTurn = gameState.gamePlayers[0]
-
-                setupNextPlayersTurn()
+//                currentPhase = GamePhases.PLAYERS_PICK_SHIELDS
+//                isTransitioning = false
+//                gameState.gamePlayers.addAll((1..3).map { GamePlayer(it.toString()) })
+//                MapGenerator.populateNewGameMap(gameState)
+//                gameState.gamePlayers.forEach { it.vehicle?.shield = VehicleShield() }
+//                gameState.playerOnTurn = gameState.gamePlayers[0]
+//
+//                setupNextPlayersTurn()
     }
 
     fun dragMouseRightClick(movement: Vec2) {

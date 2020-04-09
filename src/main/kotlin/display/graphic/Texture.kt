@@ -4,6 +4,8 @@ import org.lwjgl.BufferUtils
 import org.lwjgl.opengl.GL11.*
 import org.lwjgl.stb.STBImage.*
 import org.lwjgl.system.MemoryStack
+import utility.Common.getSafePath
+import java.io.File
 import java.nio.ByteBuffer
 
 class Texture {
@@ -62,7 +64,9 @@ class Texture {
             return texture
         }
 
-        fun loadTexture(path: String): Texture {
+        fun loadTexture(resourcePath: String): Texture {
+            val safePath = getSafePath(resourcePath)
+
             var image = BufferUtils.createByteBuffer(0)
             var width = 0
             var height = 0
@@ -72,14 +76,15 @@ class Texture {
                 val comp = stack.mallocInt(1)
 
                 stbi_set_flip_vertically_on_load(true)
-                image = stbi_load(path, w, h, comp, 0)
-                    ?: throw RuntimeException("Failed to load a texture file!\n${stbi_failure_reason()}")
+                image = stbi_load(safePath, w, h, comp, 0)
+                    ?: throw RuntimeException("Cannot load texture file at $safePath \n${stbi_failure_reason()}")
 
                 width = w.get()
                 height = h.get()
             }
             return createTexture(width, height, image)
         }
+
     }
 
 }

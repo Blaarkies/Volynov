@@ -1,6 +1,7 @@
 package utility
 
 import org.jbox2d.common.Vec2
+import java.io.File
 import java.util.*
 import kotlin.math.*
 
@@ -15,6 +16,14 @@ object Common {
                 Scanner(it, "UTF-8").use { scanner -> result = scanner.useDelimiter("\\A").next() }
             }
         return result
+    }
+
+    fun getSafePath(resourcePath: String): String {
+        val alternativePath = "src/main/resources/${resourcePath.substring(1)}"
+        return when {
+            File(alternativePath).exists() -> alternativePath
+            else -> resourcePath
+        }
     }
 
     fun <T, S> joinLists(aList: List<T>, bList: List<S>): Sequence<Pair<T, S>> = sequence {
@@ -52,6 +61,5 @@ object Common {
 
     fun getTimingFunctionSigmoid(interpolateStep: Float, centerGradient: Float = 1f) =
         (1f / (1f + exp((-(interpolateStep - .5f) * 10f)) * centerGradient)) * 1.023f - 0.0022f
-
 
 }

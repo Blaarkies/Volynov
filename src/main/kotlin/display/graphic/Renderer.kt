@@ -11,6 +11,7 @@ import org.lwjgl.opengl.GL20.GL_FRAGMENT_SHADER
 import org.lwjgl.opengl.GL20.GL_VERTEX_SHADER
 import org.lwjgl.system.MemoryUtil
 import utility.Common
+import utility.Common.getSafePath
 import java.awt.FontFormatException
 import java.io.FileInputStream
 import java.io.IOException
@@ -40,7 +41,8 @@ class Renderer {
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
         font = try {
-            Font(FileInputStream("src\\main\\resources\\fonts\\ALBMT___.TTF"), 80)
+            val fontPath = getSafePath("./fonts/ALBMT___.TTF")
+            Font(FileInputStream(fontPath), 80)
         } catch (ex: FontFormatException) {
             Logger.getLogger(Renderer::class.java.name).log(Level.CONFIG, null, ex)
             Font()
@@ -158,8 +160,8 @@ class Renderer {
         scale: Vec2 = Vec2(1f, 1f),
         useCamera: Boolean
     ) {
-//        val uniTex = program!!.getUniformLocation("texImage")
-//        program!!.setUniform(uniTex, 0)
+        //        val uniTex = program!!.getUniformLocation("texImage")
+        //        program!!.setUniform(uniTex, 0)
 
         val model = Matrix4f.translate(offset.x, offset.y, z)
             .multiply(Matrix4f.rotate(h * Common.radianToDegree, 0f, 0f, 1f))
