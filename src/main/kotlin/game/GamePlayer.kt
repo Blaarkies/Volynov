@@ -5,7 +5,7 @@ import engine.freeBody.Warhead
 import utility.Common.getTimingFunctionEaseIn
 
 class GamePlayer(
-    val name: String,
+    var name: String,
     val type: GamePlayerTypes = GamePlayerTypes.HUMAN,
     var vehicle: Vehicle? = null,
     val playerAim: PlayerAim = PlayerAim(),

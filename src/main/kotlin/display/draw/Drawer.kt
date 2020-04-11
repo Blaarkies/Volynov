@@ -3,18 +3,17 @@ package display.draw
 import display.graphic.BasicShapes
 import display.graphic.Color
 import display.graphic.Renderer
+import display.text.TextJustify
 import engine.freeBody.FreeBody
 import engine.freeBody.Particle
 import engine.physics.CellLocation
 import engine.physics.GravityCell
 import game.GamePlayer
-import org.jbox2d.common.MathUtils.sin
 import org.jbox2d.common.Vec2
 import utility.Common.makeVec2
 import utility.Common.makeVec2Circle
 import utility.Common.vectorUnit
 import java.util.*
-import kotlin.math.cos
 import kotlin.math.sqrt
 
 class Drawer(val renderer: Renderer) {
@@ -26,29 +25,29 @@ class Drawer(val renderer: Renderer) {
     }
 
     fun drawDebugForces(freeBody: FreeBody) {
-        val x = freeBody.worldBody.position.x
-        val y = freeBody.worldBody.position.y
-        val accelerationX = freeBody.worldBody.m_force.x
-        val accelerationY = freeBody.worldBody.m_force.y
-
-        val multiplier = 2000f
-        val linePoints = listOf(
-            x,
-            y,
-            x + accelerationX * multiplier,
-            y + accelerationY * multiplier
-        )
-        val triangleStripPoints = BasicShapes.getLineTriangleStrip(linePoints, .2f)
-        val arrowHeadPoints = BasicShapes.getArrowHeadPoints(linePoints)
-        val data = getColoredData(
-            triangleStripPoints + arrowHeadPoints,
-            Color(0f, 1f, 1f, 1f), Color(0f, 1f, 1f, 0.0f)
-        ).toFloatArray()
+//        val x = freeBody.worldBody.position.x
+//        val y = freeBody.worldBody.position.y
+//        val accelerationX = freeBody.worldBody.m_force.x
+//        val accelerationY = freeBody.worldBody.m_force.y
+//
+//        val multiplier = 2000f
+//        val linePoints = listOf(
+//            x,
+//            y,
+//            x + accelerationX * multiplier,
+//            y + accelerationY * multiplier
+//        )
+//        val triangleStripPoints = BasicShapes.getLineTriangleStrip(linePoints, .2f)
+//        val arrowHeadPoints = BasicShapes.getArrowHeadPoints(linePoints)
+//        val data = getColoredData(
+//            triangleStripPoints + arrowHeadPoints,
+//            Color(0f, 1f, 1f, 1f), Color(0f, 1f, 1f, 0.0f)
+//        ).toFloatArray()
 
         textures.getTexture(TextureEnum.white_pixel).bind()
         //        renderer.drawStrip(data)
 
-        renderer.drawText(freeBody.id, freeBody.worldBody.position, vectorUnit, Color.WHITE)
+        renderer.drawText(freeBody.id, freeBody.worldBody.position, vectorUnit, Color.WHITE, TextJustify.LEFT)
     }
 
     fun drawTrail(freeBody: FreeBody) {

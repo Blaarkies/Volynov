@@ -50,10 +50,8 @@ class Warhead(
 
         val textureConfig = TextureConfig(TextureEnum.white_pixel, chunkedVertices = BasicShapes.polygon30.chunked(2))
             .updateGpuBufferData()
-        return Particle(id, worldBody, shapeBox.radius, textureConfig).let {
-            particles.add(it)
-            it
-        }
+        return Particle(id, worldBody, shapeBox.radius, textureConfig)
+            .also { particles.add(it) }
 
     }
 
@@ -89,7 +87,7 @@ class Warhead(
                 shapeBox.vertices.map { listOf(it.x / radius, it.y / radius) }
 
             return Warhead("1", firedBy, Motion(), worldBody, radius, textureConfig)
-                .let {
+                .also {
 //                    it.textureConfig.updateGpuBufferData()
                     it.textureConfig.gpuBufferData = it.textureConfig.chunkedVertices.flatMap {
                         val (x, y) = it
@@ -103,7 +101,6 @@ class Warhead(
 
                     firedBy.warheads.add(it)
                     worldBody.userData = FreeBodyCallback(it, onWarheadCollision)
-                    it
                 }
         }
 

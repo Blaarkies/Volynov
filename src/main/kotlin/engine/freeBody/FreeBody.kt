@@ -27,18 +27,15 @@ open class FreeBody(
             world: World,
             bodyDef: BodyDef
         ): Body {
-            val fixtureDef = FixtureDef().let {
+            val fixtureDef = FixtureDef().also {
                 it.shape = shapeBox
                 it.density = mass / (PI.toFloat() * radius.pow(2f))
                 it.friction = friction
                 it.restitution = restitution
-                it
             }
 
-            return world.createBody(bodyDef).let {
-                it.createFixture(fixtureDef)
-                it
-            }
+            return world.createBody(bodyDef)
+                .also { it.createFixture(fixtureDef) }
         }
 
         fun createBodyDef(
@@ -46,13 +43,12 @@ open class FreeBody(
             x: Float, y: Float, h: Float,
             dx: Float, dy: Float, dh: Float
         ): BodyDef {
-            return BodyDef().let {
+            return BodyDef().also {
                 it.type = bodyType
                 it.position.set(x, y)
                 it.angle = h
                 it.linearVelocity = Vec2(dx, dy)
                 it.angularVelocity = dh
-                it
             }
         }
 

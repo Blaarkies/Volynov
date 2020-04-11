@@ -75,3 +75,5 @@ object Common {
         (1f / (1f + exp((-(interpolateStep - .5f) * 10f)) * centerGradient)) * 1.023f - 0.0022f
 
 }
+
+fun Vec2.toList(): List<Float> = listOf(this.x, this.y)

@@ -5,6 +5,8 @@ import io.reactivex.subjects.PublishSubject
 import org.jbox2d.common.Vec2
 import org.lwjgl.BufferUtils
 import org.lwjgl.glfw.GLFW
+import org.lwjgl.glfw.GLFW.glfwGetKey
+import org.lwjgl.glfw.GLFW.glfwGetKeyName
 import org.lwjgl.glfw.GLFWErrorCallback
 import org.lwjgl.opengl.GL
 import org.lwjgl.opengl.GL11
@@ -24,6 +26,7 @@ class Window(private val title: String, var width: Int, var height: Int, private
     val mouseButtonEvent = PublishSubject.create<MouseButtonEvent>()
     val cursorPositionEvent = PublishSubject.create<Vec2>()
     val mouseScrollEvent = PublishSubject.create<Vec2>()
+    val textInputEvent = PublishSubject.create<String>()
 
     fun init() {
         // Setup an error callback. The default implementation
@@ -69,7 +72,7 @@ class Window(private val title: String, var width: Int, var height: Int, private
     }
 
     private fun setupInputCallbacks() {
-        GLFW.glfwSetKeyCallback(windowHandle) { window, key, scancode, action, mods ->
+        GLFW.glfwSetKeyCallback(windowHandle) { _, key, scancode, action, mods ->
             if (action == GLFW.GLFW_PRESS) {
                 when {
                     key == GLFW.GLFW_KEY_F12 -> {
@@ -84,20 +87,22 @@ class Window(private val title: String, var width: Int, var height: Int, private
             }
         }?.let { callbacks.add(it) }
 
-        GLFW.glfwSetMouseButtonCallback(windowHandle) { window, button, action, mods ->
+        GLFW.glfwSetMouseButtonCallback(windowHandle) { _, button, action, mods ->
             mouseButtonEvent.onNext(MouseButtonEvent(button, action, mods, getCursorPosition()))
         }?.let { callbacks.add(it) }
 
-        GLFW.glfwSetCursorPosCallback(windowHandle) { window, xPos, yPos ->
+        GLFW.glfwSetCursorPosCallback(windowHandle) { _, xPos, yPos ->
             cursorPositionEvent.onNext(makeVec2(xPos, yPos))
         }?.let { callbacks.add(it) }
 
-        GLFW.glfwSetScrollCallback(windowHandle) { window, xOffset, yOffset ->
+        GLFW.glfwSetScrollCallback(windowHandle) { _, xOffset, yOffset ->
             mouseScrollEvent.onNext(makeVec2(xOffset, yOffset))
         }?.let { callbacks.add(it) }
 
+        GLFW.glfwSetCharCallback(windowHandle) { _, codepoint ->
+            textInputEvent.onNext(Character.toChars(codepoint)[0].toString())
+        }?.let { callbacks.add(it) }
         //        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-        //        glfwSetCharCallback(window, character_callback);
     }
 
     fun setClearColor(r: Float, g: Float, b: Float, alpha: Float) {

@@ -3,6 +3,7 @@ package display.graphic
 import Matrix4f
 import input.CameraView
 import display.text.Font
+import display.text.TextJustify
 import org.jbox2d.common.Vec2
 import org.lwjgl.opengl.GL11.*
 import org.lwjgl.opengl.GL15.GL_ARRAY_BUFFER
@@ -83,8 +84,13 @@ class Renderer {
         numVertices = 0
     }
 
-    fun drawText(text: CharSequence, offset: Vec2, scale: Vec2, color: Color, useCamera: Boolean = true) =
-        font.drawText(this, text, offset, scale, color, useCamera)
+    fun drawText(text: CharSequence,
+                 offset: Vec2,
+                 scale: Vec2,
+                 color: Color,
+                 justify: TextJustify = TextJustify.LEFT,
+                 useCamera: Boolean = true
+    ) = font.drawText(this, text, offset, scale, color, justify, useCamera)
 
     fun drawShape(
         data: FloatArray,

@@ -13,6 +13,7 @@ import java.awt.geom.AffineTransform
 import java.awt.image.AffineTransformOp
 import java.awt.image.BufferedImage
 import java.io.InputStream
+import java.lang.NullPointerException
 import kotlin.math.hypot
 import java.awt.Color as AwtColor
 
@@ -184,10 +185,11 @@ class Font constructor(font: Font = Font(MONOSPACED, BOLD, 32), antiAlias: Boole
         offset: Vec2,
         scale: Vec2,
         color: Color,
+        justify: TextJustify,
         useCamera: Boolean
     ) {
-        drawLetters(fontBitMapShadow, offset, scale, renderer, text, Color.BLACK, useCamera)
-        drawLetters(fontBitMap, offset, scale, renderer, text, color, useCamera)
+        drawLetters(fontBitMapShadow, offset, scale, renderer, text, Color.BLACK, justify, useCamera)
+        drawLetters(fontBitMap, offset, scale, renderer, text, color, justify, useCamera)
     }
 
     private fun drawLetters(
@@ -197,18 +199,29 @@ class Font constructor(font: Font = Font(MONOSPACED, BOLD, 32), antiAlias: Boole
         renderer: Renderer,
         text: CharSequence,
         color: Color,
+        justify: TextJustify,
         useCamera: Boolean
     ) {
-        val glyphs = text.map { glyphs[it]!! }
-        val centerText = Vec2(-getTextTotalWidth(glyphs, scale) * .75f, 0f)
+        val glyphs = text.mapNotNull {
+            try {
+                glyphs[it]
+            } catch (e: NullPointerException) {
+                throw Exception("Could not find text character in font", e)
+            }
+        }
+        val justifyment = when (justify) {
+            TextJustify.LEFT -> Vec2()
+            TextJustify.CENTER -> Vec2(-getTextTotalWidth(glyphs, scale), 0f)
+            TextJustify.RIGHT -> Vec2()
+        }
 
-        var x = -glyphs[0].width * scale.x
+        var x = 0f//glyphs[0].width * scale.x
         var y = 0f
         glyphs.forEach {
             x += it.width * scale.x
 
             drawTextPosition(
-                texture, renderer, Vec2(x, y).add(offset).add(centerText),
+                texture, renderer, Vec2(x, y).add(offset).add(justifyment),
                 scale, it, color, useCamera
             )
             x += it.width * scale.x

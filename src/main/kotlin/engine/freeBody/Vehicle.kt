@@ -57,12 +57,11 @@ class Vehicle(
                     )
                         .toTypedArray()
                     shapeBox.set(vertices, vertices.size)
-                    FixtureDef().let {
+                    FixtureDef().also {
                         it.shape = shapeBox
                         it.density = mass / (PI.toFloat() * radius.pow(2f) * (fullShape.size * .5f))
                         it.friction = friction
                         it.restitution = restitution
-                        it
                     }
                 }
                 .forEach { worldBody.createFixture(it) }
@@ -70,10 +69,7 @@ class Vehicle(
             textureConfig.chunkedVertices = listOf(listOf(0f, 0f)) + fullShape + listOf(fullShape.first())
 
             return Vehicle(player.name, Motion(), worldBody, radius, textureConfig)
-                .let {
-                    player.vehicle = it
-                    it
-                }
+                .also { player.vehicle = it }
         }
 
     }

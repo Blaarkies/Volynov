@@ -4,6 +4,7 @@ import display.draw.Drawer
 import display.draw.TextureEnum
 import display.graphic.BasicShapes
 import display.graphic.Color
+import display.text.TextJustify
 import org.jbox2d.common.Vec2
 import utility.Common
 
@@ -38,6 +39,7 @@ class GuiWindow(
             offset.add(Vec2(0f, scale.y - 25f)),
             Common.vectorUnit.mul(.15f),
             Color.WHITE,
+            TextJustify.LEFT,
             false
         )
 

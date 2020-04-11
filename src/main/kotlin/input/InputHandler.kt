@@ -18,6 +18,13 @@ class InputHandler(private val gamePhaseHandler: GamePhaseHandler) {
         setupKeyboard(window)
         setupMouseMove(window)
         setupMouseClicks(window)
+        setupTextInput(window)
+    }
+
+    private fun setupTextInput(window: Window) {
+        window.textInputEvent.takeUntil(unsubscribe).subscribe {
+            gamePhaseHandler.inputText(it)
+        }
     }
 
     private fun setupMouseClicks(window: Window) {
@@ -41,10 +48,11 @@ class InputHandler(private val gamePhaseHandler: GamePhaseHandler) {
             when (it.action) {
                 GLFW.GLFW_PRESS -> {
                     when (it.key) {
-                        GLFW.GLFW_KEY_SPACE -> gamePhaseHandler.pauseGame(it)
+//                        GLFW.GLFW_KEY_SPACE -> gamePhaseHandler.pauseGame(it)
                         GLFW.GLFW_KEY_LEFT -> gamePhaseHandler.keyPressArrowLeft(it)
                         GLFW.GLFW_KEY_RIGHT -> gamePhaseHandler.keyPressArrowRight(it)
                         GLFW.GLFW_KEY_ESCAPE -> gamePhaseHandler.keyPressEscape(it)
+                        GLFW.GLFW_KEY_BACKSPACE -> gamePhaseHandler.keyPressBackspace(it)
                     }
                 }
             }

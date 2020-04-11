@@ -7,7 +7,7 @@ import org.jbox2d.common.Vec2
 import utility.Common.roundFloat
 import kotlin.math.roundToInt
 
-class GuiController(private val drawer: Drawer) {
+class GuiController(private val drawer: Drawer, val setTextInputState: () -> Unit) {
 
     private val elements = mutableListOf<GuiElement>()
 
@@ -20,6 +20,12 @@ class GuiController(private val drawer: Drawer) {
     fun checkHover(location: Vec2) = elements.forEach { it.handleHover(location) }
 
     fun checkLeftClick(location: Vec2) = elements.toList().forEach { it.handleClick(location) }
+
+    fun checkAddTextInput(text: String) = elements.filterIsInstance<GuiInput>().forEach { it.handleAddTextInput(text) }
+
+    fun checkRemoveTextInput() = elements.filterIsInstance<GuiInput>().forEach { it.handleRemoveTextInput() }
+
+    fun stopTextInput() = elements.filterIsInstance<GuiInput>().forEach { it.stopTextInput() }
 
     fun createMainMenu(
         onClickNewGame: () -> Unit,
@@ -92,8 +98,13 @@ class GuiController(private val drawer: Drawer) {
             draggable = false, childElements = addRemoveButtonsList.toMutableList()
         )
 
-        val playerButtons = players
-            .map { GuiButton(drawer, scale = playerButtonSize, title = "P${it.name}", textSize = .3f) }
+        val playerButtons = players.withIndex()
+            .map { (index, player) ->
+                val playerName = if (player.name.length == 1) "" else player.name
+                GuiInput(drawer, scale = Vec2(75f, 50f), placeholder = "Player ${index + 1}",
+                    onClick = setTextInputState, onChange = { text -> player.name = text })
+                    .setTextValue(playerName)
+            }
             .let { listOf(addRemoveContainer) + it }
         setElementsInColumns(playerButtons, 40f)
         when (indexOfPlayersButtons) {
@@ -108,7 +119,7 @@ class GuiController(private val drawer: Drawer) {
         clear()
         val shieldPickerWindow =
             GuiWindow(
-                drawer, Vec2(200f, -200f), Vec2(150f, 150f), title = "Player ${player.name} to pick a shield",
+                drawer, Vec2(200f, -200f), Vec2(150f, 150f), title = "${player.name} to pick a shield",
                 draggable = true
             )
         shieldPickerWindow.addChild(
@@ -126,7 +137,7 @@ class GuiController(private val drawer: Drawer) {
         clear()
         val commandPanelWindow = GuiWindow(
             drawer, Vec2(350f, -350f), Vec2(150f, 150f),
-            title = "Player ${player.name}", draggable = true
+            title = player.name, draggable = true
         )
         commandPanelWindow.addChildren(
             listOf(

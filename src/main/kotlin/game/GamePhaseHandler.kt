@@ -7,13 +7,12 @@ import display.draw.TextureEnum
 import display.events.MouseButtonEvent
 import display.graphic.Color
 import display.gui.GuiController
+import display.text.TextJustify
 import engine.GameState
 import engine.GameState.Companion.getContactBodies
 import engine.motion.Director
 import engine.shields.VehicleShield
 import org.jbox2d.common.Vec2
-import org.jbox2d.dynamics.Body
-import org.jbox2d.dynamics.contacts.ContactEdge
 import utility.Common.getTimingFunctionEaseIn
 import utility.Common.getTimingFunctionEaseOut
 import utility.Common.vectorUnit
@@ -39,7 +38,8 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
 
     private var lastPhaseTimestamp = currentTime
 
-    private val guiController = GuiController(drawer)
+    private val guiController = GuiController(drawer, setTextInputState = { textInputIsBusy = true })
+    private var textInputIsBusy = false
     private lateinit var exitCall: () -> Unit
 
     fun init(window: Window) {
@@ -134,13 +134,13 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
         drawer.renderer.drawText(
             "Animating: ${isTransitioning.toString().padEnd(5, ' ')} ${currentPhase.name}",
             Vec2(120f - camera.windowWidth * .5f, -10f + camera.windowHeight * .5f),
-            vectorUnit.mul(0.1f), Color.GREEN, false
+            vectorUnit.mul(0.1f), Color.GREEN, TextJustify.LEFT, false
         )
 
         drawer.renderer.drawText(
             "${elapsedTime.div(100f).roundToInt().div(10f)} seconds",
             Vec2(40f - camera.windowWidth * .5f, -30f + camera.windowHeight * .5f),
-            vectorUnit.mul(0.1f), Color.GREEN, false
+            vectorUnit.mul(0.1f), Color.GREEN, TextJustify.LEFT, false
         )
     }
 
@@ -341,7 +341,6 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
                 guiController.update()
             }
         }
-
     }
 
     private fun getPlayerAndMouseLocations(location: Vec2): Triple<GamePlayer, Vec2, Vec2> {
@@ -363,15 +362,29 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
 
     private fun getScreenLocation(location: Vec2): Vec2 =
         location.add(Vec2(-camera.windowWidth, -camera.windowHeight).mul(.5f))
-            .let {
-                it.y *= -1f
-                it
-            }
+            .also { it.y *= -1f }
 
     fun keyPressEscape(event: KeyboardEvent) {
+        if (textInputIsBusy) {
+            textInputIsBusy = false
+            guiController.stopTextInput()
+            return
+        }
         when (currentPhase) {
             GamePhases.MAIN_MENU -> exitCall()
             else -> setupMainMenu()
+        }
+    }
+
+    fun keyPressBackspace(event: KeyboardEvent) {
+        if (textInputIsBusy) {
+            guiController.checkRemoveTextInput()
+        }
+    }
+
+    fun inputText(text: String) {
+        if (textInputIsBusy) {
+            guiController.checkAddTextInput(text)
         }
     }
 
@@ -410,6 +423,9 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
     }
 
     private fun setupStartGame() {
+        gameState.gamePlayers.withIndex()
+            .filter { (_, player) -> player.name.length <= 1 }
+            .forEach { (index, player) -> player.name = "Player ${index + 1}" }
         guiController.clear()
         startNewPhase(GamePhases.NEW_GAME_INTRO)
 

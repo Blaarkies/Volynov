@@ -47,7 +47,7 @@ class GuiButton(
             else -> drawer.renderer.drawStrip(buttonOutline, offset, useCamera = false)
         }
 
-        GuiElement.drawLabel(drawer, this)
+        drawLabel(drawer, this)
         super.render()
     }
 

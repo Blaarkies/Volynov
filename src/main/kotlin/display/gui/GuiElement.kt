@@ -2,8 +2,8 @@ package display.gui
 
 import display.draw.Drawer
 import display.graphic.Color
+import display.text.TextJustify
 import org.jbox2d.common.Vec2
-import utility.Common
 import utility.Common.vectorUnit
 
 open class GuiElement(
@@ -48,8 +48,8 @@ open class GuiElement(
         fun drawLabel(drawer: Drawer, element: GuiElementInterface) {
             drawer.renderer.drawText(
                 element.title, element.offset,
-                Common.vectorUnit.mul(element.textSize),
-                element.color, false
+                vectorUnit.mul(element.textSize),
+                element.color, TextJustify.CENTER, false
             )
         }
 

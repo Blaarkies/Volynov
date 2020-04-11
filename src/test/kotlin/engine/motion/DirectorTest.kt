@@ -11,10 +11,10 @@ internal class DirectorTest {
     @Test
     fun distance() {
         val rightPointed = Director.getDistance(0f, 0f, 1f, 1f)
-        assertEquals(1.414f, Common.roundFloat(rightPointed, 3))
+        assertEquals(1.414f, roundFloat(rightPointed, 3))
 
         val leftPointed = Director.getDistance(0f, 0f, -1f, -1f)
-        assertEquals(1.414f, Common.roundFloat(leftPointed, 3))
+        assertEquals(1.414f, roundFloat(leftPointed, 3))
     }
 
     @Test

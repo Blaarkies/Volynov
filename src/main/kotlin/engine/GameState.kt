@@ -163,10 +163,7 @@ class GameState {
             warheadMass, warheadRadius, textureConfig = TextureConfig(TextureEnum.metal),
             onWarheadCollision = { self, body -> detonateWarhead(self as Warhead, body) }
         )
-            .let {
-                warheads.add(it)
-                it
-            }
+            .also { warheads.add(it) }
 
     }
 

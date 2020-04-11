@@ -25,6 +25,8 @@ object BasicShapes {
 
     val polygon4Spiked = getSpikedPolygon(8)
 
+    val verticalLine = listOf(0f, 1f, 0f, -1f)
+
     private fun getPolygonVertices(corners: Int, rotate: Double = .25): List<Float> = (0 until corners).flatMap {
         val t = 2 * PI * (it / corners.toFloat()) + PI * rotate
         listOf(cos(t).toFloat(), sin(t).toFloat())

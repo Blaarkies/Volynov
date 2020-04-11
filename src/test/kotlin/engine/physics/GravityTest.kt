@@ -35,7 +35,7 @@ internal class GravityTest {
 //    }
 
     private fun getGravityForceBetweenPlanetSatellite(sx: Float = 0f, sy: Float = 0f): Vec2 {
-        val world = World(Vec2(0f, 0f))
+        val world = World(Vec2())
 
         val terra = Planet.create(world, "terra", sx, sy, 0f, 0f, 0f, 0f, 100f, 10f,
             textureConfig = TextureConfig(TextureEnum.white_pixel))
