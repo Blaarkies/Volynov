@@ -8,7 +8,7 @@ import display.text.TextJustify
 import org.jbox2d.common.Vec2
 import utility.Common
 
-class GuiWindow(
+class GuiPanel(
     drawer: Drawer,
     offset: Vec2 = Vec2(),
     scale: Vec2 = Vec2(100f, 100f),
@@ -24,6 +24,7 @@ class GuiWindow(
 
     init {
         childElementOffsets.putAll(childElements.map { Pair(it, it.offset.clone()) })
+        calculateElementRegion(this)
     }
 
     override fun render() {
@@ -51,7 +52,7 @@ class GuiWindow(
     override fun update() = childElements.forEach { it.update() }
 
     override fun addOffset(newOffset: Vec2) {
-        GuiElement.addOffset(this, newOffset)
+        addOffset(this, newOffset)
         calculateNewOffsets()
     }
 
@@ -59,7 +60,7 @@ class GuiWindow(
 
     override fun handleClick(location: Vec2) = childElements.forEach { it.handleClick(location) }
 
-    fun calculateNewOffsets() = childElements.forEach { it.updateOffset(childElementOffsets[it]!!.add(offset)) }
+    private fun calculateNewOffsets() = childElements.forEach { it.updateOffset(childElementOffsets[it]!!.add(offset)) }
 
     fun addChildren(elements: List<GuiElement>) {
         childElements.addAll(elements)
@@ -71,6 +72,12 @@ class GuiWindow(
         childElements.add(element)
         childElementOffsets[element] = element.offset.clone()
         calculateNewOffsets()
+    }
+
+    fun handleDrag(location: Vec2, movement: Vec2) {
+        if (draggable && isHover(location)) { // TODO: use custom isHover() to only allow a small region as drag handle
+            addOffset(movement)
+        }
     }
 
 }

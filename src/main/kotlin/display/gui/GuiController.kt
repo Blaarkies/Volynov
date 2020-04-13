@@ -7,7 +7,7 @@ import org.jbox2d.common.Vec2
 import utility.Common.roundFloat
 import kotlin.math.roundToInt
 
-class GuiController(private val drawer: Drawer, val setTextInputState: () -> Unit) {
+class GuiController(private val drawer: Drawer) {
 
     private val elements = mutableListOf<GuiElement>()
 
@@ -21,11 +21,16 @@ class GuiController(private val drawer: Drawer, val setTextInputState: () -> Uni
 
     fun checkLeftClick(location: Vec2) = elements.toList().forEach { it.handleClick(location) }
 
+    fun checkLeftClickDrag(location: Vec2, movement: Vec2) = elements.filterIsInstance<GuiPanel>()
+        .forEach { it.handleDrag(location, movement) }
+
     fun checkAddTextInput(text: String) = elements.filterIsInstance<GuiInput>().forEach { it.handleAddTextInput(text) }
 
     fun checkRemoveTextInput() = elements.filterIsInstance<GuiInput>().forEach { it.handleRemoveTextInput() }
 
     fun stopTextInput() = elements.filterIsInstance<GuiInput>().forEach { it.stopTextInput() }
+
+    fun textInputIsBusy(): Boolean = elements.filterIsInstance<GuiInput>().toList().any { it.textInputIsBusy }
 
     fun createMainMenu(
         onClickNewGame: () -> Unit,
@@ -93,7 +98,7 @@ class GuiController(private val drawer: Drawer, val setTextInputState: () -> Uni
         )
         val addRemoveButtonsList = listOf(addPlayerButton, removePlayerButton)
         setElementsInRows(addRemoveButtonsList)
-        val addRemoveContainer = GuiWindow(
+        val addRemoveContainer = GuiPanel(
             drawer, scale = playerButtonSize, color = Color.TRANSPARENT,
             draggable = false, childElements = addRemoveButtonsList.toMutableList()
         )
@@ -102,7 +107,7 @@ class GuiController(private val drawer: Drawer, val setTextInputState: () -> Uni
             .map { (index, player) ->
                 val playerName = if (player.name.length == 1) "" else player.name
                 GuiInput(drawer, scale = Vec2(75f, 50f), placeholder = "Player ${index + 1}",
-                    onClick = setTextInputState, onChange = { text -> player.name = text })
+                    onChange = { text -> player.name = text })
                     .setTextValue(playerName)
             }
             .let { listOf(addRemoveContainer) + it }
@@ -118,7 +123,7 @@ class GuiController(private val drawer: Drawer, val setTextInputState: () -> Uni
     fun createPlayersPickShields(player: GamePlayer, onClickShield: (player: GamePlayer) -> Unit) {
         clear()
         val shieldPickerWindow =
-            GuiWindow(
+            GuiPanel(
                 drawer, Vec2(200f, -200f), Vec2(150f, 150f), title = "${player.name} to pick a shield",
                 draggable = true
             )
@@ -135,7 +140,7 @@ class GuiController(private val drawer: Drawer, val setTextInputState: () -> Uni
         onClickFire: (player: GamePlayer) -> Unit
     ) {
         clear()
-        val commandPanelWindow = GuiWindow(
+        val commandPanelWindow = GuiPanel(
             drawer, Vec2(350f, -350f), Vec2(150f, 150f),
             title = player.name, draggable = true
         )
@@ -165,7 +170,7 @@ class GuiController(private val drawer: Drawer, val setTextInputState: () -> Uni
 
     fun createRoundLeaderboard(players: MutableList<GamePlayer>, onClickNextRound: () -> Unit) {
         clear()
-        val leaderBoardWindow = GuiWindow(drawer, Vec2(), Vec2(200f, 300f), "Leaderboard", draggable = true)
+        val leaderBoardWindow = GuiPanel(drawer, Vec2(), Vec2(200f, 300f), "Leaderboard", draggable = true)
         val playerLines = players.sortedByDescending { it.score }.map {
             GuiLabel(
                 drawer,

@@ -28,8 +28,10 @@ class GuiInput(
     private var buttonBackground: FloatArray
     private var backgroundColor = color.setAlpha(.1f)
 
-    var inputText = ""
+    private var inputText = ""
     private val paddedScale = Vec2(scale.x - 8f, 20f)
+    val textInputIsBusy
+        get() = currentPhase == GuiElementPhases.INPUT
 
     init {
         val verticalCursorLinePoint = BasicShapes.verticalLine.chunked(2)
@@ -75,7 +77,7 @@ class GuiInput(
     }
 
     override fun handleHover(location: Vec2) {
-        if (currentPhase == GuiElementPhases.INPUT) return
+        if (textInputIsBusy) return
         super.handleHover(location)
     }
 
@@ -90,21 +92,21 @@ class GuiInput(
     }
 
     fun handleAddTextInput(text: String) {
-        if (currentPhase == GuiElementPhases.INPUT) {
+        if (textInputIsBusy) {
             inputText += text
             onChange(inputText)
         }
     }
 
     fun handleRemoveTextInput() {
-        if (currentPhase == GuiElementPhases.INPUT) {
+        if (textInputIsBusy) {
             inputText = inputText.dropLast(1)
             onChange(inputText)
         }
     }
 
     fun stopTextInput() {
-        if (currentPhase == GuiElementPhases.INPUT) {
+        if (textInputIsBusy) {
             currentPhase = GuiElementPhases.IDLE
         }
     }

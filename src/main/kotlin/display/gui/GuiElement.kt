@@ -26,9 +26,9 @@ open class GuiElement(
 
     override fun update() = updateCallback(this)
 
-    override fun addOffset(newOffset: Vec2) = GuiElement.addOffset(this, newOffset)
+    override fun addOffset(newOffset: Vec2) = addOffset(this, newOffset)
 
-    override fun updateOffset(newOffset: Vec2) = GuiElement.updateOffset(this, newOffset)
+    override fun updateOffset(newOffset: Vec2) = updateOffset(this, newOffset)
 
     override fun handleHover(location: Vec2) = when {
         isHover(location) -> currentPhase = GuiElementPhases.HOVERED
@@ -61,7 +61,7 @@ open class GuiElement(
         fun addOffset(element: GuiElement, newOffset: Vec2) = updateOffset(element, element.offset.add(newOffset))
 
         fun updateOffset(element: GuiElement, newOffset: Vec2) {
-            element.offset = newOffset
+            element.offset.set(newOffset)
             calculateElementRegion(element)
         }
 

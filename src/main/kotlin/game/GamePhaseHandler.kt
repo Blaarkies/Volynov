@@ -38,40 +38,31 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
 
     private var lastPhaseTimestamp = currentTime
 
-    private val guiController = GuiController(drawer, setTextInputState = { textInputIsBusy = true })
-    private var textInputIsBusy = false
+    private val guiController = GuiController(drawer)
+    private val textInputIsBusy
+        get() = guiController.textInputIsBusy()
     private lateinit var exitCall: () -> Unit
 
     fun init(window: Window) {
         exitCall = { window.exit() }
+        when (0) {
+            0 -> setupMainMenu()
+            1 -> setupMainMenuSelectPlayers()
+            2 -> {
 
-        setupMainMenu()
+                currentPhase = GamePhases.PLAYERS_PICK_SHIELDS
+                isTransitioning = false
+                gameState.reset()
+                gameState.gamePlayers.addAll((1..3).map { GamePlayer(it.toString()) })
+                MapGenerator.populateNewGameMap(gameState)
 
-//                currentPhase = GamePhases.PLAYERS_PICK_SHIELDS
-//                isTransitioning = false
-//                gameState.gamePlayers.addAll((1..3).map { GamePlayer(it.toString()) })
-//                MapGenerator.populateNewGameMap(gameState)
-//                gameState.gamePlayers.forEach { it.vehicle?.shield = VehicleShield() }
-//                gameState.playerOnTurn = gameState.gamePlayers[0]
-//
-//                setupNextPlayersTurn()
-    }
+                gameState.gamePlayers.forEach { it.vehicle?.shield = VehicleShield() }
+                gameState.playerOnTurn = gameState.gamePlayers.first()
 
-    fun dragMouseRightClick(movement: Vec2) {
-        camera.moveLocation(movement.mulLocal(-camera.z))
-    }
-
-    fun scrollCamera(movement: Float) {
-        camera.moveZoom(movement * -.001f)
-    }
-
-    fun pauseGame(event: KeyboardEvent) {
-        currentPhase = when (currentPhase) {
-            GamePhases.PAUSE -> GamePhases.PLAY
-            GamePhases.PLAY -> GamePhases.PAUSE
-            else -> GamePhases.PAUSE
+                setupNextPlayersTurn()
+            }
+            else -> throw Throwable("Enter a debug step number to start game")
         }
-        startTransition()
     }
 
     private fun startTransition() {
@@ -199,8 +190,9 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
             return
         }
 
-        gameState.gamePlayers.map { "Player ${it.name} HP:${it.vehicle!!.hitPoints.toInt()}" }
-            .joinToString().let { println(it) }
+        gameState.gamePlayers
+            .joinToString { "${it.name} HP:${it.vehicle!!.hitPoints.toInt()}; " }
+            .also { println(it) }
 
         setNextPlayerOnTurn()
         setupPlayerCommandPanel()
@@ -300,7 +292,28 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
         }
     }
 
-    fun doubleLeftClick(location: Vec2, click: MouseButtonEvent) {
+    fun dragMouseRightClick(movement: Vec2) {
+        camera.moveLocation(movement.mulLocal(-camera.z))
+    }
+
+    fun dragMouseLeftClick(location: Vec2, movement: Vec2) {
+        guiController.checkLeftClickDrag(getScreenLocation(location), movement)
+    }
+
+    fun scrollCamera(movement: Float) {
+        camera.moveZoom(movement * -.001f)
+    }
+
+    fun pauseGame(event: KeyboardEvent) {
+        currentPhase = when (currentPhase) {
+            GamePhases.PAUSE -> GamePhases.PLAY
+            GamePhases.PLAY -> GamePhases.PAUSE
+            else -> GamePhases.PAUSE
+        }
+        startTransition()
+    }
+
+    fun doubleLeftClick(location: Vec2) {
         val transformedLocation = getScreenLocation(location).mul(camera.z).add(camera.location)
 
         val clickedBody = gameState.gravityBodies.find {
@@ -366,7 +379,6 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
 
     fun keyPressEscape(event: KeyboardEvent) {
         if (textInputIsBusy) {
-            textInputIsBusy = false
             guiController.stopTextInput()
             return
         }
@@ -379,6 +391,12 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
     fun keyPressBackspace(event: KeyboardEvent) {
         if (textInputIsBusy) {
             guiController.checkRemoveTextInput()
+        }
+    }
+
+    fun keyPressEnter(event: KeyboardEvent) {
+        if (textInputIsBusy) {
+            guiController.stopTextInput()
         }
     }
 
