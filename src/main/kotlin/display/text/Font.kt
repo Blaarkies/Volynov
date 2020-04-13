@@ -1,9 +1,6 @@
 package display.text
 
-import display.graphic.BasicShapes
-import display.graphic.Color
-import display.graphic.Renderer
-import display.graphic.Texture
+import display.graphic.*
 import org.jbox2d.common.Vec2
 import org.lwjgl.system.MemoryUtil
 import java.awt.Font
@@ -186,10 +183,11 @@ class Font constructor(font: Font = Font(MONOSPACED, BOLD, 32), antiAlias: Boole
         scale: Vec2,
         color: Color,
         justify: TextJustify,
-        useCamera: Boolean
+        useCamera: Boolean,
+        snipRegion: SnipRegion?
     ) {
-        drawLetters(fontBitMapShadow, offset, scale, renderer, text, Color.BLACK, justify, useCamera)
-        drawLetters(fontBitMap, offset, scale, renderer, text, color, justify, useCamera)
+        drawLetters(fontBitMapShadow, offset, scale, renderer, text, Color.BLACK, justify, useCamera, snipRegion)
+        drawLetters(fontBitMap, offset, scale, renderer, text, color, justify, useCamera, snipRegion)
     }
 
     private fun drawLetters(
@@ -200,7 +198,8 @@ class Font constructor(font: Font = Font(MONOSPACED, BOLD, 32), antiAlias: Boole
         text: CharSequence,
         color: Color,
         justify: TextJustify,
-        useCamera: Boolean
+        useCamera: Boolean,
+        snipRegion: SnipRegion?
     ) {
         val glyphs = text.mapNotNull {
             try {
@@ -222,7 +221,7 @@ class Font constructor(font: Font = Font(MONOSPACED, BOLD, 32), antiAlias: Boole
 
             drawTextPosition(
                 texture, renderer, Vec2(x, y).add(offset).add(justifyment),
-                scale, it, color, useCamera
+                scale, it, color, useCamera, snipRegion
             )
             x += it.width * scale.x
         }
@@ -235,7 +234,8 @@ class Font constructor(font: Font = Font(MONOSPACED, BOLD, 32), antiAlias: Boole
         scale: Vec2,
         glyph: Glyph,
         color: Color,
-        useCamera: Boolean
+        useCamera: Boolean,
+        snipRegion: SnipRegion?
     ) {
         val textureWidth = texture.width.toFloat()
         val textureHeight = texture.height.toFloat()
@@ -256,7 +256,7 @@ class Font constructor(font: Font = Font(MONOSPACED, BOLD, 32), antiAlias: Boole
             }.toFloatArray()
 
         texture.bind()
-        renderer.drawShape(data, offset, 0f, scale, useCamera)
+        renderer.drawShape(data, offset, 0f, scale, useCamera, snipRegion)
 
         //        textures.white_pixel.bind()
         //        renderer.drawShape(data, offset, 0f, scale, useCamera)

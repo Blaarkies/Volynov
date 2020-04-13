@@ -4,6 +4,7 @@ import display.draw.Drawer
 import display.draw.TextureEnum
 import display.graphic.BasicShapes
 import display.graphic.Color
+import display.graphic.SnipRegion
 import display.text.TextJustify
 import org.jbox2d.common.Vec2
 import utility.Common.makeVec2
@@ -50,16 +51,17 @@ class GuiInput(
         calculateElementRegion(this)
     }
 
-    override fun render() {
+    override fun render(snipRegion: SnipRegion?) {
         drawer.textures.getTexture(TextureEnum.white_pixel).bind()
 
         when (currentPhase) {
-            GuiElementPhases.HOVERED -> drawer.renderer.drawShape(buttonBackground, offset, useCamera = false)
+            GuiElementPhases.HOVERED -> drawer.renderer.drawShape(buttonBackground, offset, useCamera = false,
+                snipRegion = snipRegion)
             GuiElementPhases.INPUT -> {
-                drawer.renderer.drawShape(buttonBackground, offset, useCamera = false)
+                drawer.renderer.drawShape(buttonBackground, offset, useCamera = false, snipRegion = snipRegion)
 
                 if (System.currentTimeMillis().rem(blinkRate * 2) < blinkRate) {
-                    drawer.renderer.drawStrip(cursorLine, offset, useCamera = false)
+                    drawer.renderer.drawStrip(cursorLine, offset, useCamera = false, snipRegion = snipRegion)
                 }
             }
         }
@@ -69,11 +71,11 @@ class GuiInput(
         val paddedOffset = offset.clone().also { it.x -= paddedScale.x }
         when (inputText.length) {
             0 -> drawer.renderer.drawText(title, paddedOffset, vectorUnit.mul(textSize),
-                color.setAlpha(.4f), TextJustify.LEFT, false)
+                color.setAlpha(.4f), TextJustify.LEFT, false, snipRegion)
             else -> drawer.renderer.drawText(inputText, paddedOffset, vectorUnit.mul(textSize),
-                color, TextJustify.LEFT, false)
+                color, TextJustify.LEFT, false, snipRegion)
         }
-        super.render()
+        super.render(snipRegion)
     }
 
     override fun handleHover(location: Vec2) {
@@ -81,7 +83,7 @@ class GuiInput(
         super.handleHover(location)
     }
 
-    override fun handleClick(location: Vec2) {
+    override fun handleLeftClick(location: Vec2) {
         when {
             isHover(location) -> {
                 currentPhase = GuiElementPhases.INPUT

@@ -2,6 +2,7 @@ package input
 
 import display.events.MouseButtonEvent
 import display.Window
+import display.events.MouseScrollEvent
 import game.GamePhaseHandler
 import io.reactivex.subjects.PublishSubject
 import org.jbox2d.common.Vec2
@@ -62,7 +63,7 @@ class InputHandler(private val gamePhaseHandler: GamePhaseHandler) {
 
     private fun setupMouseScroll(window: Window) {
         window.mouseScrollEvent.takeUntil(unsubscribe)
-            .subscribe { gamePhaseHandler.scrollCamera(it.y) }
+            .subscribe { gamePhaseHandler.scrollMouse(it) }
     }
 
     private fun setupDoubleLeftClick(window: Window) {

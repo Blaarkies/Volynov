@@ -1,6 +1,7 @@
 package display
 
 import display.events.MouseButtonEvent
+import display.events.MouseScrollEvent
 import io.reactivex.subjects.PublishSubject
 import org.jbox2d.common.Vec2
 import org.lwjgl.BufferUtils
@@ -25,7 +26,7 @@ class Window(private val title: String, var width: Int, var height: Int, private
     val keyboardEvent = PublishSubject.create<KeyboardEvent>()
     val mouseButtonEvent = PublishSubject.create<MouseButtonEvent>()
     val cursorPositionEvent = PublishSubject.create<Vec2>()
-    val mouseScrollEvent = PublishSubject.create<Vec2>()
+    val mouseScrollEvent = PublishSubject.create<MouseScrollEvent>()
     val textInputEvent = PublishSubject.create<String>()
 
     fun init() {
@@ -96,7 +97,7 @@ class Window(private val title: String, var width: Int, var height: Int, private
         }?.let { callbacks.add(it) }
 
         GLFW.glfwSetScrollCallback(windowHandle) { _, xOffset, yOffset ->
-            mouseScrollEvent.onNext(makeVec2(xOffset, yOffset))
+            mouseScrollEvent.onNext( MouseScrollEvent(makeVec2(xOffset, yOffset), getCursorPosition()) )
         }?.let { callbacks.add(it) }
 
         GLFW.glfwSetCharCallback(windowHandle) { _, codepoint ->

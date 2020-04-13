@@ -5,6 +5,7 @@ import display.Window
 import display.draw.Drawer
 import display.draw.TextureEnum
 import display.events.MouseButtonEvent
+import display.events.MouseScrollEvent
 import display.graphic.Color
 import display.gui.GuiController
 import display.text.TextJustify
@@ -45,7 +46,7 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
 
     fun init(window: Window) {
         exitCall = { window.exit() }
-        when (0) {
+        when (2) {
             0 -> setupMainMenu()
             1 -> setupMainMenuSelectPlayers()
             2 -> {
@@ -53,7 +54,7 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
                 currentPhase = GamePhases.PLAYERS_PICK_SHIELDS
                 isTransitioning = false
                 gameState.reset()
-                gameState.gamePlayers.addAll((1..3).map { GamePlayer(it.toString()) })
+                gameState.gamePlayers.addAll((1..3).map { GamePlayer("Player $it") })
                 MapGenerator.populateNewGameMap(gameState)
 
                 gameState.gamePlayers.forEach { it.vehicle?.shield = VehicleShield() }
@@ -204,7 +205,8 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
         val vehiclesDestroyed = gameState.gamePlayers.count { it.vehicle!!.hitPoints > 0 } < 2
         if (vehiclesDestroyed) {
             startNewPhase(GamePhases.END_ROUND)
-            guiController.createRoundLeaderboard(gameState.gamePlayers, onClickNextRound = {})
+            guiController.createRoundLeaderboard(gameState.gamePlayers,
+                onClickNextRound = { setupMainMenuSelectPlayers() })
             return true
         }
         return false
@@ -300,8 +302,13 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
         guiController.checkLeftClickDrag(getScreenLocation(location), movement)
     }
 
-    fun scrollCamera(movement: Float) {
-        camera.moveZoom(movement * -.001f)
+    fun scrollMouse(event: MouseScrollEvent) {
+        val screenLocation = getScreenLocation(event.location)
+        if (guiController.locationIsGui(screenLocation)) {
+            guiController.checkScroll(event.movement, screenLocation)
+        } else {
+            camera.moveZoom(event.movement.y * -.001f)
+        }
     }
 
     fun pauseGame(event: KeyboardEvent) {

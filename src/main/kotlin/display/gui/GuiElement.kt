@@ -2,6 +2,7 @@ package display.gui
 
 import display.draw.Drawer
 import display.graphic.Color
+import display.graphic.SnipRegion
 import display.text.TextJustify
 import org.jbox2d.common.Vec2
 import utility.Common.vectorUnit
@@ -22,7 +23,7 @@ open class GuiElement(
     protected var topRight: Vec2 = Vec2()
     protected var bottomLeft: Vec2 = Vec2()
 
-    override fun render() = Unit
+    override fun render(snipRegion: SnipRegion?) = Unit
 
     override fun update() = updateCallback(this)
 
@@ -35,23 +36,32 @@ open class GuiElement(
         else -> currentPhase = GuiElementPhases.IDLE
     }
 
-    override fun handleClick(location: Vec2) = Unit
+    override fun handleLeftClick(location: Vec2) = Unit
 
-    protected fun isHover(location: Vec2): Boolean =
+    override fun handleLeftClickDrag(location: Vec2, movement: Vec2) = Unit
+
+    override fun handleScroll(location: Vec2, movement: Vec2) = Unit
+
+    fun isHover(location: Vec2): Boolean =
         location.x > bottomLeft.x
-            && location.x < topRight.x
-            && location.y > bottomLeft.y
-            && location.y < topRight.y
+                && location.x < topRight.x
+                && location.y > bottomLeft.y
+                && location.y < topRight.y
 
     companion object {
 
-        fun drawLabel(drawer: Drawer, element: GuiElementInterface) {
-            drawer.renderer.drawText(
-                element.title, element.offset,
-                vectorUnit.mul(element.textSize),
-                element.color, TextJustify.CENTER, false
-            )
-        }
+        fun drawLabel(drawer: Drawer,
+                      element: GuiElementInterface,
+                      justify: TextJustify = TextJustify.CENTER,
+                      snipRegion: SnipRegion?
+        ) = drawer.renderer.drawText(
+            element.title,
+            element.offset,
+            vectorUnit.mul(element.textSize),
+            element.color,
+            justify,
+            false,
+            snipRegion)
 
         fun calculateElementRegion(element: GuiElement) {
             element.bottomLeft = element.offset.add(element.scale.negate())

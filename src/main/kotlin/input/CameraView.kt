@@ -1,5 +1,6 @@
 package input
 
+import Matrix4f
 import display.Window
 import engine.freeBody.FreeBody
 import org.jbox2d.common.Vec2
@@ -67,6 +68,12 @@ class CameraView(private val window: Window) {
     fun reset() {
         location = Vec2()
         z = .05f
+    }
+
+    fun getRenderCamera(): Matrix4f {
+        val zoomScale = 1f / z
+        return Matrix4f.scale(zoomScale, zoomScale, 1f)
+            .multiply(Matrix4f.translate(-location.x, -location.y, 0f))
     }
 
 }
