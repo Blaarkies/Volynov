@@ -41,7 +41,7 @@ class GuiPanel(
             offset.add(Vec2(0f, scale.y - 25f)),
             Common.vectorUnit.mul(.15f),
             Color.WHITE,
-            TextJustify.LEFT,
+            TextJustify.CENTER,
             false,
             snipRegion
         )

@@ -80,7 +80,12 @@ sourceSets {
 tasks {
 
     withType<KotlinCompile> {
-        kotlinOptions.jvmTarget = "11"
+        kotlinOptions.jvmTarget = "1.8"
+    }
+
+    register<Zip>("zipFolder") {
+        from("$buildDir/Volynov-$version")
+        destinationDirectory.set(File("$buildDir/"))
     }
 
     task("renameFolder") {
@@ -95,16 +100,21 @@ tasks {
         doLast {
             File("$buildDir/libs/run.bat")
                 .writeText("""|chcp 65001
-                        |java -Dfile.encoding=UTF-8 -jar ./volynov-$version-uber.jar
+                        |java -Dfile.encoding=UTF-8 -Dorg.lwjgl.util.Debug=true -jar ./volynov-$version-uber.jar
                         |pause
                         """.trimMargin())
         }
     }
 
+    register<Copy>("copyTextures") {
+        from("$projectDir/src/main/resources")
+        exclude("shaders")
+        into("$buildDir/libs")
+    }
+
     register<Jar>("uberJar") {
         dependsOn(configurations.runtimeClasspath)
 
-        group = "build"
         archiveClassifier.set("uber")
         manifest { attributes["Main-Class"] = "MainKt" }
 
@@ -118,7 +128,7 @@ tasks {
 
     task("package") {
         group = "build"
-        dependsOn("clean", "uberJar", "copyTextures", "createBat", "renameFolder")
+        dependsOn("clean", "uberJar", "copyTextures", "createBat", "renameFolder", "zipFolder")
     }
 }
 
@@ -126,10 +136,4 @@ tasks.test {
     group = "build"
     useJUnitPlatform()
     testLogging { events("PASSED", "SKIPPED", "FAILED") }
-}
-
-tasks.register<Copy>("copyTextures") {
-    from("$projectDir/src/main/resources")
-    exclude("shaders")
-    into("$buildDir/libs")
 }

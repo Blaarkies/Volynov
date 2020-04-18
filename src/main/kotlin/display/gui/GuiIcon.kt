@@ -1,32 +1,34 @@
 package display.gui
 
 import display.draw.Drawer
+import display.draw.TextureEnum
 import display.graphic.Color
 import display.graphic.SnipRegion
-import display.text.TextJustify
 import org.jbox2d.common.Vec2
+import utility.Common.vectorUnit
 
-class GuiLabel(
+class GuiIcon(
     drawer: Drawer,
     offset: Vec2 = Vec2(),
-    val justify: TextJustify = TextJustify.LEFT,
-    title: String,
+    scale: Vec2 = vectorUnit,
+    title: String = "",
     textSize: Float = 0f,
     color: Color = Color.WHITE.setAlpha(.7f),
-    updateCallback: (GuiElement) -> Unit = {}
+    val texture: TextureEnum = TextureEnum.white_pixel
 ) : GuiElement(
     drawer,
     offset,
-    Vec2(title.length * 16f, textSize * 100f),
+    scale,
     title,
     textSize,
     color,
-    updateCallback
+    {}
 ) {
 
     override fun render(snipRegion: SnipRegion?) {
         super.render(snipRegion)
-        drawLabel(drawer, this, justify, snipRegion)
+
+        drawer.drawIcon(texture, scale, offset, color)
     }
 
 }

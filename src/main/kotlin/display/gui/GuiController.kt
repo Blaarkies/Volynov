@@ -1,11 +1,13 @@
 package display.gui
 
 import display.draw.Drawer
+import display.draw.TextureEnum
 import display.graphic.Color
 import display.text.TextJustify
 import game.GamePlayer
 import org.jbox2d.common.Vec2
 import utility.Common.roundFloat
+import utility.Common.vectorUnit
 import kotlin.math.roundToInt
 
 class GuiController(private val drawer: Drawer) {
@@ -129,7 +131,7 @@ class GuiController(private val drawer: Drawer) {
         clear()
         val shieldPickerPanel =
             GuiPanel(
-                drawer, Vec2(200f, -200f), Vec2(150f, 150f), title = "${player.name} to pick a shield",
+                drawer, Vec2(710f, -340f), Vec2(250f, 200f), title = "${player.name} to pick a shield",
                 draggable = true
             )
         shieldPickerPanel.addChild(
@@ -146,32 +148,35 @@ class GuiController(private val drawer: Drawer) {
     ) {
         clear()
         val commandPanel = GuiPanel(
-            drawer, Vec2(350f, -350f), Vec2(150f, 150f),
+            drawer, Vec2(710f, -340f), Vec2(250f, 200f),
             title = player.name, draggable = true
         )
         val weaponsList = GuiScroll(drawer, Vec2(50f, -50f), Vec2(100f, 100f)).addChildren(
-            (1..30).map {
-                GuiButton(drawer, scale = Vec2(100f, 25f), title = "Boom number $it", textSize = .15f,
-                    onClick = { println("clicked $it") })
+            (1..5).map {
+                GuiButton(drawer, scale = Vec2(100f, 25f), title = "Boom $it", textSize = .15f,
+                    onClick = { println("clicked [Boom $it]") })
             }
         )
         commandPanel.addChildren(
             listOf(
-                GuiButton(drawer, Vec2(-100f, 0f), Vec2(50f, 25f), title = "Aim",
+                GuiButton(drawer, Vec2(-200f, 0f), Vec2(50f, 25f), title = "Aim",
                     onClick = { onClickAim(player) }),
-                GuiButton(drawer, Vec2(-100f, -50f), Vec2(50f, 25f), title = "Power",
+                GuiButton(drawer, Vec2(-200f, -50f), Vec2(50f, 25f), title = "Power",
                     onClick = { onClickPower(player) }),
-                GuiButton(drawer, Vec2(-100f, -100f), Vec2(50f, 25f), title = "Fire",
+                GuiButton(drawer, Vec2(-200f, -100f), Vec2(50f, 25f), title = "Fire",
                     onClick = { onClickFire(player) }),
 
-                GuiLabel(drawer, Vec2(-150f, 90f), justify = TextJustify.LEFT, title = getPlayerAimAngleDisplay(player),
+                GuiLabel(drawer, Vec2(-210f, 110f), justify = TextJustify.LEFT,
+                    title = getPlayerAimAngleDisplay(player),
                     textSize = .15f,
                     updateCallback = { it.title = getPlayerAimAngleDisplay(player) }),
-                GuiLabel(drawer, Vec2(-150f, 70f), justify = TextJustify.LEFT, title = getPlayerAimPowerDisplay(player),
+                GuiLabel(drawer, Vec2(-210f, 80f), justify = TextJustify.LEFT, title = getPlayerAimPowerDisplay(player),
                     textSize = .15f,
                     updateCallback = { it.title = getPlayerAimPowerDisplay(player) }),
 
-                weaponsList
+                weaponsList,
+
+                GuiIcon(drawer, Vec2(-230f, 110f), vectorUnit.mul(20f), texture = TextureEnum.icon_aim)
             )
         )
         elements.add(commandPanel)
@@ -186,11 +191,18 @@ class GuiController(private val drawer: Drawer) {
     fun createRoundLeaderboard(players: MutableList<GamePlayer>, onClickNextRound: () -> Unit) {
         clear()
         val leaderBoardPanel = GuiPanel(drawer, Vec2(), Vec2(200f, 300f), "Leaderboard", draggable = false)
-        val playerLines = players.sortedByDescending { it.score }.map {
+        val playerLines = listOf(GuiLabel(
+            drawer,
+            Vec2(-50f, 100f),
+            justify = TextJustify.LEFT,
+            title = "Player          Score".padStart(10, ' '),
+            textSize = .2f
+        )) + players.sortedByDescending { it.score }.map {
             GuiLabel(
                 drawer,
+                Vec2(-50f, 100f),
                 justify = TextJustify.LEFT,
-                title = "${it.name.padEnd(10, ' ')}${it.score.roundToInt()}".padStart(10, ' '),
+                title = "${it.name.padEnd(20, ' ')}${it.score.roundToInt()}".padStart(10, ' '),
                 textSize = .2f
             )
         }
@@ -199,7 +211,7 @@ class GuiController(private val drawer: Drawer) {
         leaderBoardPanel.addChildren(playerLines)
         leaderBoardPanel.addChild(
             GuiButton(
-                drawer, Vec2(0f, -280f), Vec2(100f, 25f), "Next Match",
+                drawer, Vec2(0f, -250f), Vec2(100f, 25f), "Next Match",
                 onClick = onClickNextRound
             )
         )

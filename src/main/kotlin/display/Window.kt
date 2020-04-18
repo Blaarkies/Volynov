@@ -47,10 +47,11 @@ class Window(private val title: String, var width: Int, var height: Int, private
         GLFW.glfwWindowHint(GLFW.GLFW_SAMPLES, 4) // anti-aliasing
 
         // Create the window
-        windowHandle = GLFW.glfwCreateWindow(width, height, title, MemoryUtil.NULL, MemoryUtil.NULL)
-        if (windowHandle == MemoryUtil.NULL) {
-            throw RuntimeException("Failed to create the GLFW window")
-        }
+        windowHandle = GLFW.glfwCreateWindow(width, height, title, GLFW.glfwGetPrimaryMonitor(), MemoryUtil.NULL)
+        //        windowHandle = GLFW.glfwCreateWindow(width, height, title, MemoryUtil.NULL, MemoryUtil.NULL)
+        //        if (windowHandle == MemoryUtil.NULL) {
+        //            throw RuntimeException("Failed to create the GLFW window")
+        //        }
         // Setup resize callback
         GLFW.glfwSetFramebufferSizeCallback(windowHandle) { _, width, height ->
             this.width = width
@@ -58,9 +59,10 @@ class Window(private val title: String, var width: Int, var height: Int, private
         }
 
         // Get the resolution of the primary monitor
-        val videoMode = GLFW.glfwGetVideoMode(GLFW.glfwGetPrimaryMonitor())!!
+        //        val videoMode = GLFW.glfwGetVideoMode(GLFW.glfwGetPrimaryMonitor())!!
         // Center our window
-        GLFW.glfwSetWindowPos(windowHandle, (videoMode.width() - width) / 2, (videoMode.height() - height) / 2)
+        //        GLFW.glfwSetWindowPos(windowHandle, (videoMode.width() - width) / 2, (videoMode.height() - height) / 2)
+
         GLFW.glfwMakeContextCurrent(windowHandle) // Make the OpenGL context current
         if (isVSync()) { // Enable v-sync
             GLFW.glfwSwapInterval(1)
@@ -97,7 +99,7 @@ class Window(private val title: String, var width: Int, var height: Int, private
         }?.let { callbacks.add(it) }
 
         GLFW.glfwSetScrollCallback(windowHandle) { _, xOffset, yOffset ->
-            mouseScrollEvent.onNext( MouseScrollEvent(makeVec2(xOffset, yOffset), getCursorPosition()) )
+            mouseScrollEvent.onNext(MouseScrollEvent(makeVec2(xOffset, yOffset), getCursorPosition()))
         }?.let { callbacks.add(it) }
 
         GLFW.glfwSetCharCallback(windowHandle) { _, codepoint ->

@@ -19,11 +19,11 @@ object MapGenerator {
 
     fun populateNewGameMap(gameState: GameState) {
         val terra = Planet.create(
-            gameState.world, "terra", 0f, 0f, 0f, 0f, 0f, .1f, 1800f, 4.5f, .3f,
+            gameState.world, "terra", 0f, 0f, 0f, 0f, 0f, .1f, 1600f, 4.5f, .3f,
             textureConfig = TextureConfig(TextureEnum.marble_earth, chunkedVertices = BasicShapes.polygon30.chunked(2))
         )
         val luna = Planet.create(
-            gameState.world, "luna", -20f, 0f, 0f, 0f, 4.8f, -.4f, 100f, 1.25f, .5f,
+            gameState.world, "luna", -25f, 0f, 0f, 0f, 4.8f, -.4f, 100f, 1.25f, .5f,
             textureConfig = TextureConfig(TextureEnum.full_moon, chunkedVertices = BasicShapes.polygon30.chunked(2))
         )
 
@@ -39,7 +39,7 @@ object MapGenerator {
 
         gameState.vehicles.addAll(vehicles)
         gameState.planets.addAll(listOf(terra, luna))
-        gameState.planets.addAll(createPlanets(gameState.world, 5))
+        gameState.planets.addAll(createAsteroids(gameState.world, 15))
 
         gameState.gravityBodies.forEach { it.textureConfig.updateGpuBufferData() }
     }
@@ -74,17 +74,17 @@ object MapGenerator {
 
         gameState.vehicles.addAll(listOf(alice, bob))
         gameState.planets.addAll(listOf(terra, luna))
-        gameState.planets.addAll(createPlanets(gameState.world, 20))
+        gameState.planets.addAll(createAsteroids(gameState.world, 20))
 
         gameState.gravityBodies.forEach { it.textureConfig.updateGpuBufferData() }
     }
 
-    private fun createPlanets(world: World, count: Int): List<Planet> {
+    private fun createAsteroids(world: World, count: Int): List<Planet> {
         return (1..count)
             .withIndex()
             .map { (i, _) ->
                 val ratio = (2 * PI * 0.07 * i).toFloat()
-                val radius = 15f
+                val radius = 35f
                 floatArrayOf(
                     (i * .04f + radius) * cos(ratio),
                     (i * .04f + radius) * sin(ratio),
@@ -93,7 +93,7 @@ object MapGenerator {
             }
             .map {
                 val direction = Director.getDirection(-it[0], -it[1]) + PI * .5f
-                val speed = 7f
+                val speed = 4.7f
                 Planet.create(
                     world, "${it[2].toInt()}", it[0], it[1], 0f,
                     cos(direction).toFloat() * speed,

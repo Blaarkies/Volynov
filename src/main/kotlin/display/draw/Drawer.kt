@@ -3,6 +3,7 @@ package display.draw
 import display.graphic.BasicShapes
 import display.graphic.Color
 import display.graphic.Renderer
+import display.graphic.SnipRegion
 import display.text.TextJustify
 import engine.freeBody.FreeBody
 import engine.freeBody.Particle
@@ -11,6 +12,8 @@ import engine.physics.CellLocation
 import engine.physics.GravityCell
 import game.GamePlayer
 import org.jbox2d.common.Vec2
+import org.lwjgl.opengl.GL11
+import org.lwjgl.opengl.GL12
 import utility.Common.makeVec2
 import utility.Common.makeVec2Circle
 import utility.Common.vectorUnit
@@ -94,7 +97,7 @@ class Drawer(val renderer: Renderer) {
         }
     }
 
-    fun drawPicture(textureEnum: TextureEnum, scale: Vec2 = vectorUnit, offset: Vec2 = Vec2()) {
+    fun drawBackground(textureEnum: TextureEnum, scale: Vec2 = vectorUnit, offset: Vec2 = Vec2()) {
         val texture = textures.getTexture(textureEnum).bind()
 
         val left = -texture.width / 2f
@@ -107,12 +110,38 @@ class Drawer(val renderer: Renderer) {
                 listOf(
                     it[0], it[1], 0f,
                     1f, 1f, 1f, 1f,
-                    (it[0] / 2 - 0.5f) * scale.x + offset.x,
-                    (it[1] / 2 - 0.5f) * scale.y + offset.y
+                    (it[0] / 2f - 0.5f) * scale.x + offset.x,
+                    (it[1] / 2f - 0.5f) * scale.y + offset.y
                 )
             }.toFloatArray()
 
         renderer.drawShape(data, scale = vectorUnit.mul(45f))
+    }
+
+    fun drawIcon(textureEnum: TextureEnum,
+                 scale: Vec2 = vectorUnit,
+                 offset: Vec2 = Vec2(),
+                 color: Color
+    ) {
+        val texture = textures.getTexture(textureEnum).bind()
+
+        val left = -texture.width / 2f
+        val right = texture.width / 2f
+        val top = texture.height / 2f
+        val bottom = -texture.height / 2f
+
+        val data = listOf(left, bottom, left, top, right, top, right, bottom).chunked(2)
+            .flatMap {
+                listOf(
+                    it[0], it[1], 0f,
+                    color.red, color.green, color.blue, color.alpha,
+                    (it[0] / 2f - 0.5f),
+                    (it[1] / 2f - 0.5f)
+                )
+            }.toFloatArray()
+
+        renderer.drawShape(data, offset, 0f, scale, useCamera = false,
+            snipRegion = SnipRegion(offset.add(scale.negate()), scale.mul(2f)))
     }
 
     fun drawPlayerAimingPointer(player: GamePlayer) {

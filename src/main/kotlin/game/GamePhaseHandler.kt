@@ -46,7 +46,7 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
 
     fun init(window: Window) {
         exitCall = { window.exit() }
-        when (2) {
+        when (0) {
             0 -> setupMainMenu()
             1 -> setupMainMenuSelectPlayers()
             2 -> {
@@ -252,7 +252,7 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
     }
 
     private fun drawPlayPhase() {
-        drawer.drawPicture(TextureEnum.stars_2k)
+        drawer.drawBackground(TextureEnum.stars_2k)
 
         val allFreeBodies = gameState.gravityBodies
         allFreeBodies.forEach { drawer.drawTrail(it) }
@@ -456,7 +456,7 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
 
         MapGenerator.populateNewGameMap(gameState)
 
-        check(gameState.gamePlayers.size > 0) { "Cannot play a game with no players." }
+        check(gameState.gamePlayers.size > 1) { "Cannot play a game with less than 2 players." }
         gameState.playerOnTurn = gameState.gamePlayers.random()
     }
 

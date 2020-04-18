@@ -6,5 +6,6 @@ enum class TextureEnum {
     metal,
     pavement,
     white_pixel,
-    stars_2k
+    stars_2k,
+    icon_aim
 }
