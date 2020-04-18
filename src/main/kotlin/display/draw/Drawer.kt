@@ -6,6 +6,7 @@ import display.graphic.Renderer
 import display.text.TextJustify
 import engine.freeBody.FreeBody
 import engine.freeBody.Particle
+import engine.freeBody.Vehicle
 import engine.physics.CellLocation
 import engine.physics.GravityCell
 import game.GamePlayer
@@ -25,24 +26,24 @@ class Drawer(val renderer: Renderer) {
     }
 
     fun drawDebugForces(freeBody: FreeBody) {
-//        val x = freeBody.worldBody.position.x
-//        val y = freeBody.worldBody.position.y
-//        val accelerationX = freeBody.worldBody.m_force.x
-//        val accelerationY = freeBody.worldBody.m_force.y
-//
-//        val multiplier = 2000f
-//        val linePoints = listOf(
-//            x,
-//            y,
-//            x + accelerationX * multiplier,
-//            y + accelerationY * multiplier
-//        )
-//        val triangleStripPoints = BasicShapes.getLineTriangleStrip(linePoints, .2f)
-//        val arrowHeadPoints = BasicShapes.getArrowHeadPoints(linePoints)
-//        val data = getColoredData(
-//            triangleStripPoints + arrowHeadPoints,
-//            Color(0f, 1f, 1f, 1f), Color(0f, 1f, 1f, 0.0f)
-//        ).toFloatArray()
+        //        val x = freeBody.worldBody.position.x
+        //        val y = freeBody.worldBody.position.y
+        //        val accelerationX = freeBody.worldBody.m_force.x
+        //        val accelerationY = freeBody.worldBody.m_force.y
+        //
+        //        val multiplier = 2000f
+        //        val linePoints = listOf(
+        //            x,
+        //            y,
+        //            x + accelerationX * multiplier,
+        //            y + accelerationY * multiplier
+        //        )
+        //        val triangleStripPoints = BasicShapes.getLineTriangleStrip(linePoints, .2f)
+        //        val arrowHeadPoints = BasicShapes.getArrowHeadPoints(linePoints)
+        //        val data = getColoredData(
+        //            triangleStripPoints + arrowHeadPoints,
+        //            Color(0f, 1f, 1f, 1f), Color(0f, 1f, 1f, 0.0f)
+        //        ).toFloatArray()
 
         textures.getTexture(TextureEnum.white_pixel).bind()
         //        renderer.drawStrip(data)
@@ -56,7 +57,11 @@ class Drawer(val renderer: Renderer) {
         if (linePoints.size < 4) {
             return
         }
-        val data = getLine(linePoints, Color(0.4f, 0.7f, 1f, 0.5f), Color.TRANSPARENT, .1f, 0f)
+        val trailColor = when (freeBody) {
+            is Vehicle -> freeBody.textureConfig.color.setAlpha(.3f)
+            else -> Color(.4f, .7f, 1f, .5f)
+        }
+        val data = getLine(linePoints, trailColor, Color.TRANSPARENT, .1f, 0f)
 
         textures.getTexture(TextureEnum.white_pixel).bind()
         renderer.drawStrip(data)

@@ -31,6 +31,7 @@ class Warhead(
     private val createdAt = currentTime
     val selfDestructTime = 45000f
     // TODO: player in current aiming phase could just wait out this time if they wanted to
+    // also influences score
 
     val damage = 100f
 
@@ -46,7 +47,7 @@ class Warhead(
         val velocity = impacted.linearVelocity
         val bodyDef = createBodyDef(BodyType.STATIC, location.x, location.y, 0f, velocity.x, velocity.y, 0f)
         val worldBody = world.createBody(bodyDef)
-//            createWorldBody(shapeBox, 0f, radius, 0f, 0f, world, bodyDef)
+        //            createWorldBody(shapeBox, 0f, radius, 0f, 0f, world, bodyDef)
 
         val textureConfig = TextureConfig(TextureEnum.white_pixel, chunkedVertices = BasicShapes.polygon30.chunked(2))
             .updateGpuBufferData()
@@ -88,17 +89,7 @@ class Warhead(
 
             return Warhead("1", firedBy, Motion(), worldBody, radius, textureConfig)
                 .also {
-//                    it.textureConfig.updateGpuBufferData()
-                    it.textureConfig.gpuBufferData = it.textureConfig.chunkedVertices.flatMap {
-                        val (x, y) = it
-                        listOf(
-                            x, y, 0f,
-                            1f, .3f, .3f, 1f,
-                            (x * .5f - 0.5f) * .1f,
-                            (y * .5f - 0.5f) * .1f
-                        )
-                    }.toFloatArray()
-
+                    it.textureConfig.updateGpuBufferData()
                     firedBy.warheads.add(it)
                     worldBody.userData = FreeBodyCallback(it, onWarheadCollision)
                 }

@@ -1,14 +1,16 @@
 package game
 
-import Vector2f
 import display.draw.TextureConfig
 import display.draw.TextureEnum
 import display.graphic.BasicShapes
+import display.graphic.Color
 import engine.GameState
 import engine.freeBody.Planet
 import engine.freeBody.Vehicle
 import engine.motion.Director
+import org.jbox2d.common.Vec2
 import org.jbox2d.dynamics.World
+import utility.Common.vectorUnit
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
@@ -25,11 +27,13 @@ object MapGenerator {
             textureConfig = TextureConfig(TextureEnum.full_moon, chunkedVertices = BasicShapes.polygon30.chunked(2))
         )
 
+        val colorStartIndex = Math.random().times(11).toInt()
         val vehicles = gameState.gamePlayers.withIndex().map { (index, player) ->
             Vehicle.create(
-                gameState.world, player,-10f * index + .5f * gameState.gamePlayers.size,
+                gameState.world, player, -10f * index + .5f * gameState.gamePlayers.size,
                 10f, index * 1f, 0f, 0f, 1f, 3f, radius = .75f,
-                textureConfig = TextureConfig(TextureEnum.metal, Vector2f(.7f, .7f), Vector2f(0f, 0f))
+                textureConfig = TextureConfig(TextureEnum.metal, vectorUnit.mul(.7f),
+                    color = Color.PALETTE_TINT10[((colorStartIndex + index) * 2).rem(11)])
             )
         }
 
@@ -45,8 +49,8 @@ object MapGenerator {
             gameState.world, "terra", 0f, 0f, 0f, 0f, 0f, .1f, 1800f, 4.5f, .3f,
             textureConfig = TextureConfig(
                 TextureEnum.marble_earth,
-                Vector2f(1f, 1f),
-                Vector2f(0f, 0f),
+                vectorUnit,
+                Vec2(),
                 BasicShapes.polygon30.chunked(2)
             )
         )
@@ -54,18 +58,18 @@ object MapGenerator {
             gameState.world, "luna", -20f, 0f, 0f, 0f, 4.4f, -.4f, 100f, 1.25f, .5f,
             textureConfig = TextureConfig(
                 TextureEnum.full_moon,
-                Vector2f(1f, 1f),
-                Vector2f(0f, 0f),
+                vectorUnit.mul(.7f),
+                Vec2(),
                 BasicShapes.polygon30.chunked(2)
             )
         )
         val alice = Vehicle.create(
             gameState.world, GamePlayer("alice"), -30f, 5f, 0f, -2f, 2.7f, 1f, 3f, radius = .75f,
-            textureConfig = TextureConfig(TextureEnum.metal, Vector2f(.7f, .7f), Vector2f(0f, 0f), listOf())
+            textureConfig = TextureConfig(TextureEnum.metal, vectorUnit.mul(.7f))
         )
         val bob = Vehicle.create(
             gameState.world, GamePlayer("bob"), 25f, 0f, 0f, 2f, -3f, 0f, 3f, radius = .75f,
-            textureConfig = TextureConfig(TextureEnum.metal, Vector2f(.7f, .7f), Vector2f(0f, 0f), listOf())
+            textureConfig = TextureConfig(TextureEnum.metal, vectorUnit.mul(.7f))
         )
 
         gameState.vehicles.addAll(listOf(alice, bob))
@@ -98,8 +102,8 @@ object MapGenerator {
                     friction = .6f,
                     textureConfig = TextureConfig(
                         TextureEnum.pavement,
-                        Vector2f(.3f, .3f),
-                        Vector2f(it[0].rem(20f) / 10 - 1, it[1].rem(20f) / 10 - 1),
+                        vectorUnit.mul(.3f),
+                        Vec2(it[0].rem(20f) / 10 - 1, it[1].rem(20f) / 10 - 1),
                         BasicShapes.polygon9.chunked(2)
                     )
                 )

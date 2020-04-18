@@ -7,6 +7,7 @@ import display.graphic.Color
 import display.graphic.SnipRegion
 import display.text.TextJustify
 import org.jbox2d.common.Vec2
+import utility.Common.vectorUnit
 
 class GuiButton(
     drawer: Drawer,

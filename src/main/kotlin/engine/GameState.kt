@@ -4,6 +4,7 @@ import input.CameraView
 import display.Window
 import display.draw.TextureConfig
 import display.draw.TextureEnum
+import display.graphic.Color
 import engine.freeBody.*
 import engine.motion.Director
 import engine.motion.Motion
@@ -160,7 +161,8 @@ class GameState {
         return Warhead.create(
             world, player, warheadLocation.x, warheadLocation.y, angle,
             warheadVelocity.x, warheadVelocity.y, 0f,
-            warheadMass, warheadRadius, textureConfig = TextureConfig(TextureEnum.metal),
+            warheadMass, warheadRadius,
+            textureConfig = TextureConfig(TextureEnum.metal, color = Color.createFromHsv(0f, 1f, .3f, 1f)),
             onWarheadCollision = { self, body -> detonateWarhead(self as Warhead, body) }
         )
             .also { warheads.add(it) }

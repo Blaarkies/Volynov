@@ -2,7 +2,6 @@ package engine.physics
 
 import display.draw.TextureConfig
 import display.draw.TextureEnum
-import display.graphic.Texture
 import engine.freeBody.Planet
 import org.jbox2d.common.Vec2
 import org.jbox2d.dynamics.World
