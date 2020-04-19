@@ -1,16 +1,21 @@
 package display
 
 import display.events.MouseButtonEvent
+import display.events.MouseScrollEvent
 import io.reactivex.subjects.PublishSubject
 import org.jbox2d.common.Vec2
 import org.lwjgl.BufferUtils
 import org.lwjgl.glfw.GLFW
+import org.lwjgl.glfw.GLFW.glfwGetKey
+import org.lwjgl.glfw.GLFW.glfwGetKeyName
 import org.lwjgl.glfw.GLFWErrorCallback
 import org.lwjgl.opengl.GL
 import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL11.*
 import org.lwjgl.system.Callback
 import org.lwjgl.system.MemoryUtil
+import utility.Common.makeVec2
+import java.nio.DoubleBuffer
 
 class Window(private val title: String, var width: Int, var height: Int, private var vSync: Boolean) {
 
@@ -21,7 +26,8 @@ class Window(private val title: String, var width: Int, var height: Int, private
     val keyboardEvent = PublishSubject.create<KeyboardEvent>()
     val mouseButtonEvent = PublishSubject.create<MouseButtonEvent>()
     val cursorPositionEvent = PublishSubject.create<Vec2>()
-    val mouseScrollEvent = PublishSubject.create<Vec2>()
+    val mouseScrollEvent = PublishSubject.create<MouseScrollEvent>()
+    val textInputEvent = PublishSubject.create<String>()
 
     fun init() {
         // Setup an error callback. The default implementation
@@ -41,10 +47,11 @@ class Window(private val title: String, var width: Int, var height: Int, private
         GLFW.glfwWindowHint(GLFW.GLFW_SAMPLES, 4) // anti-aliasing
 
         // Create the window
-        windowHandle = GLFW.glfwCreateWindow(width, height, title, MemoryUtil.NULL, MemoryUtil.NULL)
-        if (windowHandle == MemoryUtil.NULL) {
-            throw RuntimeException("Failed to create the GLFW window")
-        }
+        windowHandle = GLFW.glfwCreateWindow(width, height, title, GLFW.glfwGetPrimaryMonitor(), MemoryUtil.NULL)
+        //        windowHandle = GLFW.glfwCreateWindow(width, height, title, MemoryUtil.NULL, MemoryUtil.NULL)
+        //        if (windowHandle == MemoryUtil.NULL) {
+        //            throw RuntimeException("Failed to create the GLFW window")
+        //        }
         // Setup resize callback
         GLFW.glfwSetFramebufferSizeCallback(windowHandle) { _, width, height ->
             this.width = width
@@ -52,9 +59,10 @@ class Window(private val title: String, var width: Int, var height: Int, private
         }
 
         // Get the resolution of the primary monitor
-        val videoMode = GLFW.glfwGetVideoMode(GLFW.glfwGetPrimaryMonitor())!!
+        //        val videoMode = GLFW.glfwGetVideoMode(GLFW.glfwGetPrimaryMonitor())!!
         // Center our window
-        GLFW.glfwSetWindowPos(windowHandle, (videoMode.width() - width) / 2, (videoMode.height() - height) / 2)
+        //        GLFW.glfwSetWindowPos(windowHandle, (videoMode.width() - width) / 2, (videoMode.height() - height) / 2)
+
         GLFW.glfwMakeContextCurrent(windowHandle) // Make the OpenGL context current
         if (isVSync()) { // Enable v-sync
             GLFW.glfwSwapInterval(1)
@@ -67,7 +75,7 @@ class Window(private val title: String, var width: Int, var height: Int, private
     }
 
     private fun setupInputCallbacks() {
-        GLFW.glfwSetKeyCallback(windowHandle) { window, key, scancode, action, mods ->
+        GLFW.glfwSetKeyCallback(windowHandle) { _, key, scancode, action, mods ->
             if (action == GLFW.GLFW_PRESS) {
                 when {
                     key == GLFW.GLFW_KEY_F12 -> {
@@ -82,20 +90,22 @@ class Window(private val title: String, var width: Int, var height: Int, private
             }
         }?.let { callbacks.add(it) }
 
-        GLFW.glfwSetMouseButtonCallback(windowHandle) { window, button, action, mods ->
+        GLFW.glfwSetMouseButtonCallback(windowHandle) { _, button, action, mods ->
             mouseButtonEvent.onNext(MouseButtonEvent(button, action, mods, getCursorPosition()))
         }?.let { callbacks.add(it) }
 
-        GLFW.glfwSetCursorPosCallback(windowHandle) { window, xPos, yPos ->
-            cursorPositionEvent.onNext(Vec2(xPos.toFloat(), yPos.toFloat()))
+        GLFW.glfwSetCursorPosCallback(windowHandle) { _, xPos, yPos ->
+            cursorPositionEvent.onNext(makeVec2(xPos, yPos))
         }?.let { callbacks.add(it) }
 
-        GLFW.glfwSetScrollCallback(windowHandle) { window, xOffset, yOffset ->
-            mouseScrollEvent.onNext(Vec2(xOffset.toFloat(), yOffset.toFloat()))
+        GLFW.glfwSetScrollCallback(windowHandle) { _, xOffset, yOffset ->
+            mouseScrollEvent.onNext(MouseScrollEvent(makeVec2(xOffset, yOffset), getCursorPosition()))
         }?.let { callbacks.add(it) }
 
-//        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-//        glfwSetCharCallback(window, character_callback);
+        GLFW.glfwSetCharCallback(windowHandle) { _, codepoint ->
+            textInputEvent.onNext(Character.toChars(codepoint)[0].toString())
+        }?.let { callbacks.add(it) }
+        //        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     }
 
     fun setClearColor(r: Float, g: Float, b: Float, alpha: Float) {
@@ -120,7 +130,7 @@ class Window(private val title: String, var width: Int, var height: Int, private
         val y = BufferUtils.createDoubleBuffer(1)
         GLFW.glfwGetCursorPos(windowHandle, x, y)
 
-        return Vec2(x.get().toFloat(), y.get().toFloat())
+        return makeVec2(x, y)
     }
 
     fun exit() {

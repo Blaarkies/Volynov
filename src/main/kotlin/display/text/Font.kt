@@ -1,9 +1,6 @@
 package display.text
 
-import display.graphic.BasicShapes
-import display.graphic.Color
-import display.graphic.Renderer
-import display.graphic.Texture
+import display.graphic.*
 import org.jbox2d.common.Vec2
 import org.lwjgl.system.MemoryUtil
 import java.awt.Font
@@ -13,9 +10,9 @@ import java.awt.geom.AffineTransform
 import java.awt.image.AffineTransformOp
 import java.awt.image.BufferedImage
 import java.io.InputStream
+import java.lang.NullPointerException
 import kotlin.math.hypot
 import java.awt.Color as AwtColor
-
 
 class Font constructor(font: Font = Font(MONOSPACED, BOLD, 32), antiAlias: Boolean = true) {
 
@@ -185,10 +182,12 @@ class Font constructor(font: Font = Font(MONOSPACED, BOLD, 32), antiAlias: Boole
         offset: Vec2,
         scale: Vec2,
         color: Color,
-        useCamera: Boolean
+        justify: TextJustify,
+        useCamera: Boolean,
+        snipRegion: SnipRegion?
     ) {
-        drawLetters(fontBitMapShadow, offset, scale, renderer, text, Color.BLACK, useCamera)
-        drawLetters(fontBitMap, offset, scale, renderer, text, color, useCamera)
+        drawLetters(fontBitMapShadow, offset, scale, renderer, text, Color.BLACK, justify, useCamera, snipRegion)
+        drawLetters(fontBitMap, offset, scale, renderer, text, color, justify, useCamera, snipRegion)
     }
 
     private fun drawLetters(
@@ -198,19 +197,31 @@ class Font constructor(font: Font = Font(MONOSPACED, BOLD, 32), antiAlias: Boole
         renderer: Renderer,
         text: CharSequence,
         color: Color,
-        useCamera: Boolean
+        justify: TextJustify,
+        useCamera: Boolean,
+        snipRegion: SnipRegion?
     ) {
-        val glyphs = text.map { glyphs[it]!! }
-        val centerText = Vec2(-getTextTotalWidth(glyphs, scale) * .75f, 0f)
+        val glyphs = text.mapNotNull {
+            try {
+                glyphs[it]
+            } catch (e: NullPointerException) {
+                throw Exception("Could not find text character in font", e)
+            }
+        }
+        val justifyment = when (justify) {
+            TextJustify.LEFT -> Vec2()
+            TextJustify.CENTER -> Vec2(-getTextTotalWidth(glyphs, scale), 0f)
+            TextJustify.RIGHT -> Vec2()
+        }
 
-        var x = -glyphs[0].width * scale.x
+        var x = 0f//glyphs[0].width * scale.x
         var y = 0f
         glyphs.forEach {
             x += it.width * scale.x
 
             drawTextPosition(
-                texture, renderer, Vec2(x, y).add(offset).add(centerText),
-                scale, it, color, useCamera
+                texture, renderer, Vec2(x, y).add(offset).add(justifyment),
+                scale, it, color, useCamera, snipRegion
             )
             x += it.width * scale.x
         }
@@ -223,10 +234,13 @@ class Font constructor(font: Font = Font(MONOSPACED, BOLD, 32), antiAlias: Boole
         scale: Vec2,
         glyph: Glyph,
         color: Color,
-        useCamera: Boolean
+        useCamera: Boolean,
+        snipRegion: SnipRegion?
     ) {
-        val glyphScale = Vec2(glyph.width / texture.width.toFloat(), glyph.height / texture.height.toFloat())
-        val glyphOffset = Vec2((glyph.x + glyph.width) / texture.width.toFloat(), glyph.y / texture.height.toFloat())
+        val textureWidth = texture.width.toFloat()
+        val textureHeight = texture.height.toFloat()
+        val glyphScale = Vec2(glyph.width / textureWidth, glyph.height / textureHeight)
+        val glyphOffset = Vec2((glyph.x + glyph.width) / textureWidth, glyph.y / textureHeight)
         val debug = renderer.debugOffset
 
         val data = BasicShapes.square
@@ -242,10 +256,10 @@ class Font constructor(font: Font = Font(MONOSPACED, BOLD, 32), antiAlias: Boole
             }.toFloatArray()
 
         texture.bind()
-        renderer.drawShape(data, offset, 0f, scale, useCamera)
+        renderer.drawShape(data, offset, 0f, scale, useCamera, snipRegion)
 
-//        textures.white_pixel.bind()
-//        renderer.drawShape(data, offset, 0f, scale, useCamera)
+        //        textures.white_pixel.bind()
+        //        renderer.drawShape(data, offset, 0f, scale, useCamera)
     }
 
     fun dispose() {

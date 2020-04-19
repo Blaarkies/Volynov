@@ -1,9 +1,13 @@
 package display.gui
 
 import display.draw.Drawer
+import display.draw.TextureEnum
 import display.graphic.BasicShapes
 import display.graphic.Color
+import display.graphic.SnipRegion
+import display.text.TextJustify
 import org.jbox2d.common.Vec2
+import utility.Common.vectorUnit
 
 class GuiButton(
     drawer: Drawer,
@@ -12,8 +16,9 @@ class GuiButton(
     title: String,
     textSize: Float = .2f,
     color: Color = Color.WHITE.setAlpha(.7f),
-    private val onClick: () -> Unit = {}
-) : GuiElement(drawer, offset, scale, title, textSize, color) {
+    private val onClick: () -> Unit = {},
+    updateCallback: (GuiElement) -> Unit = {}
+) : GuiElement(drawer, offset, scale, title, textSize, color, updateCallback) {
 
     private var buttonOutline: FloatArray
     private var buttonBackground: FloatArray
@@ -29,27 +34,29 @@ class GuiButton(
         calculateElementRegion(this)
     }
 
-    override fun render() {
-        drawer.textures.white_pixel.bind()
+    override fun render(snipRegion: SnipRegion?) {
+        drawer.textures.getTexture(TextureEnum.white_pixel).bind()
 
         when (currentPhase) {
-            GuiElementPhases.HOVERED -> drawer.renderer.drawShape(buttonBackground, offset, useCamera = false)
+            GuiElementPhases.HOVERED -> drawer.renderer.drawShape(buttonBackground, offset, useCamera = false,
+                snipRegion = snipRegion)
         }
 
         when (currentPhase) {
             GuiElementPhases.CLICKED -> drawer.renderer.drawStrip(
                 buttonOutline,
                 offset.add(Vec2(0f, -2f)),
-                useCamera = false
+                useCamera = false,
+                snipRegion = snipRegion
             )
-            else -> drawer.renderer.drawStrip(buttonOutline, offset, useCamera = false)
+            else -> drawer.renderer.drawStrip(buttonOutline, offset, useCamera = false, snipRegion = snipRegion)
         }
 
-        GuiElement.drawLabel(drawer, this)
-        super.render()
+        super.render(snipRegion)
+        drawLabel(drawer, this, TextJustify.CENTER, snipRegion)
     }
 
-    override fun handleClick(location: Vec2) {
+    override fun handleLeftClick(location: Vec2) {
         when {
             isHover(location) -> {
                 currentPhase = GuiElementPhases.CLICKED
@@ -58,7 +65,5 @@ class GuiButton(
             else -> currentPhase = GuiElementPhases.IDLE
         }
     }
-
-
 
 }

@@ -1,27 +1,50 @@
 package display.gui
 
 import display.draw.Drawer
+import display.draw.TextureEnum
 import display.graphic.Color
+import display.text.TextJustify
 import game.GamePlayer
 import org.jbox2d.common.Vec2
+import utility.Common.roundFloat
+import utility.Common.vectorUnit
+import kotlin.math.roundToInt
 
 class GuiController(private val drawer: Drawer) {
 
     private val elements = mutableListOf<GuiElement>()
 
-    fun render() = elements.forEach { it.render() }
+    fun render() = elements.forEach { it.render(null) }
+
+    fun update() = elements.forEach { it.update() }
 
     fun clear() = elements.clear()
 
     fun checkHover(location: Vec2) = elements.forEach { it.handleHover(location) }
 
-    fun checkLeftClick(location: Vec2) = elements.toList().forEach { it.handleClick(location) }
+    fun checkLeftClick(location: Vec2) = elements.toList().forEach { it.handleLeftClick(location) }
+
+    fun checkLeftClickDrag(location: Vec2, movement: Vec2) =
+        elements.forEach { it.handleLeftClickDrag(location, movement) }
+
+    fun checkScroll(movement: Vec2, location: Vec2) = elements.forEach { it.handleScroll(location, movement) }
+
+    fun checkAddTextInput(text: String) = elements.filterIsInstance<GuiInput>().forEach { it.handleAddTextInput(text) }
+
+    fun checkRemoveTextInput() = elements.filterIsInstance<GuiInput>().forEach { it.handleRemoveTextInput() }
+
+    fun stopTextInput() = elements.filterIsInstance<GuiInput>().forEach { it.stopTextInput() }
+
+    fun textInputIsBusy(): Boolean = elements.filterIsInstance<GuiInput>().toList().any { it.textInputIsBusy }
+
+    fun locationIsGui(location: Vec2): Boolean = elements.any { it.isHover(location) }
 
     fun createMainMenu(
         onClickNewGame: () -> Unit,
         onClickSettings: () -> Unit,
         onClickQuit: () -> Unit
     ) {
+        clear()
         val buttonScale = Vec2(200f, 44f)
         val menuButtons = listOf(
             GuiButton(drawer, scale = buttonScale, title = "New Game", textSize = .27f, onClick = onClickNewGame),
@@ -32,10 +55,9 @@ class GuiController(private val drawer: Drawer) {
         setElementsInRows(menuButtons, 40f, false)
         menuButtons.forEach { it.addOffset(Vec2(0f, 150f)) }
 
-        elements.add(GuiLabel(drawer, Vec2(-10f, 250f), "Volynov", .6f))
+        elements.add(GuiLabel(drawer, Vec2(-10f, 250f), TextJustify.CENTER, "Volynov", .6f))
         elements.addAll(menuButtons)
     }
-
 
     fun createMainMenuSelectPlayers(
         onClickStart: () -> Unit,
@@ -44,7 +66,8 @@ class GuiController(private val drawer: Drawer) {
         onRemovePlayer: () -> Unit,
         playerList: MutableList<GamePlayer>
     ) {
-        elements.add(GuiLabel(drawer, Vec2(-10f, 250f), "Select Players", .2f))
+        clear()
+        elements.add(GuiLabel(drawer, Vec2(0f, 250f), TextJustify.CENTER, "Select Players", .2f))
 
         updateMainMenuSelectPlayers(playerList, onAddPlayer, onRemovePlayer)
 
@@ -82,13 +105,18 @@ class GuiController(private val drawer: Drawer) {
         )
         val addRemoveButtonsList = listOf(addPlayerButton, removePlayerButton)
         setElementsInRows(addRemoveButtonsList)
-        val addRemoveContainer = GuiWindow(
+        val addRemoveContainer = GuiPanel(
             drawer, scale = playerButtonSize, color = Color.TRANSPARENT,
             draggable = false, childElements = addRemoveButtonsList.toMutableList()
         )
 
-        val playerButtons = players
-            .map { GuiButton(drawer, scale = playerButtonSize, title = "P${it.name}", textSize = .3f) }
+        val playerButtons = players.withIndex()
+            .map { (index, player) ->
+                val playerName = if (player.name.length == 1) "" else player.name
+                GuiInput(drawer, scale = Vec2(75f, 50f), placeholder = "Player ${index + 1}",
+                    onChange = { text -> player.name = text })
+                    .setTextValue(playerName)
+            }
             .let { listOf(addRemoveContainer) + it }
         setElementsInColumns(playerButtons, 40f)
         when (indexOfPlayersButtons) {
@@ -100,56 +128,128 @@ class GuiController(private val drawer: Drawer) {
     }
 
     fun createPlayersPickShields(player: GamePlayer, onClickShield: (player: GamePlayer) -> Unit) {
-        val shieldPickerWindow =
-            GuiWindow(
-                drawer, Vec2(200f, -200f), Vec2(150f, 150f), title = "Player ${player.name} to pick a shield",
+        clear()
+        val shieldPickerPanel =
+            GuiPanel(
+                drawer, Vec2(710f, -340f), Vec2(250f, 200f), title = "${player.name} to pick a shield",
                 draggable = true
             )
-        shieldPickerWindow.addChild(
+        shieldPickerPanel.addChild(
             GuiButton(drawer, scale = Vec2(100f, 25f), title = "Pick one", onClick = { onClickShield(player) })
         )
-        elements.add(shieldPickerWindow)
+        elements.add(shieldPickerPanel)
     }
 
-    fun createPlayerCommandPanel(player: GamePlayer, onClickFire: (player: GamePlayer) -> Unit) {
-        val commandPanelWindow =
-            GuiWindow(
-                drawer, Vec2(200f, -200f), Vec2(150f, 150f), title = "Player ${player.name}",
-                draggable = true
-            )
-        commandPanelWindow.addChild(
-            GuiButton(drawer, scale = Vec2(100f, 25f), title = "Fire all guns!", onClick = { onClickFire(player) })
+    fun createPlayerCommandPanel(
+        player: GamePlayer,
+        onClickAim: (player: GamePlayer) -> Unit,
+        onClickPower: (player: GamePlayer) -> Unit,
+        onClickFire: (player: GamePlayer) -> Unit
+    ) {
+        clear()
+        val commandPanel = GuiPanel(
+            drawer, Vec2(710f, -340f), Vec2(250f, 200f),
+            title = player.name, draggable = true
         )
-        elements.add(commandPanelWindow)
+        val weaponsList = GuiScroll(drawer, Vec2(50f, -50f), Vec2(100f, 100f)).addChildren(
+            (1..5).map {
+                GuiButton(drawer, scale = Vec2(100f, 25f), title = "Boom $it", textSize = .15f,
+                    onClick = { println("clicked [Boom $it]") })
+            }
+        )
+        commandPanel.addChildren(
+            listOf(
+                GuiButton(drawer, Vec2(-200f, 0f), Vec2(50f, 25f), title = "Aim",
+                    onClick = { onClickAim(player) }),
+                GuiButton(drawer, Vec2(-200f, -50f), Vec2(50f, 25f), title = "Power",
+                    onClick = { onClickPower(player) }),
+                GuiButton(drawer, Vec2(-200f, -100f), Vec2(50f, 25f), title = "Fire",
+                    onClick = { onClickFire(player) }),
+
+                GuiLabel(drawer, Vec2(-210f, 110f), justify = TextJustify.LEFT,
+                    title = getPlayerAimAngleDisplay(player),
+                    textSize = .15f,
+                    updateCallback = { it.title = getPlayerAimAngleDisplay(player) }),
+                GuiLabel(drawer, Vec2(-210f, 80f), justify = TextJustify.LEFT, title = getPlayerAimPowerDisplay(player),
+                    textSize = .15f,
+                    updateCallback = { it.title = getPlayerAimPowerDisplay(player) }),
+
+                weaponsList,
+
+                GuiIcon(drawer, Vec2(-230f, 110f), vectorUnit.mul(20f), texture = TextureEnum.icon_aim)
+            )
+        )
+        elements.add(commandPanel)
     }
 
-    private fun setElementsInColumns(elements: List<GuiElement>, gap: Float = 0f, centered: Boolean = true) {
-        val totalWidth = elements.map { it.scale.x * 2f }.sum() + gap * (elements.size - 1)
-        val columnSize = totalWidth / elements.size
+    private fun getPlayerAimPowerDisplay(player: GamePlayer): String =
+        player.playerAim.power.let { displayNumber(it, 2) + "%" }
 
-        elements.withIndex()
-            .forEach { (index, element) ->
-                val newXOffset = when (centered) {
-                    true -> columnSize * (index - (elements.size - 1) * .5f)
-                    else -> columnSize * index + columnSize * .5f
+    private fun getPlayerAimAngleDisplay(player: GamePlayer): String =
+        player.playerAim.getDegreesAngle().let { displayNumber(it, 2) + "º" }
+
+    fun createRoundLeaderboard(players: MutableList<GamePlayer>, onClickNextRound: () -> Unit) {
+        clear()
+        val leaderBoardPanel = GuiPanel(drawer, Vec2(), Vec2(200f, 300f), "Leaderboard", draggable = false)
+        val playerLines = listOf(GuiLabel(
+            drawer,
+            Vec2(-50f, 100f),
+            justify = TextJustify.LEFT,
+            title = "Player          Score".padStart(10, ' '),
+            textSize = .2f
+        )) + players.sortedByDescending { it.score }.map {
+            GuiLabel(
+                drawer,
+                Vec2(-50f, 100f),
+                justify = TextJustify.LEFT,
+                title = "${it.name.padEnd(20, ' ')}${it.score.roundToInt()}".padStart(10, ' '),
+                textSize = .2f
+            )
+        }
+        setElementsInRows(playerLines, 10f)
+
+        leaderBoardPanel.addChildren(playerLines)
+        leaderBoardPanel.addChild(
+            GuiButton(
+                drawer, Vec2(0f, -250f), Vec2(100f, 25f), "Next Match",
+                onClick = onClickNextRound
+            )
+        )
+        elements.add(leaderBoardPanel)
+    }
+
+    private fun displayNumber(value: Float, decimals: Int): String = roundFloat(value, decimals).toString()
+
+    companion object {
+
+        fun setElementsInColumns(elements: List<GuiElement>, gap: Float = 0f, centered: Boolean = true) {
+            val totalWidth = elements.map { it.scale.x * 2f }.sum() + gap * (elements.size - 1)
+            val columnSize = totalWidth / elements.size
+
+            elements.withIndex()
+                .forEach { (index, element) ->
+                    val newXOffset = when (centered) {
+                        true -> columnSize * (index - (elements.size - 1) * .5f)
+                        else -> columnSize * index + columnSize * .5f
+                    }
+                    element.addOffset(Vec2(newXOffset, element.offset.y))
                 }
-                element.addOffset(Vec2(newXOffset, element.offset.y))
-            }
+        }
+
+        fun setElementsInRows(elements: List<GuiElement>, gap: Float = 0f, centered: Boolean = true) {
+            val totalHeight = elements.map { it.scale.y * 2f }.sum() + gap * (elements.size - 1)
+            val rowSize = totalHeight / elements.size
+
+            elements.withIndex()
+                .forEach { (index, element) ->
+                    val newYOffset = when (centered) {
+                        true -> rowSize * (index - (elements.size - 1) * .5f)
+                        else -> rowSize * index + rowSize * .5f
+                    } * -1f
+                    element.addOffset(Vec2(element.offset.x, newYOffset))
+                }
+        }
+
     }
-
-    private fun setElementsInRows(elements: List<GuiElement>, gap: Float = 0f, centered: Boolean = true) {
-        val totalHeight = elements.map { it.scale.y * 2f }.sum() + gap * (elements.size - 1)
-        val rowSize = totalHeight / elements.size
-
-        elements.withIndex()
-            .forEach { (index, element) ->
-                val newYOffset = when (centered) {
-                    true -> rowSize * (index - (elements.size - 1) * .5f)
-                    else -> rowSize * index + rowSize * .5f
-                } * -1f
-                element.addOffset(Vec2(element.offset.x, newYOffset))
-            }
-    }
-
 
 }

@@ -1,5 +1,6 @@
 package input
 
+import Matrix4f
 import display.Window
 import engine.freeBody.FreeBody
 import org.jbox2d.common.Vec2
@@ -19,7 +20,7 @@ class CameraView(private val window: Window) {
     var currentPhase = CameraPhases.STATIC
     var lastStaticLocation = location
     private var lastPhaseTimestamp = System.currentTimeMillis()
-    private val transitionDuration = 1000f
+    private var transitionDuration = 1000f
 
     private lateinit var trackFreeBody: FreeBody
 
@@ -47,12 +48,13 @@ class CameraView(private val window: Window) {
         location = position
     }
 
-    fun trackFreeBody(newFreeBody: FreeBody) {
+    fun trackFreeBody(newFreeBody: FreeBody, transitionTime: Float = 1000f) {
         currentPhase = CameraPhases.TRANSITION_TO_TARGET
         lastPhaseTimestamp = System.currentTimeMillis()
         trackFreeBody = newFreeBody
 
         lastStaticLocation = location
+        transitionDuration = transitionTime
     }
 
     fun moveLocation(movement: Vec2) {
@@ -66,6 +68,12 @@ class CameraView(private val window: Window) {
     fun reset() {
         location = Vec2()
         z = .05f
+    }
+
+    fun getRenderCamera(): Matrix4f {
+        val zoomScale = 1f / z
+        return Matrix4f.scale(zoomScale, zoomScale, 1f)
+            .multiply(Matrix4f.translate(-location.x, -location.y, 0f))
     }
 
 }

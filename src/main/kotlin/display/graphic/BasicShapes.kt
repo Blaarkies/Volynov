@@ -23,19 +23,31 @@ object BasicShapes {
 
     val square = polygon4.map { it * sqrt(2f) }
 
-    private fun getPolygonVertices(corners: Int): List<Float> = (0 until corners).flatMap {
-        val t = 2 * PI * (it / corners.toFloat()) + PI * .25
+    val polygon4Spiked = getSpikedPolygon(8)
+
+    val verticalLine = listOf(0f, 1f, 0f, -1f)
+
+    private fun getPolygonVertices(corners: Int, rotate: Double = .25): List<Float> = (0 until corners).flatMap {
+        val t = 2 * PI * (it / corners.toFloat()) + PI * rotate
         listOf(cos(t).toFloat(), sin(t).toFloat())
     }
 
-    fun getArrowHeadPoints(linePoints: List<Float>): List<Float> {
+    private fun getSpikedPolygon(corners: Int, smoothness: Float = .6f): List<Float> {
+        return getPolygonVertices(corners).chunked(2)
+            .withIndex()
+            .flatMap { (index, vertex) ->
+                val scale = (if (index.rem(2) == 0) 1f else smoothness)
+                listOf(vertex[0] * scale, vertex[1] * scale)
+            }
+    }
+
+    fun getArrowHeadPoints(linePoints: List<Float>, headSize: Float = 1f): List<Float> {
         val (ax, ay, bx, by) = linePoints
 
         val normalY = bx - ax
         val normalX = -by + ay
         val magnitude = Director.getDistance(normalX, normalY)
 
-        val headSize = 5f
         val x = headSize * normalX / magnitude
         val y = headSize * normalY / magnitude
         return listOf(

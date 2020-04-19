@@ -1,8 +1,9 @@
 package display.graphic
 
 import Matrix4f
-import input.CameraView
 import display.text.Font
+import display.text.TextJustify
+import input.CameraView
 import org.jbox2d.common.Vec2
 import org.lwjgl.opengl.GL11.*
 import org.lwjgl.opengl.GL15.GL_ARRAY_BUFFER
@@ -11,6 +12,8 @@ import org.lwjgl.opengl.GL20.GL_FRAGMENT_SHADER
 import org.lwjgl.opengl.GL20.GL_VERTEX_SHADER
 import org.lwjgl.system.MemoryUtil
 import utility.Common
+import utility.Common.getSafePath
+import utility.Common.vectorUnit
 import java.awt.FontFormatException
 import java.io.FileInputStream
 import java.io.IOException
@@ -20,7 +23,7 @@ import java.util.logging.Logger
 
 class Renderer {
 
-    var debugOffset: Vec2 = Vec2(1f, 1f)
+    var debugOffset: Vec2 = vectorUnit
 
     private lateinit var vao: VertexArrayObject
     private lateinit var vbo: VertexBufferObject
@@ -40,7 +43,8 @@ class Renderer {
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
         font = try {
-            Font(FileInputStream("src\\main\\resources\\fonts\\ALBMT___.TTF"), 80)
+            val fontPath = getSafePath("./fonts/ALBMT___.TTF")
+            Font(FileInputStream(fontPath), 80)
         } catch (ex: FontFormatException) {
             Logger.getLogger(Renderer::class.java.name).log(Level.CONFIG, null, ex)
             Font()
@@ -80,25 +84,33 @@ class Renderer {
         numVertices = 0
     }
 
-    fun drawText(text: CharSequence, offset: Vec2, scale: Vec2, color: Color, useCamera: Boolean = true) =
-        font.drawText(this, text, offset, scale, color, useCamera)
+    fun drawText(text: CharSequence,
+                 offset: Vec2,
+                 scale: Vec2,
+                 color: Color,
+                 justify: TextJustify = TextJustify.LEFT,
+                 useCamera: Boolean = true,
+                 snipRegion: SnipRegion? = null
+    ) = font.drawText(this, text, offset, scale, color, justify, useCamera, snipRegion)
 
     fun drawShape(
         data: FloatArray,
         offset: Vec2 = Vec2(),
         h: Float = 0f,
-        scale: Vec2 = Vec2(1f, 1f),
-        useCamera: Boolean = true
-    ) = drawEntity(data, offset, h, scale, GL_TRIANGLE_FAN, useCamera)
+        scale: Vec2 = vectorUnit,
+        useCamera: Boolean = true,
+        snipRegion: SnipRegion? = null
+    ) = drawEntity(data, offset, h, scale, GL_TRIANGLE_FAN, useCamera, snipRegion)
 
     fun drawStrip(
         data: FloatArray,
         offset: Vec2 = Vec2(),
         h: Float = 0f,
-        scale: Vec2 = Vec2(1f, 1f),
-        useCamera: Boolean = true
+        scale: Vec2 = vectorUnit,
+        useCamera: Boolean = true,
+        snipRegion: SnipRegion? = null
     ) =
-        drawEntity(data, offset, h, scale, GL_TRIANGLE_STRIP, useCamera)
+        drawEntity(data, offset, h, scale, GL_TRIANGLE_STRIP, useCamera, snipRegion)
 
     private fun drawEntity(
         data: FloatArray,
@@ -106,7 +118,8 @@ class Renderer {
         h: Float,
         scale: Vec2,
         drawType: Int,
-        useCamera: Boolean
+        useCamera: Boolean,
+        snipRegion: SnipRegion?
     ) {
         begin()
         if (vertices.remaining() < data.size) {
@@ -117,7 +130,7 @@ class Renderer {
         vertices.put(data)
         numVertices += data.size / vertexDimensionCount
 
-        setUniformInputs(offset, 0f, h, scale, useCamera)
+        setUniformInputs(offset, 0f, h, scale, useCamera, snipRegion)
         end(drawType)
     }
 
@@ -155,11 +168,17 @@ class Renderer {
         offset: Vec2 = Vec2(),
         z: Float = 0f,
         h: Float = 0f,
-        scale: Vec2 = Vec2(1f, 1f),
-        useCamera: Boolean
+        scale: Vec2 = vectorUnit,
+        useCamera: Boolean,
+        snipRegion: SnipRegion?
     ) {
-//        val uniTex = program!!.getUniformLocation("texImage")
-//        program!!.setUniform(uniTex, 0)
+        //        val uniTex = program!!.getUniformLocation("texImage")
+        //        program!!.setUniform(uniTex, 0)
+
+        val gameCamera = cameraView.getRenderCamera()
+        val guiCamera = Matrix4f()
+        glDisable(GL_SCISSOR_TEST)
+
 
         val model = Matrix4f.translate(offset.x, offset.y, z)
             .multiply(Matrix4f.rotate(h * Common.radianToDegree, 0f, 0f, 1f))
@@ -167,11 +186,17 @@ class Renderer {
         val uniModel = program.getUniformLocation("model")
         program.setUniform(uniModel, model)
 
-        val zoomScale = 1f / cameraView.z
         val view = when (useCamera) {
-            true -> Matrix4f.scale(zoomScale, zoomScale, 1f)
-                .multiply(Matrix4f.translate(-cameraView.location.x, -cameraView.location.y, 0f))
-            false -> Matrix4f()
+            true -> gameCamera
+            false -> {
+                if (snipRegion != null) {
+                    glScissor(cameraView.windowWidth.div(2).toInt() + snipRegion.offset.x.toInt(),
+                        cameraView.windowHeight.div(2).toInt() + snipRegion.offset.y.toInt(),
+                        snipRegion.scale.x.toInt(), snipRegion.scale.y.toInt())
+                    glEnable(GL_SCISSOR_TEST)
+                }
+                guiCamera
+            }
         }
         val uniView = program.getUniformLocation("view")
         program.setUniform(uniView, view)
@@ -202,3 +227,4 @@ class Renderer {
         program.pointVertexAttribute(texAttribute, 2, 9 * java.lang.Float.BYTES, 7 * java.lang.Float.BYTES)
     }
 }
+

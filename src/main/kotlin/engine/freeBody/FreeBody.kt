@@ -11,7 +11,6 @@ import kotlin.math.pow
 open class FreeBody(
     val id: String,
     var motion: Motion,
-    var shapeBox: Shape,
     var worldBody: Body,
     var radius: Float,
     val textureConfig: TextureConfig
@@ -28,28 +27,29 @@ open class FreeBody(
             world: World,
             bodyDef: BodyDef
         ): Body {
-            val fixtureDef = FixtureDef()
-            fixtureDef.shape = shapeBox
-            fixtureDef.density = mass / (PI.toFloat() * radius.pow(2f))
-            fixtureDef.friction = friction
-            fixtureDef.restitution = restitution
+            val fixtureDef = FixtureDef().also {
+                it.shape = shapeBox
+                it.density = mass / (PI.toFloat() * radius.pow(2f))
+                it.friction = friction
+                it.restitution = restitution
+            }
 
-            val worldBody = world.createBody(bodyDef)
-            worldBody.createFixture(fixtureDef)
-
-            return worldBody
+            return world.createBody(bodyDef)
+                .also { it.createFixture(fixtureDef) }
         }
 
-        fun createBodyDef(bodyType: BodyType,
-                          x: Float, y: Float, h: Float,
-                          dx: Float, dy: Float, dh: Float): BodyDef {
-            val bodyDef = BodyDef()
-            bodyDef.type = bodyType
-            bodyDef.position.set(x, y)
-            bodyDef.angle = h
-            bodyDef.linearVelocity = Vec2(dx, dy)
-            bodyDef.angularVelocity = dh
-            return bodyDef
+        fun createBodyDef(
+            bodyType: BodyType,
+            x: Float, y: Float, h: Float,
+            dx: Float, dy: Float, dh: Float
+        ): BodyDef {
+            return BodyDef().also {
+                it.type = bodyType
+                it.position.set(x, y)
+                it.angle = h
+                it.linearVelocity = Vec2(dx, dy)
+                it.angularVelocity = dh
+            }
         }
 
     }

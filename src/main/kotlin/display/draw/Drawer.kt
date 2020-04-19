@@ -3,40 +3,55 @@ package display.draw
 import display.graphic.BasicShapes
 import display.graphic.Color
 import display.graphic.Renderer
-import display.graphic.Texture
+import display.graphic.SnipRegion
+import display.text.TextJustify
 import engine.freeBody.FreeBody
+import engine.freeBody.Particle
+import engine.freeBody.Vehicle
 import engine.physics.CellLocation
 import engine.physics.GravityCell
+import game.GamePlayer
 import org.jbox2d.common.Vec2
+import org.lwjgl.opengl.GL11
+import org.lwjgl.opengl.GL12
+import utility.Common.makeVec2
+import utility.Common.makeVec2Circle
+import utility.Common.vectorUnit
 import java.util.*
 import kotlin.math.sqrt
 
-class Drawer(val renderer: Renderer, val textures: TextureHolder) {
+class Drawer(val renderer: Renderer) {
+
+    val textures = TextureHolder()
+
+    fun init() {
+        textures.init()
+    }
 
     fun drawDebugForces(freeBody: FreeBody) {
-        val x = freeBody.worldBody.position.x
-        val y = freeBody.worldBody.position.y
-        val accelerationX = freeBody.worldBody.m_force.x
-        val accelerationY = freeBody.worldBody.m_force.y
+        //        val x = freeBody.worldBody.position.x
+        //        val y = freeBody.worldBody.position.y
+        //        val accelerationX = freeBody.worldBody.m_force.x
+        //        val accelerationY = freeBody.worldBody.m_force.y
+        //
+        //        val multiplier = 2000f
+        //        val linePoints = listOf(
+        //            x,
+        //            y,
+        //            x + accelerationX * multiplier,
+        //            y + accelerationY * multiplier
+        //        )
+        //        val triangleStripPoints = BasicShapes.getLineTriangleStrip(linePoints, .2f)
+        //        val arrowHeadPoints = BasicShapes.getArrowHeadPoints(linePoints)
+        //        val data = getColoredData(
+        //            triangleStripPoints + arrowHeadPoints,
+        //            Color(0f, 1f, 1f, 1f), Color(0f, 1f, 1f, 0.0f)
+        //        ).toFloatArray()
 
-        val multiplier = 2000f
-        val linePoints = listOf(
-            x,
-            y,
-            x + accelerationX * multiplier,
-            y + accelerationY * multiplier
-        )
-        val triangleStripPoints = BasicShapes.getLineTriangleStrip(linePoints, 2f)
-        val arrowHeadPoints = BasicShapes.getArrowHeadPoints(linePoints)
-        val data = getColoredData(
-            triangleStripPoints + arrowHeadPoints,
-            Color(0f, 1f, 1f, 1f), Color(0f, 1f, 1f, 0.0f)
-        ).toFloatArray()
+        textures.getTexture(TextureEnum.white_pixel).bind()
+        //        renderer.drawStrip(data)
 
-        textures.white_pixel.bind()
-//        renderer.drawStrip(data)
-
-        renderer.drawText(freeBody.id, freeBody.worldBody.position, Vec2(1f, 1f), Color.WHITE)
+        renderer.drawText(freeBody.id, freeBody.worldBody.position, vectorUnit, Color.WHITE, TextJustify.LEFT)
     }
 
     fun drawTrail(freeBody: FreeBody) {
@@ -45,24 +60,28 @@ class Drawer(val renderer: Renderer, val textures: TextureHolder) {
         if (linePoints.size < 4) {
             return
         }
-        val data = getLine(linePoints, Color(0.4f, 0.7f, 1f, 0.5f), Color.TRANSPARENT, .1f, 0f)
+        val trailColor = when (freeBody) {
+            is Vehicle -> freeBody.textureConfig.color.setAlpha(.3f)
+            else -> Color(.4f, .7f, 1f, .5f)
+        }
+        val data = getLine(linePoints, trailColor, Color.TRANSPARENT, .1f, 0f)
 
-        textures.white_pixel.bind()
+        textures.getTexture(TextureEnum.white_pixel).bind()
         renderer.drawStrip(data)
     }
 
     fun drawFreeBody(freeBody: FreeBody) {
-        freeBody.textureConfig.texture.bind()
+        textures.getTexture(freeBody.textureConfig.texture).bind()
         renderer.drawShape(
             freeBody.textureConfig.gpuBufferData,
             freeBody.worldBody.position,
             freeBody.worldBody.angle,
-            Vec2(freeBody.radius, freeBody.radius)
+            vectorUnit.mul(freeBody.radius)
         )
     }
 
     fun drawGravityCells(gravityMap: HashMap<CellLocation, GravityCell>, resolution: Float) {
-        textures.white_pixel.bind()
+        textures.getTexture(TextureEnum.white_pixel).bind()
         val maxMass = gravityMap.maxBy { (_, cell) -> cell.totalMass }!!.value.totalMass
         val scale = 0.707106781f * resolution
         gravityMap.forEach { (key, cell) ->
@@ -74,12 +93,12 @@ class Drawer(val renderer: Renderer, val textures: TextureHolder) {
                         (it[0] / 2 - 0.5f), (it[1] / 2 - 0.5f)
                     )
                 }.toFloatArray()
-            renderer.drawShape(data, Vec2(key.x * resolution, key.y * resolution), 0f, Vec2(scale, scale))
+            renderer.drawShape(data, makeVec2(key.x, key.y).mul(resolution), 0f, makeVec2(scale))
         }
     }
 
-    fun drawPicture(texture: Texture, scale: Vec2 = Vec2(1f, 1f), offset: Vec2 = Vec2()) {
-        texture.bind()
+    fun drawBackground(textureEnum: TextureEnum, scale: Vec2 = vectorUnit, offset: Vec2 = Vec2()) {
+        val texture = textures.getTexture(textureEnum).bind()
 
         val left = -texture.width / 2f
         val right = texture.width / 2f
@@ -91,12 +110,69 @@ class Drawer(val renderer: Renderer, val textures: TextureHolder) {
                 listOf(
                     it[0], it[1], 0f,
                     1f, 1f, 1f, 1f,
-                    (it[0] / 2 - 0.5f) * scale.x + offset.x,
-                    (it[1] / 2 - 0.5f) * scale.y + offset.y
+                    (it[0] / 2f - 0.5f) * scale.x + offset.x,
+                    (it[1] / 2f - 0.5f) * scale.y + offset.y
                 )
             }.toFloatArray()
 
-        renderer.drawShape(data, scale = Vec2(1f, 1f).mul(45f))
+        renderer.drawShape(data, scale = vectorUnit.mul(45f))
+    }
+
+    fun drawIcon(textureEnum: TextureEnum,
+                 scale: Vec2 = vectorUnit,
+                 offset: Vec2 = Vec2(),
+                 color: Color
+    ) {
+        val texture = textures.getTexture(textureEnum).bind()
+
+        val left = -texture.width / 2f
+        val right = texture.width / 2f
+        val top = texture.height / 2f
+        val bottom = -texture.height / 2f
+
+        val data = listOf(left, bottom, left, top, right, top, right, bottom).chunked(2)
+            .flatMap {
+                listOf(
+                    it[0], it[1], 0f,
+                    color.red, color.green, color.blue, color.alpha,
+                    (it[0] / 2f - 0.5f),
+                    (it[1] / 2f - 0.5f)
+                )
+            }.toFloatArray()
+
+        renderer.drawShape(data, offset, 0f, scale, useCamera = false,
+            snipRegion = SnipRegion(offset.add(scale.negate()), scale.mul(2f)))
+    }
+
+    fun drawPlayerAimingPointer(player: GamePlayer) {
+        val playerLocation = player.vehicle!!.worldBody.position
+        val angle = player.playerAim.angle
+        val aimLocation = makeVec2Circle(angle).mul(player.playerAim.power / 10f)
+
+        val linePoints = listOf(
+            playerLocation.x,
+            playerLocation.y,
+            playerLocation.x + aimLocation.x,
+            playerLocation.y + aimLocation.y
+        )
+        val triangleStripPoints = BasicShapes.getLineTriangleStrip(linePoints, .2f)
+        val arrowHeadPoints = BasicShapes.getArrowHeadPoints(linePoints, .5f)
+        val data = getColoredData(
+            triangleStripPoints + arrowHeadPoints, Color.RED.setAlpha(.5f), Color.RED.setAlpha(.1f)
+        ).toFloatArray()
+
+        textures.getTexture(TextureEnum.white_pixel).bind()
+        renderer.drawStrip(data)
+    }
+
+    fun drawParticle(particle: Particle) {
+        textures.getTexture(particle.textureConfig.texture).bind()
+        renderer.drawShape(
+            particle.textureConfig.gpuBufferData,
+            particle.worldBody.position,
+            particle.worldBody.angle,
+            vectorUnit.mul(particle.radius)
+        )
     }
 
     companion object {
@@ -118,7 +194,8 @@ class Drawer(val renderer: Renderer, val textures: TextureHolder) {
                         chunk[0], chunk[1], 0f, /* pos*/
                         color.red, color.green, color.blue, color.alpha, /* color*/
                         0f, 0f /* texture*/
-                    ) }
+                    )
+                }
         }
 
         fun getLine(

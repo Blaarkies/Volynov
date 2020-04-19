@@ -6,7 +6,7 @@ import kotlin.system.exitProcess
 fun main() = runBlocking {
     try {
         val gameLogic: IGameLogic = AppLogic()
-        val gameEngine = AppRunner("Volynov", 700, 700, true, gameLogic)
+        val gameEngine = AppRunner("Volynov", 1920, 1080, true, gameLogic)
         gameEngine.run()
     } catch (exception: Exception) {
         exception.printStackTrace()
