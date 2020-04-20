@@ -50,7 +50,6 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
             0 -> setupMainMenu()
             1 -> setupMainMenuSelectPlayers()
             2 -> {
-
                 currentPhase = GamePhases.PLAYERS_PICK_SHIELDS
                 isTransitioning = false
                 gameState.reset()

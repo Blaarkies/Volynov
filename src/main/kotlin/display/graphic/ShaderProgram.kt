@@ -1,14 +1,9 @@
 package display.graphic
 
-import Matrix2f
-import Matrix3f
-import Matrix4f
-import Vector2f
-import Vector3f
-import Vector4f
 import org.lwjgl.opengl.GL20.*
 import org.lwjgl.opengl.GL30.glBindFragDataLocation
 import org.lwjgl.system.MemoryStack
+import utility.math.*
 
 class ShaderProgram {
 

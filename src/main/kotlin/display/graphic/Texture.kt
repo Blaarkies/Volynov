@@ -2,7 +2,7 @@ package display.graphic
 
 import org.lwjgl.BufferUtils
 import org.lwjgl.opengl.GL11.*
-import org.lwjgl.stb.STBImage.*
+import org.lwjgl.stb.STBImage
 import org.lwjgl.system.MemoryStack
 import utility.Common.getSafePath
 import java.io.File
@@ -75,9 +75,11 @@ class Texture {
                 val h = stack.mallocInt(1)
                 val comp = stack.mallocInt(1)
 
-                stbi_set_flip_vertically_on_load(true)
-                image = stbi_load(safePath, w, h, comp, 0)
-                    ?: throw RuntimeException("Cannot load texture file at $safePath \n${stbi_failure_reason()}")
+                STBImage.stbi_set_flip_vertically_on_load(true)
+                image = STBImage.stbi_load(safePath, w, h, comp, 0)
+                    ?: throw RuntimeException("""
+                        |Cannot load texture file at [$safePath] 
+                        |${STBImage.stbi_failure_reason()}""".trimMargin())
 
                 width = w.get()
                 height = h.get()

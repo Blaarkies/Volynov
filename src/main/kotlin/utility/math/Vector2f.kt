@@ -1,3 +1,5 @@
+package utility.math
+
 import java.nio.FloatBuffer
 
 class Vector2f {

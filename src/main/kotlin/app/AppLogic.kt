@@ -7,6 +7,11 @@ import display.Window
 import engine.GameState
 import game.GamePhaseHandler
 import input.InputHandler
+import javafx.application.Application.launch
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
+import org.lwjgl.stb.STBImage
 
 class AppLogic : IGameLogic {
 

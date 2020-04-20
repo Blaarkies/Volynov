@@ -1,10 +1,10 @@
 package input
 
-import Matrix4f
 import display.Window
 import engine.freeBody.FreeBody
 import org.jbox2d.common.Vec2
 import utility.Common.getTimingFunctionSigmoid
+import utility.math.Matrix4f
 import kotlin.math.pow
 
 class CameraView(private val window: Window) {

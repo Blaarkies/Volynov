@@ -2,7 +2,6 @@ package input
 
 import display.events.MouseButtonEvent
 import display.Window
-import display.events.MouseScrollEvent
 import game.GamePhaseHandler
 import io.reactivex.subjects.PublishSubject
 import org.jbox2d.common.Vec2

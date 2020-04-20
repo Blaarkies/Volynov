@@ -6,8 +6,6 @@ import io.reactivex.subjects.PublishSubject
 import org.jbox2d.common.Vec2
 import org.lwjgl.BufferUtils
 import org.lwjgl.glfw.GLFW
-import org.lwjgl.glfw.GLFW.glfwGetKey
-import org.lwjgl.glfw.GLFW.glfwGetKeyName
 import org.lwjgl.glfw.GLFWErrorCallback
 import org.lwjgl.opengl.GL
 import org.lwjgl.opengl.GL11
@@ -15,7 +13,6 @@ import org.lwjgl.opengl.GL11.*
 import org.lwjgl.system.Callback
 import org.lwjgl.system.MemoryUtil
 import utility.Common.makeVec2
-import java.nio.DoubleBuffer
 
 class Window(private val title: String, var width: Int, var height: Int, private var vSync: Boolean) {
 
@@ -29,7 +26,7 @@ class Window(private val title: String, var width: Int, var height: Int, private
     val mouseScrollEvent = PublishSubject.create<MouseScrollEvent>()
     val textInputEvent = PublishSubject.create<String>()
 
-    fun init() {
+    fun init(debugMode: Boolean) {
         // Setup an error callback. The default implementation
         // will print the error message in System.err.
         GLFW.glfwSetErrorCallback(GLFWErrorCallback.createPrint(System.err))
@@ -46,22 +43,24 @@ class Window(private val title: String, var width: Int, var height: Int, private
         GLFW.glfwWindowHint(GLFW.GLFW_OPENGL_FORWARD_COMPAT, GL11.GL_TRUE)
         GLFW.glfwWindowHint(GLFW.GLFW_SAMPLES, 4) // anti-aliasing
 
-        // Create the window
-        windowHandle = GLFW.glfwCreateWindow(width, height, title, GLFW.glfwGetPrimaryMonitor(), MemoryUtil.NULL)
-        //        windowHandle = GLFW.glfwCreateWindow(width, height, title, MemoryUtil.NULL, MemoryUtil.NULL)
-        //        if (windowHandle == MemoryUtil.NULL) {
-        //            throw RuntimeException("Failed to create the GLFW window")
-        //        }
-        // Setup resize callback
-        GLFW.glfwSetFramebufferSizeCallback(windowHandle) { _, width, height ->
-            this.width = width
-            this.height = height
-        }
+        when (debugMode) {
+            false -> windowHandle =
+                GLFW.glfwCreateWindow(width, height, title, GLFW.glfwGetPrimaryMonitor(), MemoryUtil.NULL)
+            true -> {
+                windowHandle = GLFW.glfwCreateWindow(width, height, title, MemoryUtil.NULL, MemoryUtil.NULL)
+                if (windowHandle == MemoryUtil.NULL) {
+                    throw RuntimeException("Failed to create the GLFW window")
+                }
+                GLFW.glfwSetFramebufferSizeCallback(windowHandle) { _, width, height ->
+                    this.width = width
+                    this.height = height
+                }
 
-        // Get the resolution of the primary monitor
-        //        val videoMode = GLFW.glfwGetVideoMode(GLFW.glfwGetPrimaryMonitor())!!
-        // Center our window
-        //        GLFW.glfwSetWindowPos(windowHandle, (videoMode.width() - width) / 2, (videoMode.height() - height) / 2)
+                val videoRes = GLFW.glfwGetVideoMode(GLFW.glfwGetPrimaryMonitor())!!
+                GLFW.glfwSetWindowPos(windowHandle, (videoRes.width() - width) / 2, (videoRes.height() - height) / 2)
+            }
+
+        }
 
         GLFW.glfwMakeContextCurrent(windowHandle) // Make the OpenGL context current
         if (isVSync()) { // Enable v-sync
