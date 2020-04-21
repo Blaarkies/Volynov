@@ -5,7 +5,6 @@ import org.lwjgl.opengl.GL11.*
 import org.lwjgl.stb.STBImage
 import org.lwjgl.system.MemoryStack
 import utility.Common.getSafePath
-import java.io.File
 import java.nio.ByteBuffer
 
 class Texture {

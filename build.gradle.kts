@@ -84,7 +84,7 @@ sourceSets {
 tasks {
 
     withType<KotlinCompile> {
-        kotlinOptions.jvmTarget = "11"
+        kotlinOptions.jvmTarget = "1.8"
     }
 
     register<Zip>("zipFolder") {
@@ -105,9 +105,9 @@ tasks {
             File("$buildDir/libs/run.bat")
                 .writeText("""|java -Dorg.lwjgl.util.Debug=true -jar .\volynov-$version-uber.jar
                               |pause """.trimMargin())
-            File("$buildDir/libs/run_with_jbr_here.bat")
-                .writeText("""|.\jbr\bin\java.exe -Dorg.lwjgl.util.Debug=true -jar .\volynov-$version-uber.jar
-                              |pause """.trimMargin())
+//            File("$buildDir/libs/run_with_jbr_here.bat")
+//                .writeText("""|.\jbr\bin\java.exe -Dorg.lwjgl.util.Debug=true -jar .\volynov-$version-uber.jar
+//                              |pause """.trimMargin())
             File("$buildDir/libs/config.txt")
                 .writeText("""|isDebugMode=0
                         """.trimMargin())

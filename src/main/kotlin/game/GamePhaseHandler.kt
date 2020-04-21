@@ -1,6 +1,6 @@
 package game
 
-import display.KeyboardEvent
+import display.events.KeyboardEvent
 import display.Window
 import display.draw.Drawer
 import display.draw.TextureEnum

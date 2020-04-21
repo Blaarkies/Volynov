@@ -1,5 +1,6 @@
 package display
 
+import display.events.KeyboardEvent
 import display.events.MouseButtonEvent
 import display.events.MouseScrollEvent
 import io.reactivex.subjects.PublishSubject

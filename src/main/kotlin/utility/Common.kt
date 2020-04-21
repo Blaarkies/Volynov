@@ -1,6 +1,5 @@
 package utility
 
-import org.jbox2d.common.MathUtils
 import org.jbox2d.common.Vec2
 import java.io.File
 import java.nio.DoubleBuffer
