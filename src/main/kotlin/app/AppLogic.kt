@@ -1,9 +1,8 @@
 package app
 
-import display.draw.Drawer
-import display.draw.TextureHolder
-import display.graphic.Renderer
 import display.Window
+import display.draw.Drawer
+import display.graphic.Renderer
 import engine.GameState
 import game.GamePhaseHandler
 import input.InputHandler

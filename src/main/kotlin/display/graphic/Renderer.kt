@@ -1,6 +1,5 @@
 package display.graphic
 
-import Matrix4f
 import display.text.Font
 import display.text.TextJustify
 import input.CameraView
@@ -14,6 +13,7 @@ import org.lwjgl.system.MemoryUtil
 import utility.Common
 import utility.Common.getSafePath
 import utility.Common.vectorUnit
+import utility.math.Matrix4f
 import java.awt.FontFormatException
 import java.io.FileInputStream
 import java.io.IOException
@@ -46,9 +46,11 @@ class Renderer {
             val fontPath = getSafePath("./fonts/ALBMT___.TTF")
             Font(FileInputStream(fontPath), 80)
         } catch (ex: FontFormatException) {
+            ex.printStackTrace()
             Logger.getLogger(Renderer::class.java.name).log(Level.CONFIG, null, ex)
             Font()
         } catch (ex: IOException) {
+            ex.printStackTrace()
             Logger.getLogger(Renderer::class.java.name).log(Level.CONFIG, null, ex)
             Font()
         }

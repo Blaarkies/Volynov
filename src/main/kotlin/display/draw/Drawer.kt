@@ -12,8 +12,6 @@ import engine.physics.CellLocation
 import engine.physics.GravityCell
 import game.GamePlayer
 import org.jbox2d.common.Vec2
-import org.lwjgl.opengl.GL11
-import org.lwjgl.opengl.GL12
 import utility.Common.makeVec2
 import utility.Common.makeVec2Circle
 import utility.Common.vectorUnit

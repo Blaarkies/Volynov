@@ -1,4 +1,5 @@
-import app.IGameLogic
+package app
+
 import display.Window
 import utility.CustomTimer
 
@@ -14,7 +15,8 @@ class AppRunner(
         width,
         height,
         vSync
-    )
+    ),
+    private val debugMode: Boolean
 ) : Runnable {
 
     private val targetFps = 60
@@ -23,7 +25,7 @@ class AppRunner(
 
     override fun run() {
         try {
-            init()
+            init(debugMode = debugMode)
             gameLoop()
         } catch (exception: Exception) {
             exception.printStackTrace()
@@ -33,8 +35,8 @@ class AppRunner(
     }
 
     @Throws(Exception::class)
-    private fun init() {
-        window.init()
+    private fun init(debugMode: Boolean) {
+        window.init(debugMode = debugMode)
         customTimer.init()
         gameLogic.init(window)
     }

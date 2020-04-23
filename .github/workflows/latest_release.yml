@@ -1,0 +1,41 @@
+name: Package latest release
+
+on:
+  push:
+    branches: [ master ]
+    tags:
+      - '*'
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v1
+
+      - name: Setup java compiler
+        uses: actions/setup-java@v1
+        with:
+          java-version: 1.8
+
+      - name: Fix gradlew file permissions
+        run: chmod +x ./gradlew
+
+      - name: Run gradle script
+        uses: eskatos/gradle-command-action@v1
+        with:
+          arguments: package
+
+      - name: Assemble package
+        run: zip -r volynov.zip build/Volynov-0.0.0/*
+
+      - name: It should create a release with assets README.md and LICENCE
+        uses: Xotl/cool-github-releases@v1
+        with:
+          mode: update
+          tag_name: latest-build
+          release_name: "Latest build"
+          body_mrkdwn: "### Download the volynov.zip file\n Unzip it into a folder, and run the run.bat file"
+          assets: volynov.zip
+          replace_assets: true
+          github_token: ${{ github.token }}

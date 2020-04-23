@@ -1,7 +1,7 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm") version "1.3.41"
+    kotlin("jvm") version "1.3.72"
 }
 
 group = "blaarkies"
@@ -11,7 +11,7 @@ repositories {
     mavenCentral()
 }
 
-val kotlinVersion = "1.3.10"
+val kotlinVersion = "1.3.72"
 val lwjglVersion = "3.2.3"
 val lwjglNatives = "natives-windows"
 
@@ -24,49 +24,53 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter:5.5.2")
 
     implementation(platform("org.lwjgl:lwjgl-bom:$lwjglVersion"))
-    val lwjglList = listOf(
-        arrayOf("lwjgl", true),
-        //        arrayOf("lwjgl-assimp", true),
-        //        arrayOf("lwjgl-bgfx", true),
-        //        arrayOf("lwjgl-cuda", false),
-        //        arrayOf("lwjgl-egl", false),
-        arrayOf("lwjgl-glfw", true),
-        arrayOf("lwjgl-jawt", false),
-        //        arrayOf("lwjgl-jemalloc", true),
-        //        arrayOf("lwjgl-libdivide", true),
-        //        arrayOf("lwjgl-llvm", true),
-        //        arrayOf("lwjgl-lmdb", true),
-        //        arrayOf("lwjgl-lz4", true),
-        //        arrayOf("lwjgl-meow", true),
-        //        arrayOf("lwjgl-nanovg", true),
-        //        arrayOf("lwjgl-nfd", true),
-        //        arrayOf("lwjgl-nuklear", true),
-        //        arrayOf("lwjgl-odbc", false),
-        //        arrayOf("lwjgl-openal", true),
-        //        arrayOf("lwjgl-opencl", false),
-        arrayOf("lwjgl-opengl", true),
-        //        arrayOf("lwjgl-opengles", true),
-        //        arrayOf("lwjgl-openvr", true),
-        //        arrayOf("lwjgl-opus", true),
-        //        arrayOf("lwjgl-ovr", true),
-        //        arrayOf("lwjgl-par", true),
-        //        arrayOf("lwjgl-remotery", true),
-        //        arrayOf("lwjgl-rpmalloc", true),
-        //        arrayOf("lwjgl-shaderc", true),
-        //        arrayOf("lwjgl-sse", true),
-        arrayOf("lwjgl-stb", true)
-        //        arrayOf("lwjgl-tinyexr", true),
-        //        arrayOf("lwjgl-tinyfd", true),
-        //        arrayOf("lwjgl-tootle", true),
-        //        arrayOf("lwjgl-vma", true),
-        //        arrayOf("lwjgl-vulkan", false),
-        //        arrayOf("lwjgl-xxhash", true),
-        //        arrayOf("lwjgl-yoga", true),
-        //        arrayOf("lwjgl-zstd", true)
+    listOf(
+        "lwjgl", "1",
+        //        "lwjgl-assimp", "1",
+        //        "lwjgl-bgfx", "1",
+        //        "lwjgl-cuda", "0",
+        //        "lwjgl-egl", "0",
+        "lwjgl-glfw", "1",
+        "lwjgl-jawt", "0",
+        "lwjgl-jemalloc", "1",
+        //        "lwjgl-libdivide", "1",
+        //        "lwjgl-llvm", "1",
+        //        "lwjgl-lmdb", "1",
+        //        "lwjgl-lz4", "1",
+        //        "lwjgl-meow", "1",
+        //        "lwjgl-nanovg", "1",
+        //        "lwjgl-nfd", "1",
+        //        "lwjgl-nuklear", "1",
+        //        "lwjgl-odbc", "0",
+        //        "lwjgl-openal", "1",
+        //        "lwjgl-opencl", "0",
+        "lwjgl-opengl", "1",
+        //        "lwjgl-opengles", "1",
+        //        "lwjgl-openvr", "1",
+        //        "lwjgl-opus", "1",
+        //        "lwjgl-ovr", "1",
+        //        "lwjgl-par", "1",
+        //        "lwjgl-remotery", "1",
+        //        "lwjgl-rpmalloc", "1",
+        //        "lwjgl-shaderc", "1",
+        //        "lwjgl-sse", "1",
+        "lwjgl-stb", "1"
+        //        "lwjgl-tinyexr", "1",
+        //        "lwjgl-tinyfd", "1",
+        //        "lwjgl-tootle", "1",
+        //        "lwjgl-vma", "1",
+        //        "lwjgl-vulkan", "0",
+        //        "lwjgl-xxhash", "1",
+        //        "lwjgl-yoga", "1",
+        //        "lwjgl-zstd", "1)
     )
-    lwjglList.forEach { implementation("org.lwjgl", it[0].toString()) }
-    lwjglList.filter { it[1] == true }
-        .forEach { runtimeOnly("org.lwjgl", it[0].toString(), classifier = lwjglNatives) }
+        .chunked(2)
+        .forEach {
+            implementation("org.lwjgl", it[0])
+            if (it[1] == "1") {
+                runtimeOnly("org.lwjgl", it[0], classifier = lwjglNatives)
+            }
+        }
 }
 
 sourceSets {
@@ -99,9 +103,13 @@ tasks {
         mustRunAfter("uberJar")
         doLast {
             File("$buildDir/libs/run.bat")
-                .writeText("""|chcp 65001
-                        |java -Dfile.encoding=UTF-8 -Dorg.lwjgl.util.Debug=true -jar ./volynov-$version-uber.jar
-                        |pause
+                .writeText("""|java -Dorg.lwjgl.util.Debug=true -jar .\volynov-$version-uber.jar
+                              |pause """.trimMargin())
+//            File("$buildDir/libs/run_with_jbr_here.bat")
+//                .writeText("""|.\jbr\bin\java.exe -Dorg.lwjgl.util.Debug=true -jar .\volynov-$version-uber.jar
+//                              |pause """.trimMargin())
+            File("$buildDir/libs/config.txt")
+                .writeText("""|isDebugMode=0
                         """.trimMargin())
         }
     }
@@ -121,7 +129,6 @@ tasks {
         from(sourceSets.main.get().output)
         from({
             configurations.runtimeClasspath.get()
-                .filter { it.name.endsWith("jar") }
                 .map { zipTree(it) }
         })
     }
