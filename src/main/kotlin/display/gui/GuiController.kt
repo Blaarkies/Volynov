@@ -5,9 +5,11 @@ import display.draw.TextureEnum
 import display.graphic.Color
 import display.text.TextJustify
 import game.GamePlayer
+import input.CameraView
 import org.jbox2d.common.Vec2
 import utility.Common.roundFloat
 import utility.Common.vectorUnit
+import kotlin.math.ceil
 import kotlin.math.roundToInt
 
 class GuiController(private val drawer: Drawer) {
@@ -67,7 +69,7 @@ class GuiController(private val drawer: Drawer) {
         playerList: MutableList<GamePlayer>
     ) {
         clear()
-        elements.add(GuiLabel(drawer, Vec2(0f, 250f), TextJustify.CENTER, "Select Players", .2f))
+        elements.add(GuiLabel(drawer, Vec2(0f, 250f), TextJustify.CENTER, "Select player names", .2f))
 
         updateMainMenuSelectPlayers(playerList, onAddPlayer, onRemovePlayer)
 
@@ -101,7 +103,7 @@ class GuiController(private val drawer: Drawer) {
         )
         val removePlayerButton = GuiButton(
             drawer, scale = playerButtonHalfSize, title = " - ", textSize = .3f,
-            onClick = if (players.size > 0) onRemovePlayer else noOpCallback
+            onClick = if (players.size > 2) onRemovePlayer else noOpCallback
         )
         val addRemoveButtonsList = listOf(addPlayerButton, removePlayerButton)
         setElementsInRows(addRemoveButtonsList)
@@ -125,6 +127,37 @@ class GuiController(private val drawer: Drawer) {
         }
 
         playerButtons.forEach { it.id = GuiElementIdentifierType.ADD_PLAYERS_GROUP }
+    }
+
+    fun addPlayerLabels(players: List<GamePlayer>, camera: CameraView) {
+        val color = Color.WHITE.setAlpha(.7f)
+        val textSize = .1f
+        val justify = TextJustify.CENTER
+        elements.addAll(
+            players.flatMap { player ->
+                val vehicle = player.vehicle!!
+
+                val updateNameCallback = { element: GuiElement ->
+                    val screenLocation = camera.getGuiLocation(
+                        vehicle.worldBody.position.add(Vec2(0f, vehicle.radius * 2.5f)))
+                    element.updateOffset(screenLocation)
+                }
+                val name = GuiLabel(drawer, Vec2(), justify, player.name, textSize, color, updateNameCallback)
+
+                val updateHpCallback = { element: GuiElement ->
+                    val screenLocation = name.offset.add(Vec2(0f, -15f))
+                    element.updateOffset(screenLocation)
+                    element.title = "HP ${ceil(vehicle.hitPoints).toInt()}"
+                }
+                val hitPoints = GuiLabel(drawer, Vec2(), justify, "", textSize, color, updateHpCallback)
+
+                listOf(name, hitPoints)
+            }.map {
+                it.updateCallback(it)
+                it.scale.setZero()
+                it
+            }
+        )
     }
 
     fun createPlayersPickShields(player: GamePlayer, onClickShield: (player: GamePlayer) -> Unit) {

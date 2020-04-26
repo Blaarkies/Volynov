@@ -1,9 +1,9 @@
 package game
 
-import display.events.KeyboardEvent
 import display.Window
 import display.draw.Drawer
 import display.draw.TextureEnum
+import display.events.KeyboardEvent
 import display.events.MouseButtonEvent
 import display.events.MouseScrollEvent
 import display.graphic.Color
@@ -90,8 +90,8 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
             cp == GamePhases.PLAYERS_PICK_SHIELDS && isTransitioning -> {
                 if (elapsedTime > pauseTime) isTransitioning = false
             }
-            cp == GamePhases.PLAYERS_PICK_SHIELDS -> return
-            cp == GamePhases.PLAYERS_TURN -> return
+            cp == GamePhases.PLAYERS_PICK_SHIELDS -> guiController.update()
+            cp == GamePhases.PLAYERS_TURN -> guiController.update()
             cp == GamePhases.PLAYERS_TURN_FIRED && isTransitioning -> tickGameUnpausing(quickStartTime)
             cp == GamePhases.PLAYERS_TURN_FIRED -> handlePlayerShot()
             cp == GamePhases.PLAYERS_TURN_FIRED_ENDS_EARLY -> handlePlayerShotEndsEarly()
@@ -136,6 +136,7 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
     }
 
     private fun handlePlayerShotEndsEarly() {
+        addPlayerLabels()
         when {
             isTransitioning -> tickGamePausing()
             else -> setupNextPlayersTurn()
@@ -183,17 +184,13 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
 
         currentPhase = GamePhases.PLAYERS_PICK_SHIELDS
         //        startTransition()
+        addPlayerLabels()
     }
 
     private fun setupNextPlayersTurn() {
         if (checkStateEndOfRound()) {
             return
         }
-
-        gameState.gamePlayers
-            .joinToString { "${it.name} HP:${it.vehicle!!.hitPoints.toInt()}; " }
-            .also { println(it) }
-
         setNextPlayerOnTurn()
         setupPlayerCommandPanel()
 
@@ -218,9 +215,15 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
             onClickPower = { startNewPhase(GamePhases.PLAYERS_TURN_POWERING) },
             onClickFire = { player -> playerFires(player) }
         )
+        addPlayerLabels()
+    }
+
+    private fun addPlayerLabels() {
+        guiController.addPlayerLabels(gameState.gamePlayers.filter { it.vehicle!!.hitPoints > 0 }, camera)
     }
 
     private fun playerFires(player: GamePlayer) {
+        guiController.clear()
         // check() {} player has enough funds && in stable position to fire large warheads
 
         val firedWarhead = gameState.fireWarhead(player, "boom small")
@@ -298,11 +301,11 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
     }
 
     fun dragMouseLeftClick(location: Vec2, movement: Vec2) {
-        guiController.checkLeftClickDrag(getScreenLocation(location), movement)
+        guiController.checkLeftClickDrag(camera.getScreenLocation(location), movement)
     }
 
     fun scrollMouse(event: MouseScrollEvent) {
-        val screenLocation = getScreenLocation(event.location)
+        val screenLocation = camera.getScreenLocation(event.location)
         if (guiController.locationIsGui(screenLocation)) {
             guiController.checkScroll(event.movement, screenLocation)
         } else {
@@ -320,7 +323,7 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
     }
 
     fun doubleLeftClick(location: Vec2) {
-        val transformedLocation = getScreenLocation(location).mul(camera.z).add(camera.location)
+        val transformedLocation = camera.getWorldLocation(location)
 
         val clickedBody = gameState.gravityBodies.find {
             it.worldBody.position
@@ -342,7 +345,8 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
 
     fun moveMouse(location: Vec2) {
         when {
-            mouseElementPhases.any { currentPhase == it } -> guiController.checkHover(getScreenLocation(location))
+            mouseElementPhases.any { currentPhase == it } -> guiController.checkHover(
+                camera.getScreenLocation(location))
             currentPhase == GamePhases.PLAYERS_TURN_AIMING -> {
                 val (playerOnTurn, transformedLocation, playerLocation) = getPlayerAndMouseLocations(location)
                 val aimDirection = Director.getDirection(
@@ -365,7 +369,7 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
     private fun getPlayerAndMouseLocations(location: Vec2): Triple<GamePlayer, Vec2, Vec2> {
         checkNotNull(gameState.playerOnTurn) { "No player is on turn." }
         val playerOnTurn = gameState.playerOnTurn!!
-        val transformedLocation = getScreenLocation(location).mul(camera.z).add(camera.location)
+        val transformedLocation = camera.getWorldLocation(location)
         val playerLocation = playerOnTurn.vehicle!!.worldBody.position
         return Triple(playerOnTurn, transformedLocation, playerLocation)
     }
@@ -373,15 +377,11 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
     fun leftClickMouse(event: MouseButtonEvent) {
         when {
             mouseElementPhases.any { currentPhase == it } -> guiController.checkLeftClick(
-                getScreenLocation(event.location))
+                camera.getScreenLocation(event.location))
             currentPhase == GamePhases.PLAYERS_TURN_AIMING -> currentPhase = GamePhases.PLAYERS_TURN
             currentPhase == GamePhases.PLAYERS_TURN_POWERING -> currentPhase = GamePhases.PLAYERS_TURN
         }
     }
-
-    private fun getScreenLocation(location: Vec2): Vec2 =
-        location.add(Vec2(-camera.windowWidth, -camera.windowHeight).mul(.5f))
-            .also { it.y *= -1f }
 
     fun keyPressEscape(event: KeyboardEvent) {
         if (textInputIsBusy) {
@@ -425,6 +425,7 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
     private fun setupMainMenuSelectPlayers() {
         currentPhase = GamePhases.MAIN_MENU_SELECT_PLAYERS
         gameState.reset()
+        repeat(2) { gameState.gamePlayers.add(GamePlayer((gameState.gamePlayers.size + 1).toString())) }
         guiController.createMainMenuSelectPlayers(
             onClickStart = { setupStartGame() },
             onClickCancel = { setupMainMenu() },

@@ -26,10 +26,10 @@ jobs:
         with:
           arguments: package
 
-      - name: Assemble package
+      - name: Zip package
         run: zip -r volynov.zip build/Volynov-0.0.0/*
 
-      - name: It should create a release with assets README.md and LICENCE
+      - name: Publish release
         uses: Xotl/cool-github-releases@v1
         with:
           mode: update
