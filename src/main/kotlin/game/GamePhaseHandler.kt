@@ -42,10 +42,10 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
     private val guiController = GuiController(drawer)
     private val textInputIsBusy
         get() = guiController.textInputIsBusy()
-    private lateinit var exitCall: () -> Unit
+    private lateinit var exitCallback: () -> Unit
 
     fun init(window: Window) {
-        exitCall = { window.exit() }
+        exitCallback = { window.exit() }
         when (0) {
             0 -> setupMainMenu()
             1 -> setupMainMenuSelectPlayers()
@@ -53,7 +53,7 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
                 currentPhase = GamePhases.PLAYERS_PICK_SHIELDS
                 isTransitioning = false
                 gameState.reset()
-                gameState.gamePlayers.addAll((1..3).map { GamePlayer("Player $it") })
+                gameState.gamePlayers.addAll((1..3).map { GamePlayer("Player $it", cash = 1000f) })
                 MapGenerator.populateNewGameMap(gameState)
 
                 gameState.gamePlayers.forEach { it.vehicle?.shield = VehicleShield() }
@@ -389,7 +389,7 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
             return
         }
         when (currentPhase) {
-            GamePhases.MAIN_MENU -> exitCall()
+            GamePhases.MAIN_MENU -> exitCallback()
             else -> setupMainMenu()
         }
     }
@@ -418,7 +418,7 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
         guiController.createMainMenu(
             onClickNewGame = { setupMainMenuSelectPlayers() },
             onClickSettings = {},
-            onClickQuit = exitCall
+            onClickQuit = exitCallback
         )
     }
 

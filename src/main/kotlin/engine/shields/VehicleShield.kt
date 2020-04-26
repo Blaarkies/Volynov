@@ -1,3 +1,7 @@
 package engine.shields
 
-class VehicleShield()
+class VehicleShield() {
+
+    var energy: Float = 100f
+
+}

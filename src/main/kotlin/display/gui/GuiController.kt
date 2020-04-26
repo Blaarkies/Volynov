@@ -138,8 +138,8 @@ class GuiController(private val drawer: Drawer) {
                 val vehicle = player.vehicle!!
 
                 val updateNameCallback = { element: GuiElement ->
-                    val screenLocation = camera.getGuiLocation(
-                        vehicle.worldBody.position.add(Vec2(0f, vehicle.radius * 2.5f)))
+                    val screenLocation = camera.getGuiLocation(vehicle.worldBody.position.add(Vec2(0f, vehicle.radius)))
+                        .add(Vec2(0f, 22f))
                     element.updateOffset(screenLocation)
                 }
                 val name = GuiLabel(drawer, Vec2(), justify, player.name, textSize, color, updateNameCallback)
@@ -190,27 +190,36 @@ class GuiController(private val drawer: Drawer) {
                     onClick = { println("clicked [Boom $it]") })
             }
         )
+        val actionButtonScale = Vec2(50f, 25f)
+        val actionButtonsOffset = Vec2(-100f, -50f)
+        val statsOffset = Vec2(40f, 190f)
         commandPanel.addChildren(
             listOf(
-                GuiButton(drawer, Vec2(-200f, 0f), Vec2(50f, 25f), title = "Aim",
+                GuiButton(drawer, actionButtonsOffset.clone(), actionButtonScale, title = "Aim",
                     onClick = { onClickAim(player) }),
-                GuiButton(drawer, Vec2(-200f, -50f), Vec2(50f, 25f), title = "Power",
+                GuiButton(drawer, actionButtonsOffset.clone(), actionButtonScale, title = "Power",
                     onClick = { onClickPower(player) }),
-                GuiButton(drawer, Vec2(-200f, -100f), Vec2(50f, 25f), title = "Fire",
-                    onClick = { onClickFire(player) }),
-
-                GuiLabel(drawer, Vec2(-210f, 110f), justify = TextJustify.LEFT,
-                    title = getPlayerAimAngleDisplay(player),
-                    textSize = .15f,
+                GuiButton(drawer, actionButtonsOffset.clone(), actionButtonScale, title = "Fire",
+                    onClick = { onClickFire(player) })
+            ).also { setElementsInRows(it, centered = false) }
+                    + listOf(
+                GuiLabel(drawer, Vec2(-210f, 110f), TextJustify.LEFT, getPlayerAimAngleDisplay(player), .15f,
                     updateCallback = { it.title = getPlayerAimAngleDisplay(player) }),
-                GuiLabel(drawer, Vec2(-210f, 80f), justify = TextJustify.LEFT, title = getPlayerAimPowerDisplay(player),
-                    textSize = .15f,
+                GuiLabel(drawer, Vec2(-210f, 80f), TextJustify.LEFT, getPlayerAimPowerDisplay(player), .15f,
                     updateCallback = { it.title = getPlayerAimPowerDisplay(player) }),
 
                 weaponsList,
 
                 GuiIcon(drawer, Vec2(-230f, 110f), vectorUnit.mul(20f), texture = TextureEnum.icon_aim)
             )
+                    + listOf(
+                GuiLabel(drawer, statsOffset.clone(), TextJustify.LEFT,
+                    "HP      ${ceil(player.vehicle!!.hitPoints).toInt()}%", .15f),
+                GuiLabel(drawer, statsOffset.clone(), TextJustify.LEFT,
+                    "Energy ${ceil(player.vehicle!!.shield!!.energy).toInt()}%", .15f),
+                GuiLabel(drawer, statsOffset.clone(), TextJustify.LEFT,
+                    "Wealth ${player.cash.toInt()}", .15f)
+            ).also { setElementsInRows(it, centered = false) }
         )
         elements.add(commandPanel)
     }

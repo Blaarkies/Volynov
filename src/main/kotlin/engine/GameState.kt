@@ -93,8 +93,10 @@ class GameState {
 
     private fun tickWarheads() {
         warheads.toList()
-            .filter { it.ageTime > it.selfDestructTime }
+            .filter { it.ageTime > it.selfDestructTime || it.isOutOfGravityField}
             .forEach { detonateWarhead(it) }
+
+        warheads.toList().forEach { it.checkGravityField() }
     }
 
     private fun detonateWarhead(warhead: Warhead, body: Body? = null) {
