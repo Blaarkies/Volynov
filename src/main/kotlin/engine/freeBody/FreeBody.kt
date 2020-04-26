@@ -5,6 +5,8 @@ import engine.motion.Motion
 import org.jbox2d.collision.shapes.Shape
 import org.jbox2d.common.Vec2
 import org.jbox2d.dynamics.*
+import utility.Common
+import utility.Common.makeVec2Circle
 import kotlin.math.PI
 import kotlin.math.pow
 
@@ -15,6 +17,12 @@ open class FreeBody(
     var radius: Float,
     val textureConfig: TextureConfig
 ) {
+
+    fun knock(momentum: Float, direction: Float) {
+        worldBody.applyLinearImpulse(
+            makeVec2Circle(direction).mul(momentum / 9.81f),
+            worldBody.worldCenter)
+    }
 
     companion object {
 

@@ -226,8 +226,8 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
         guiController.clear()
         // check() {} player has enough funds && in stable position to fire large warheads
 
-        val firedWarhead = gameState.fireWarhead(player, "boom small")
-        camera.trackFreeBody(firedWarhead, 200f)
+        gameState.fireWarhead(player, "boom small")
+            .also { warhead -> camera.trackFreeBody(warhead, 200f) }
 
         startNewPhase(GamePhases.PLAYERS_TURN_FIRED)
     }

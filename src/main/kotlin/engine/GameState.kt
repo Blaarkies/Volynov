@@ -22,6 +22,7 @@ import org.jbox2d.dynamics.contacts.Contact
 import org.jbox2d.dynamics.contacts.ContactEdge
 import utility.Common
 import utility.Common.makeVec2Circle
+import kotlin.math.PI
 
 class GameState {
 
@@ -93,7 +94,7 @@ class GameState {
 
     private fun tickWarheads() {
         warheads.toList()
-            .filter { it.ageTime > it.selfDestructTime || it.isOutOfGravityField}
+            .filter { it.ageTime > it.selfDestructTime || it.isOutOfGravityField }
             .forEach { detonateWarhead(it) }
 
         warheads.toList().forEach { it.checkGravityField() }
@@ -156,9 +157,8 @@ class GameState {
         val warheadVelocity = angleVector.mul(power).add(originVelocity)
 
         val warheadMass = .1f
-        //        val body = player.vehicle!!.worldBody
-        // body.applyLinearImpulse(angleVector.mul(power).negate(), body.localCenter)
-        // TODO: recoil causes excessive spin
+
+        activeCallbacks.add { vehicle.knock(warheadMass * warheadVelocity.length(), angle + PI.toFloat()) }
 
         return Warhead.create(
             world, player, warheadLocation.x, warheadLocation.y, angle,
