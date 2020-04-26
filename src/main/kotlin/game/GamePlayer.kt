@@ -9,8 +9,11 @@ class GamePlayer(
     val type: GamePlayerTypes = GamePlayerTypes.HUMAN,
     var vehicle: Vehicle? = null,
     val playerAim: PlayerAim = PlayerAim(),
-    var score: Float = 0f
+    var score: Float = 0f,
+    var cash: Float = 0f
 ) {
+
+    val warheads = mutableListOf<Warhead>()
 
     fun scoreDamage(warhead: Warhead, totalDamage: Float, vehicle: Vehicle) {
         val selfHarm = when (vehicle) {
@@ -24,7 +27,7 @@ class GamePlayer(
             .div(warhead.selfDestructTime - noAgeBonusTime)
             .let { getTimingFunctionEaseIn(it) * 5 + 1f }
 
-        score += selfHarm * totalDamage * age
+        addScore(selfHarm * totalDamage * age)
     }
 
     fun scoreKill(vehicle: Vehicle) {
@@ -32,9 +35,12 @@ class GamePlayer(
             this.vehicle -> -.5f
             else -> 1f
         }
-        score += selfHarm * 2f
+        addScore(selfHarm * 2f)
     }
 
-    val warheads = mutableListOf<Warhead>()
+    private fun addScore(addition: Float) {
+        score += addition
+        cash += addition
+    }
 
 }

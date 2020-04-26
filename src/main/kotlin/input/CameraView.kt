@@ -76,6 +76,13 @@ class CameraView(private val window: Window) {
             .multiply(Matrix4f.translate(-location.x, -location.y, 0f))
     }
 
+    fun getScreenLocation(cursorLocation: Vec2): Vec2 =
+        cursorLocation.add(Vec2(-windowWidth, -windowHeight).mul(.5f)).also { it.y *= -1f }
+
+    fun getWorldLocation(screenLocation: Vec2): Vec2 = getScreenLocation(screenLocation).mul(z).add(location)
+
+    fun getGuiLocation(worldLocation: Vec2): Vec2 = worldLocation.add(location.negate()).mul(1f / z)
+
 }
 
 enum class CameraPhases {

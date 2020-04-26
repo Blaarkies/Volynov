@@ -9,6 +9,7 @@ import java.util.concurrent.ForkJoinPool
 import kotlin.math.cos
 import kotlin.math.roundToInt
 import kotlin.math.sin
+import kotlin.math.sqrt
 
 object Gravity {
 
@@ -45,7 +46,7 @@ object Gravity {
     fun addGravityForces(freeBodies: List<FreeBody>): Pair<HashMap<CellLocation, GravityCell>, Float> = runBlocking {
         val gravityMap = HashMap<CellLocation, GravityCell>()
 
-        val resolution = 20f//2f
+        val resolution = 20f //2f
         freeBodies.forEach {
             val x = it.worldBody.position.x
             val y = it.worldBody.position.y
@@ -72,28 +73,20 @@ object Gravity {
                             val body = clientBody.worldBody
                             val totalForce = Vec2()
 
-                            gravityMapList.filter { (subLocation, _) ->
-                                getDistance(
-                                    subLocation.x.toFloat(),
-                                    subLocation.y.toFloat(),
-                                    mainLocation.x.toFloat(),
-                                    mainLocation.y.toFloat()
-                                ) > 1f
-                            }.forEach { (subLocation, serverCell) ->
-                                val force = gravitationalForce(
-                                    serverCell.totalMass, subLocation.x * resolution, subLocation.y * resolution,
-                                    body.mass, body.position.x, body.position.y
-                                )
-                                totalForce.x += force.x
-                                totalForce.y += force.y
-                            }
+                            gravityMapList
+                                .filter { (subLocation, _) -> getDistance(subLocation, mainLocation) > sqrt(2f) }
+                                .forEach { (subLocation, serverCell) ->
+                                    val force = gravitationalForce(
+                                        serverCell.totalMass, subLocation.x * resolution, subLocation.y * resolution,
+                                        body.mass, body.position.x, body.position.y
+                                    )
+                                    totalForce.x += force.x
+                                    totalForce.y += force.y
+                                }
 
-                            gravityMapList.filter { (subLocation, _) ->
-                                getDistance(
-                                    subLocation.x.toFloat(), subLocation.y.toFloat(),
-                                    mainLocation.x.toFloat(), mainLocation.y.toFloat()
-                                ) <= 1f
-                            }.flatMap { (_, cell) -> cell.freeBodies }
+                            gravityMapList
+                                .filter { (subLocation, _) -> getDistance(subLocation, mainLocation) <= sqrt(2f) }
+                                .flatMap { (_, cell) -> cell.freeBodies }
                                 .filter { it != clientBody }
                                 .forEach { server ->
                                     val serverBody = server.worldBody

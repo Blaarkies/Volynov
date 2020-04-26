@@ -1,20 +1,20 @@
 package engine
 
-import input.CameraView
 import display.Window
 import display.draw.TextureConfig
 import display.draw.TextureEnum
 import display.graphic.Color
-import engine.freeBody.*
+import engine.freeBody.Particle
+import engine.freeBody.Planet
+import engine.freeBody.Vehicle
+import engine.freeBody.Warhead
 import engine.motion.Director
 import engine.motion.Motion
 import engine.physics.CellLocation
 import engine.physics.Gravity
 import engine.physics.GravityCell
 import game.GamePlayer
-import org.jbox2d.callbacks.ContactImpulse
-import org.jbox2d.callbacks.ContactListener
-import org.jbox2d.collision.Manifold
+import input.CameraView
 import org.jbox2d.common.Vec2
 import org.jbox2d.dynamics.Body
 import org.jbox2d.dynamics.World
@@ -93,8 +93,10 @@ class GameState {
 
     private fun tickWarheads() {
         warheads.toList()
-            .filter { it.ageTime > it.selfDestructTime }
+            .filter { it.ageTime > it.selfDestructTime || it.isOutOfGravityField}
             .forEach { detonateWarhead(it) }
+
+        warheads.toList().forEach { it.checkGravityField() }
     }
 
     private fun detonateWarhead(warhead: Warhead, body: Body? = null) {
@@ -135,7 +137,7 @@ class GameState {
         vehicles.clear()
         planets.clear()
 
-        world.setContactListener(MyContactListener(this))
+        world.setContactListener(ContactListener(this))
     }
 
     fun fireWarhead(player: GamePlayer, warheadType: String = "will make this some class later"): Warhead {
@@ -194,27 +196,3 @@ class GameState {
     }
 }
 
-class MyContactListener(val gameState: GameState) : ContactListener {
-
-    override fun beginContact(contact: Contact) {
-        val bodies = listOf(contact.fixtureA, contact.fixtureB).map { it.body }
-        bodies.mapNotNull { it.userData }
-            .map { it as FreeBodyCallback }
-            .filter { it.freeBody is Warhead }
-            .forEach { warhead ->
-                val otherBody = bodies.find { body -> body != warhead.freeBody.worldBody }!!
-                gameState.activeCallbacks.add { warhead.callback(warhead.freeBody, otherBody) }
-            }
-
-    }
-
-    override fun endContact(contact: Contact) {
-    }
-
-    override fun preSolve(contact: Contact, oldManifold: Manifold) {
-    }
-
-    override fun postSolve(contact: Contact, impulse: ContactImpulse) {
-    }
-
-}

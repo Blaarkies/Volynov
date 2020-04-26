@@ -35,6 +35,17 @@ class Warhead(
 
     val damage = 100f
 
+    var lastGravityForce: Float = 0f
+    val isOutOfGravityField: Boolean
+        get() {
+            val nowGravityForce = worldBody.m_force.length()
+            return nowGravityForce < 0.02f && lastGravityForce - nowGravityForce > 0.0001f
+        }
+
+    fun checkGravityField() {
+        lastGravityForce = worldBody.m_force.length()
+    }
+
     fun createParticles(
         particles: MutableList<Particle>,
         world: World,
