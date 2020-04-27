@@ -74,22 +74,24 @@ class GameState {
 
         tickGravityChanges()
         Motion.addNewTrailers(trailerBodies)
+        tickVehicles()
 
         tickWarheads()
         tickParticles(timeStep)
     }
 
-    private fun tickParticles(timeStep: Float) {
-        particles.toList().forEach {
-            it.worldBody.position.addLocal(it.worldBody.linearVelocity.mul(timeStep))
-            if (it.ageTime > 1000f) {
-                particles.remove(it)
-                return@forEach
+    private fun tickVehicles() {
+        vehicles.forEach { vehicle ->
+            if (vehicle.isOutOfGravityField && vehicle.worldBody.linearVelocity.length() > .1f) {
+                vehicle.knock(5f * vehicle.worldBody.mass * vehicle.worldBody.linearVelocity.length(),
+                    Director.getDirection(vehicle.worldBody.linearVelocity.negate()))
             }
-
-            val scale = Common.getTimingFunctionEaseOut(it.ageTime / 1000f)
-            it.radius = it.fullRadius * scale
+            vehicle.updateLastGravityForce()
         }
+    }
+
+    private fun tickParticles(timeStep: Float) {
+        particles.toList().forEach { it.update(timeStep, particles) }
     }
 
     private fun tickWarheads() {
@@ -97,16 +99,37 @@ class GameState {
             .filter { it.ageTime > it.selfDestructTime || it.isOutOfGravityField }
             .forEach { detonateWarhead(it) }
 
-        warheads.toList().forEach { it.checkGravityField() }
+        warheads.forEach { it.updateLastGravityForce() }
     }
 
     private fun detonateWarhead(warhead: Warhead, body: Body? = null) {
-        val particle = warhead.createParticles(particles, world, body ?: warhead.worldBody)
+        val particle = Particle.createParticle(
+            particles,
+            world,
+            body ?: warhead.worldBody,
+            warhead.worldBody.position,
+            2f,
+            1000f)
 
         checkToDamageVehicles(particle, warhead)
+        knockFreeBodies(particle, warhead)
 
         world.destroyBody(warhead.worldBody)
         warheads.remove(warhead)
+    }
+
+    private fun knockFreeBodies(particle: Particle, warhead: Warhead) {
+        gravityBodies.map {
+            Pair(it, (Director.getDistance(it.worldBody, particle.worldBody)
+                    - it.radius - warhead.radius).coerceAtLeast(0f))
+        }
+            .filter { (_, distance) -> distance < particle.radius }
+            .forEach { (body, distance) ->
+                val intensity = (1f - distance / particle.radius).coerceAtLeast(0f) * .5f
+                val momentum = intensity * warhead.energy
+
+                body.knock(momentum, Director.getDirection(body.worldBody, particle.worldBody))
+            }
     }
 
     private fun checkToDamageVehicles(particle: Particle, warhead: Warhead) {
@@ -117,7 +140,7 @@ class GameState {
             .filter { (_, distance) -> distance < particle.radius }
             .forEach { (vehicle, distance) ->
                 val damageUnit = (1f - distance / particle.radius).coerceAtLeast(0f)
-                    .let { Common.getTimingFunctionEaseIn(it) }
+                    .let { Common.getTimingFunctionEaseOut(it) }
                 val totalDamage = damageUnit * warhead.damage
                 vehicle.hitPoints -= totalDamage
                 warhead.firedBy.scoreDamage(warhead, totalDamage, vehicle)
@@ -141,7 +164,9 @@ class GameState {
         world.setContactListener(ContactListener(this))
     }
 
-    fun fireWarhead(player: GamePlayer, warheadType: String = "will make this some class later"): Warhead {
+    fun fireWarhead(player: GamePlayer,
+                    warheadType: String = "will make this some class later",
+                    callback: (Warhead) -> Unit) {
         checkNotNull(player.vehicle) { "Player does not have a vehicle." }
         val vehicle = player.vehicle!!
         val angle = player.playerAim.angle
@@ -156,19 +181,24 @@ class GameState {
         val warheadLocation = angleVector.mul(minimumSafeDistance).add(originLocation)
         val warheadVelocity = angleVector.mul(power).add(originVelocity)
 
-        val warheadMass = .1f
+        val warheadMass = 1f
 
-        activeCallbacks.add { vehicle.knock(warheadMass * warheadVelocity.length(), angle + PI.toFloat()) }
+        activeCallbacks.add {
+            vehicle.knock(warheadMass * warheadVelocity.length(), angle + PI.toFloat())
 
-        return Warhead.create(
-            world, player, warheadLocation.x, warheadLocation.y, angle,
-            warheadVelocity.x, warheadVelocity.y, 0f,
-            warheadMass, warheadRadius,
-            textureConfig = TextureConfig(TextureEnum.metal, color = Color.createFromHsv(0f, 1f, .3f, 1f)),
-            onWarheadCollision = { self, body -> detonateWarhead(self as Warhead, body) }
-        )
-            .also { warheads.add(it) }
+            Particle.createParticle(particles, world, vehicle.worldBody, warheadLocation, .3f, 250f)
 
+            val warhead = Warhead.create(
+                world, player, warheadLocation.x, warheadLocation.y, angle,
+                warheadVelocity.x, warheadVelocity.y, 0f,
+                warheadMass, warheadRadius,
+                textureConfig = TextureConfig(TextureEnum.metal, color = Color.createFromHsv(0f, 1f, .3f, 1f)),
+                onWarheadCollision = { self, body -> detonateWarhead(self as Warhead, body) }
+            )
+                .also { warheads.add(it) }
+
+            callback(warhead)
+        }
     }
 
     companion object {

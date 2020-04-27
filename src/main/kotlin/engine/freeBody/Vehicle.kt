@@ -23,6 +23,17 @@ class Vehicle(
     var shield: VehicleShield? = null
     var hitPoints: Float = 100f
 
+    var lastGravityForce: Float = 0f
+    val isOutOfGravityField: Boolean
+        get() {
+            val nowGravityForce = worldBody.m_force.length()
+            return nowGravityForce < 0.02f
+        }
+
+    fun updateLastGravityForce() {
+        lastGravityForce = worldBody.m_force.length()
+    }
+
     companion object {
 
         fun create(

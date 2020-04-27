@@ -11,6 +11,7 @@ import display.gui.GuiController
 import display.text.TextJustify
 import engine.GameState
 import engine.GameState.Companion.getContactBodies
+import engine.freeBody.Warhead
 import engine.motion.Director
 import engine.shields.VehicleShield
 import org.jbox2d.common.Vec2
@@ -226,8 +227,7 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
         guiController.clear()
         // check() {} player has enough funds && in stable position to fire large warheads
 
-        gameState.fireWarhead(player, "boom small")
-            .also { warhead -> camera.trackFreeBody(warhead, 200f) }
+        gameState.fireWarhead(player, "boom small") { warhead: Warhead -> camera.trackFreeBody(warhead, 200f)}
 
         startNewPhase(GamePhases.PLAYERS_TURN_FIRED)
     }

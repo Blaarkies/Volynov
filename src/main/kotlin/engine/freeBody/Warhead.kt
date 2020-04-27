@@ -1,12 +1,10 @@
 package engine.freeBody
 
 import display.draw.TextureConfig
-import display.draw.TextureEnum
 import display.graphic.BasicShapes
 import engine.FreeBodyCallback
 import engine.motion.Motion
 import game.GamePlayer
-import org.jbox2d.collision.shapes.CircleShape
 import org.jbox2d.collision.shapes.PolygonShape
 import org.jbox2d.common.Vec2
 import org.jbox2d.dynamics.Body
@@ -33,38 +31,18 @@ class Warhead(
     // TODO: player in current aiming phase could just wait out this time if they wanted to
     // also influences score
 
-    val damage = 100f
+    val damage = 50f
+    val energy = 50f
 
     var lastGravityForce: Float = 0f
     val isOutOfGravityField: Boolean
         get() {
             val nowGravityForce = worldBody.m_force.length()
-            return nowGravityForce < 0.02f && lastGravityForce - nowGravityForce > 0.0001f
+            return nowGravityForce < 0.02f
         }
 
-    fun checkGravityField() {
+    fun updateLastGravityForce() {
         lastGravityForce = worldBody.m_force.length()
-    }
-
-    fun createParticles(
-        particles: MutableList<Particle>,
-        world: World,
-        impacted: Body
-    ): Particle {
-        val shapeBox = CircleShape()
-        shapeBox.radius = 2f
-
-        val location = worldBody.position
-        val velocity = impacted.linearVelocity
-        val bodyDef = createBodyDef(BodyType.STATIC, location.x, location.y, 0f, velocity.x, velocity.y, 0f)
-        val worldBody = world.createBody(bodyDef)
-        //            createWorldBody(shapeBox, 0f, radius, 0f, 0f, world, bodyDef)
-
-        val textureConfig = TextureConfig(TextureEnum.white_pixel, chunkedVertices = BasicShapes.polygon30.chunked(2))
-            .updateGpuBufferData()
-        return Particle(id, worldBody, shapeBox.radius, textureConfig)
-            .also { particles.add(it) }
-
     }
 
     companion object {
