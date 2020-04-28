@@ -4,6 +4,8 @@ import display.draw.TextureConfig
 import display.draw.TextureEnum
 import display.graphic.BasicShapes
 import display.graphic.Color
+import engine.GameState
+import engine.motion.Director
 import engine.shields.VehicleShield
 import game.GamePlayer
 import org.jbox2d.collision.shapes.PolygonShape
@@ -77,11 +79,63 @@ class Vehicle(
     val isOutOfGravityField: Boolean
         get() {
             val nowGravityForce = worldBody.m_force.length()
-            return nowGravityForce < 0.02f
+            return nowGravityForce < 0.1f
         }
 
     fun updateLastGravityForce() {
         lastGravityForce = worldBody.m_force.length()
+    }
+
+    fun update() {
+        if (isOutOfGravityField && worldBody.linearVelocity.clone().let {
+                it.normalize()
+                it
+            }.add(worldBody.position.clone().let {
+                it.normalize()
+                it
+            }).length() > .7f) {
+            worldBody.linearDamping = .8f
+        } else {
+            worldBody.linearDamping = 0f
+        }
+
+        updateLastGravityForce()
+    }
+
+    fun fireWarhead(gameState: GameState,
+                    player: GamePlayer,
+                    warheadType: String = "will make this some class later",
+                    callback: (Warhead) -> Unit) {
+        val angle = player.playerAim.angle
+        val power = player.playerAim.power * .15f
+        val originLocation = worldBody.position
+        val originVelocity = worldBody.linearVelocity
+
+        val warheadRadius = .2f
+        val minimumSafeDistance = 1.5f * radius
+        val angleVector = Common.makeVec2Circle(angle)
+
+        val warheadLocation = angleVector.mul(minimumSafeDistance).add(originLocation)
+        val warheadVelocity = angleVector.mul(power).add(originVelocity)
+
+        val warheadMass = 1f
+
+        gameState.activeCallbacks.add {
+            knock(warheadMass * warheadVelocity.length(), angle + PI.toFloat())
+
+            Particle("1", gameState.particles, gameState.world, worldBody, warheadLocation, .3f, 250f)
+
+            Warhead("1", gameState.warheads,
+                gameState.world, player, warheadLocation.x, warheadLocation.y, angle,
+                warheadVelocity.x, warheadVelocity.y, 0f,
+                warheadMass, warheadRadius, .1f, .1f,
+                onCollision = { self, impacted ->
+                    (self as Warhead).detonate(gameState.world, gameState.warheads, gameState.particles,
+                        gameState.vehicles, gameState.gravityBodies, impacted)
+                }
+            ).also { callback(it) }
+        }
+
     }
 
 }

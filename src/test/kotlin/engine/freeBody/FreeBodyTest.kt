@@ -1,6 +1,10 @@
 package engine.freeBody
 
+import TestConstants.positionIterations
+import TestConstants.timeStep
+import TestConstants.velocityIterations
 import display.draw.TextureEnum
+import engine.FreeBodyCallback
 import engine.physics.Gravity
 import game.GamePlayer
 import org.jbox2d.common.Vec2
@@ -12,10 +16,6 @@ import kotlin.math.PI
 import kotlin.math.absoluteValue
 
 internal class FreeBodyTest {
-
-    val timeStep = 1f / 60f
-    val velocityIterations = 8
-    val positionIterations = 3
 
     val momentum = 1f
     val direction = PI.toFloat()
@@ -78,5 +78,39 @@ internal class FreeBodyTest {
         assertTrue(velocity.x < 0f)
         assertTrue(velocity.y.absoluteValue < .0001f)
         assertTrue(rotation == 0f)
+    }
+
+    @Test
+    fun detonation_should_knock_nearby_bodies() {
+        val gravityBodies = mutableListOf<FreeBody>()
+
+        val planets = mutableListOf<Planet>()
+        Planet("pluto", planets, world, 1f, 1f, 0f, 0f, 0f, 0f, 1f, .1f, texture = TextureEnum.white_pixel)
+
+        val vehicles = mutableListOf<Vehicle>()
+        val player = GamePlayer("sputnik")
+        Vehicle(vehicles, world, player, 1f, 0f, 0f, 0f, 0f, 0f, 1f, .1f, texture = TextureEnum.white_pixel)
+
+        val particles = mutableListOf<Particle>()
+        val warheads = mutableListOf<Warhead>()
+        Warhead("dud", warheads, world, player, 1f, -1f, 0f, 0f, 0f, 0f, 1f, .1f,
+            onCollision = { self, impacted ->
+                (self as Warhead).detonate(world, warheads, particles, vehicles, gravityBodies, impacted)
+            })
+
+        val boom = Warhead("boom", warheads, world, player, 0f, 0f, 0f, 0f, 0f, 0f, 1f, .1f,
+            onCollision = { self, impacted ->
+                (self as Warhead).detonate(world, warheads, particles, vehicles, gravityBodies, impacted)
+            })
+
+        gravityBodies.addAll(planets + vehicles + warheads)
+
+        (boom.worldBody.userData as FreeBodyCallback).callback(boom, boom.worldBody)
+        world.step(timeStep, velocityIterations, positionIterations)
+
+        gravityBodies.forEach {
+            assertTrue(it.worldBody.linearVelocity.length() > .1f,
+                "Expected ${it.id} to be knocked away due to explosion")
+        }
     }
 }

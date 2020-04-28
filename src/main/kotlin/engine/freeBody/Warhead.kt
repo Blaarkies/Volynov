@@ -5,13 +5,14 @@ import display.draw.TextureEnum
 import display.graphic.BasicShapes
 import display.graphic.Color
 import engine.FreeBodyCallback
-import engine.motion.Motion
+import engine.motion.Director
 import game.GamePlayer
 import org.jbox2d.collision.shapes.PolygonShape
 import org.jbox2d.common.Vec2
 import org.jbox2d.dynamics.Body
 import org.jbox2d.dynamics.BodyType
 import org.jbox2d.dynamics.World
+import utility.Common
 
 class Warhead(
     id: String,
@@ -28,7 +29,7 @@ class Warhead(
     radius: Float = .7F,
     restitution: Float = .3f,
     friction: Float = .6f,
-    onCollision: (FreeBody, Body) -> Unit
+    onCollision: (FreeBody, Body?) -> Unit
 ) : FreeBody(id, radius) {
 
     init {
@@ -75,6 +76,70 @@ class Warhead(
 
     fun updateLastGravityForce() {
         lastGravityForce = worldBody.m_force.length()
+    }
+
+    fun detonate(world: World,
+                 warheads: MutableList<Warhead>,
+                 particles: MutableList<Particle>,
+                 vehicles: MutableList<Vehicle>,
+                 gravityBodies: List<FreeBody>,
+                 impacted: Body? = null) {
+        val particle = Particle("1", particles, world, impacted ?: worldBody, worldBody.position, 2f, 1000f)
+
+        checkToDamageVehicles(world, vehicles, particle)
+        knockFreeBodies(gravityBodies, particle)
+
+        world.destroyBody(worldBody)
+        warheads.remove(this)
+    }
+
+    private fun knockFreeBodies(gravityBodies: List<FreeBody>, particle: Particle) {
+        gravityBodies.map {
+            Pair(it, (Director.getDistance(it.worldBody, particle.worldBody)
+                    - it.radius - radius).coerceAtLeast(0f))
+        }
+            .filter { (_, distance) -> distance < particle.radius }
+            .forEach { (body, distance) ->
+                val intensity = (1f - distance / particle.radius).coerceAtLeast(0f) * .5f
+                val momentum = intensity * energy
+
+                body.knock(momentum, Director.getDirection(body.worldBody, particle.worldBody))
+            }
+    }
+
+    private fun checkToDamageVehicles(world: World,
+                                      vehicles: MutableList<Vehicle>,
+                                      particle: Particle) {
+        vehicles.toList().map {
+            Pair(it, (Director.getDistance(it.worldBody, particle.worldBody)
+                    - it.radius - radius).coerceAtLeast(0f))
+        }
+            .filter { (_, distance) -> distance < particle.radius }
+            .forEach { (vehicle, distance) ->
+                val damageUnit = (1f - distance / particle.radius).coerceAtLeast(0f)
+                    .let { Common.getTimingFunctionEaseOut(it) }
+                val totalDamage = damageUnit * damage
+                vehicle.hitPoints -= totalDamage
+                firedBy.scoreDamage(this, totalDamage, vehicle)
+
+                if (vehicle.hitPoints <= 0) {
+                    firedBy.scoreKill(vehicle)
+
+                    world.destroyBody(vehicle.worldBody)
+                    vehicles.remove(vehicle)
+                }
+            }
+    }
+
+    fun update(world: World,
+               warheads: MutableList<Warhead>,
+               particles: MutableList<Particle>,
+               vehicles: MutableList<Vehicle>,
+               gravityBodies: List<FreeBody>) {
+        if (ageTime > selfDestructTime || isOutOfGravityField) {
+            detonate(world, warheads, particles, vehicles, gravityBodies)
+        }
+        updateLastGravityForce()
     }
 
 }

@@ -150,7 +150,7 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
                 && gameState.vehicles
             .all {
                 it.worldBody.contactList != null
-                        && getContactBodies(it.worldBody.contactList).any { other -> other.mass > 50f }
+                        && getContactBodies(it.worldBody.contactList).any { other -> other.mass > 10f }
             })
         when {
             roundEndsEarly -> if (!checkStateEndOfRound()) startNewPhase(GamePhases.PLAYERS_TURN_FIRED_ENDS_EARLY)
@@ -227,7 +227,7 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
         guiController.clear()
         // check() {} player has enough funds && in stable position to fire large warheads
 
-        gameState.fireWarhead(player, "boom small") { warhead: Warhead -> camera.trackFreeBody(warhead, 200f)}
+        player.vehicle?.fireWarhead(gameState, player, "boom small") { warhead -> camera.trackFreeBody(warhead, 200f) }
 
         startNewPhase(GamePhases.PLAYERS_TURN_FIRED)
     }

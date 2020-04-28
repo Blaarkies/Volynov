@@ -16,9 +16,7 @@ open class FreeBody(val id: String, var radius: Float) {
     lateinit var textureConfig: TextureConfig
 
     fun knock(momentum: Float, direction: Float) {
-        worldBody.applyLinearImpulse(
-            makeVec2Circle(direction).mul(momentum / 9.81f),
-            worldBody.worldCenter)
+        worldBody.applyLinearImpulse(makeVec2Circle(direction).mul(momentum / 9.81f), worldBody.position)
     }
 
     companion object {
