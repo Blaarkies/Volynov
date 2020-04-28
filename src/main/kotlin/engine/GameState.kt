@@ -1,9 +1,6 @@
 package engine
 
 import display.Window
-import display.draw.TextureConfig
-import display.draw.TextureEnum
-import display.graphic.Color
 import engine.freeBody.Particle
 import engine.freeBody.Planet
 import engine.freeBody.Vehicle
@@ -103,13 +100,7 @@ class GameState {
     }
 
     private fun detonateWarhead(warhead: Warhead, body: Body? = null) {
-        val particle = Particle.createParticle(
-            particles,
-            world,
-            body ?: warhead.worldBody,
-            warhead.worldBody.position,
-            2f,
-            1000f)
+        val particle = Particle("1", particles, world, body ?: warhead.worldBody, warhead.worldBody.position, 2f, 1000f)
 
         checkToDamageVehicles(particle, warhead)
         knockFreeBodies(particle, warhead)
@@ -186,18 +177,14 @@ class GameState {
         activeCallbacks.add {
             vehicle.knock(warheadMass * warheadVelocity.length(), angle + PI.toFloat())
 
-            Particle.createParticle(particles, world, vehicle.worldBody, warheadLocation, .3f, 250f)
+            Particle("1", particles, world, vehicle.worldBody, warheadLocation, .3f, 250f)
 
-            val warhead = Warhead.create(
+            Warhead("1", warheads,
                 world, player, warheadLocation.x, warheadLocation.y, angle,
                 warheadVelocity.x, warheadVelocity.y, 0f,
-                warheadMass, warheadRadius,
-                textureConfig = TextureConfig(TextureEnum.metal, color = Color.createFromHsv(0f, 1f, .3f, 1f)),
-                onWarheadCollision = { self, body -> detonateWarhead(self as Warhead, body) }
-            )
-                .also { warheads.add(it) }
-
-            callback(warhead)
+                warheadMass, warheadRadius, .1f, .1f,
+                onCollision = { self, body -> detonateWarhead(self as Warhead, body) }
+            ).also { callback(it) }
         }
     }
 

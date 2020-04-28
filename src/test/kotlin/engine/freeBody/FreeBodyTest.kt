@@ -1,6 +1,5 @@
 package engine.freeBody
 
-import display.draw.TextureConfig
 import display.draw.TextureEnum
 import engine.physics.Gravity
 import game.GamePlayer
@@ -30,8 +29,10 @@ internal class FreeBodyTest {
     @BeforeEach
     fun setUp() {
         world = World(Vec2())
-        aliceVehicle = Vehicle.create(world, GamePlayer("alice"), 0f, 0f, 0f, 0f, 0f, 0f, 1f, .7f, .5f, .5f,
-            TextureConfig(TextureEnum.white_pixel))
+
+        val vehicles = mutableListOf<Vehicle>()
+        aliceVehicle = Vehicle(vehicles, world, GamePlayer("alice"), 0f, 0f, 0f, 0f, 0f, 0f, 1f, .7f, .5f, .5f,
+            TextureEnum.white_pixel)
         location = aliceVehicle.worldBody.position
         velocity = aliceVehicle.worldBody.linearVelocity
         rotation = aliceVehicle.worldBody.angularVelocity
@@ -60,8 +61,10 @@ internal class FreeBodyTest {
 
     @Test
     fun knocked_vehicle_should_recoil_with_gravity_field() {
-        val terra = Planet.create(world, "terra", 10f, 0f, 0f, 0f, 0f, 0f, 1600f, 4.5f,
-            textureConfig = TextureConfig(TextureEnum.white_pixel))
+        val planets = mutableListOf<Planet>()
+        val terra = Planet("terra", planets, world, 10f, 0f, 0f, 0f, 0f, 0f, 1600f, 4.5f,
+            texture = TextureEnum.white_pixel)
+
         val gravityBodies = listOf(aliceVehicle, terra)
 
         world.step(timeStep, velocityIterations, positionIterations)
