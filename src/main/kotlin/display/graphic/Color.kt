@@ -49,9 +49,9 @@ class Color {
         val HEX = Color("#01FF6499")
         val HSV = createFromHsv(.5f, 1f, .5f, 1f)
 
-        val PALETTE8 = (0..8).map { createFromHsv(it / 7f, 1f, .5f) }
+        val PALETTE8 = (1..8).map { createFromHsv(it / 8f, 1f, .5f) }
         val PALETTE_TINT10 =
-            (0..8).map { createFromHsv(it / 7f, 1f, .8f) } + listOf(WHITE, createFromHsv(0f, 0f, .7f))
+            (1..8).map { createFromHsv(it / 8f, 1f, .8f) } + listOf(WHITE, createFromHsv(0f, 0f, .7f)).toList()
 
         private fun getSafeValue(value: Float) = value.coerceIn(0f, 1f)
 

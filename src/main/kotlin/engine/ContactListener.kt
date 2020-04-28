@@ -12,10 +12,11 @@ class ContactListener(val gameState: GameState) : ContactListener {
         val bodies = listOf(contact.fixtureA, contact.fixtureB).map { it.body }
         bodies.mapNotNull { it.userData }
             .map { it as FreeBodyCallback }
-            .filter { it.freeBody is Warhead }
+            .filter { it.freeBody is Warhead && !it.isHandled}
             .forEach { warhead ->
                 val otherBody = bodies.find { body -> body != warhead.freeBody.worldBody }!!
                 gameState.activeCallbacks.add { warhead.callback(warhead.freeBody, otherBody) }
+                warhead.isHandled = true
             }
 
     }

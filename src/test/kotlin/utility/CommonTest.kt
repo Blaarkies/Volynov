@@ -12,8 +12,7 @@ import utility.Common.roundFloat
 
 internal class CommonTest {
 
-    fun testest() {
-
+    fun printChartData() {
         val data = getChartedData {
             getTimingFunctionEaseIn(1f - it)
         }

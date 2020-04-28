@@ -27,7 +27,7 @@ jobs:
           arguments: package
 
       - name: Zip package
-        run: zip -r volynov.zip build/Volynov-0.0.0/*
+        run: zip -r volynov.zip build/Volynov-0.0.0
 
       - name: Publish release
         uses: Xotl/cool-github-releases@v1

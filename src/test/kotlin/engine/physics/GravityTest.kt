@@ -1,6 +1,8 @@
 package engine.physics
 
-import display.draw.TextureConfig
+import TestConstants.positionIterations
+import TestConstants.timeStep
+import TestConstants.velocityIterations
 import display.draw.TextureEnum
 import engine.freeBody.Planet
 import org.jbox2d.common.Vec2
@@ -29,17 +31,38 @@ internal class GravityTest {
         assertTrue(forceUpLeft.y > 0)
     }
 
-//    @Test
-//    fun in_binary_system_the_massive_body_moves_less() {
-//    }
+    @Test
+    fun in_binary_system_the_massive_body_moves_less() {
+        val world = World(Vec2())
+
+        val planets = mutableListOf<Planet>()
+        val terra = Planet("terra", planets, world, -5f, 0f, 0f, 0f, 0f, 0f, 1000f, 1f,
+            texture = TextureEnum.white_pixel)
+        val luna = Planet("luna", planets, world, 5f, 0f, 0f, 0f, 0f, 0f, 100f, 1f,
+            texture = TextureEnum.white_pixel)
+
+        planets.forEach {
+            assertTrue(it.worldBody.linearVelocity.length() == 0f, "Expected ${it.id} to not move")
+        }
+
+        Gravity.addGravityForces(planets)
+        world.step(timeStep, velocityIterations, positionIterations)
+
+        planets.forEach {
+            assertTrue(it.worldBody.linearVelocity.length() > 0f, "Expected ${it.id} to move")
+        }
+        assertTrue(terra.worldBody.linearVelocity.length() < luna.worldBody.linearVelocity.length(),
+            "Expected ${terra.id} to move less than ${luna.id}")
+    }
 
     private fun getGravityForceBetweenPlanetSatellite(sx: Float = 0f, sy: Float = 0f): Vec2 {
         val world = World(Vec2())
 
-        val terra = Planet.create(world, "terra", sx, sy, 0f, 0f, 0f, 0f, 100f, 10f,
-            textureConfig = TextureConfig(TextureEnum.white_pixel))
-        val luna = Planet.create(world, "luna", 0f, 0f, 0f, 0f, 0f, 0f, 100f, 10f,
-            textureConfig = TextureConfig(TextureEnum.white_pixel))
+        val planets = mutableListOf<Planet>()
+        val terra = Planet("terra", planets, world, sx, sy, 0f, 0f, 0f, 0f, 100f, 10f,
+            texture = TextureEnum.white_pixel)
+        val luna = Planet("luna", planets, world, 0f, 0f, 0f, 0f, 0f, 0f, 100f, 10f,
+            texture = TextureEnum.white_pixel)
 
         return Gravity.gravitationalForce(luna, terra)
     }
