@@ -40,6 +40,7 @@ class Vehicle(
         val fullShape = BasicShapes.polygon4Spiked.chunked(2)
         val bodyDef = createBodyDef(BodyType.DYNAMIC, x, y, h, dx, dy, dh)
         worldBody = world.createBody(bodyDef)
+        worldBody.userData = this
 
         (listOf(fullShape.last()) + fullShape + listOf(fullShape.first()))
             .map { listOf(it[0] * radius, it[1] * radius) }
@@ -79,8 +80,12 @@ class Vehicle(
     val isOutOfGravityField: Boolean
         get() {
             val nowGravityForce = worldBody.m_force.length()
-            return nowGravityForce < 0.1f
+            return false //nowGravityForce < 0.1f
         }
+    val isStable: Boolean
+        get() = worldBody.contactList != null && GameState.getContactBodies(worldBody.contactList)
+            .filter { it.userData !is MapBorder }
+            .any { other -> other.mass > 10f }
 
     fun updateLastGravityForce() {
         lastGravityForce = worldBody.m_force.length()

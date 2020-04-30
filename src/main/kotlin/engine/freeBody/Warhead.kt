@@ -32,6 +32,8 @@ class Warhead(
     onCollision: (FreeBody, Body?) -> Unit
 ) : FreeBody(id, radius) {
 
+    val freeBodyCallback = FreeBodyCallback(this, onCollision)
+
     init {
         val shapeBox = PolygonShape()
         val vertices = BasicShapes.polygon4.chunked(2)
@@ -42,7 +44,7 @@ class Warhead(
         val bodyDef = createBodyDef(BodyType.DYNAMIC, x, y, h, dx, dy, dh)
         worldBody = createWorldBody(shapeBox, mass, radius, friction, restitution, world, bodyDef)
         worldBody.isBullet = true
-        worldBody.userData = FreeBodyCallback(this, onCollision)
+        worldBody.userData = this
 
         textureConfig = TextureConfig(TextureEnum.metal,
             chunkedVertices = shapeBox.vertices.map { listOf(it.x / radius, it.y / radius) },
@@ -71,7 +73,7 @@ class Warhead(
     val isOutOfGravityField: Boolean
         get() {
             val nowGravityForce = worldBody.m_force.length()
-            return nowGravityForce < 0.02f
+            return false //nowGravityForce < 0.02f
         }
 
     fun updateLastGravityForce() {

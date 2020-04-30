@@ -62,7 +62,7 @@ class CameraView(private val window: Window) {
     }
 
     fun moveZoom(movement: Float) {
-        z = (z + movement * z.pow(1.2f) * 50f).coerceIn(.0001f, 1f)
+        z = (z + movement * z.pow(1.2f) * 50f).coerceIn(.01f, .15f)
     }
 
     fun reset() {

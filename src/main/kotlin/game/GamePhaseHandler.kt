@@ -10,8 +10,6 @@ import display.graphic.Color
 import display.gui.GuiController
 import display.text.TextJustify
 import engine.GameState
-import engine.GameState.Companion.getContactBodies
-import engine.freeBody.Warhead
 import engine.motion.Director
 import engine.shields.VehicleShield
 import org.jbox2d.common.Vec2
@@ -125,13 +123,13 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
 
         drawer.renderer.drawText(
             "Animating: ${isTransitioning.toString().padEnd(5, ' ')} ${currentPhase.name}",
-            Vec2(120f - camera.windowWidth * .5f, -10f + camera.windowHeight * .5f),
+            Vec2(5f - camera.windowWidth * .5f, -10f + camera.windowHeight * .5f),
             vectorUnit.mul(0.1f), Color.GREEN, TextJustify.LEFT, false
         )
 
         drawer.renderer.drawText(
-            "${elapsedTime.div(100f).roundToInt().div(10f)} seconds",
-            Vec2(40f - camera.windowWidth * .5f, -30f + camera.windowHeight * .5f),
+            "${elapsedTime.div(100f).roundToInt().div(10f)} s",
+            Vec2(5f - camera.windowWidth * .5f, -30f + camera.windowHeight * .5f),
             vectorUnit.mul(0.1f), Color.GREEN, TextJustify.LEFT, false
         )
     }
@@ -147,11 +145,7 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
     private fun handlePlayerShot() {
         val roundEndsEarly = (gameState.warheads.none()
                 && gameState.particles.none()
-                && gameState.vehicles
-            .all {
-                it.worldBody.contactList != null
-                        && getContactBodies(it.worldBody.contactList).any { other -> other.mass > 10f }
-            })
+                && gameState.vehicles.all { it.isStable })
         when {
             roundEndsEarly -> if (!checkStateEndOfRound()) startNewPhase(GamePhases.PLAYERS_TURN_FIRED_ENDS_EARLY)
             elapsedTime > maxTurnDuration -> setupNextPlayersTurn()
@@ -262,6 +256,7 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
         allFreeBodies.forEach { drawer.drawFreeBody(it) }
         //        allFreeBodies.forEach { drawDebugForces(it) }
         //        drawer.drawGravityCells(gameState.gravityMap, gameState.resolution)
+        drawer.drawBorder(gameState.mapBorder!!)
     }
 
     private fun tickGameUnpausing(
@@ -292,7 +287,6 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
         } else {
             val timeFunctionStep = getTimingFunctionEaseIn(1f - interpolateStep) * (1f - endSpeed) + endSpeed
             gameState.tickClock(timeStep * timeFunctionStep, velocityIterations, positionIterations)
-            //            println("${roundFloat(interpolateStep, 2).toString().padEnd(4, '0')} <> " + roundFloat(timeFunctionStep, 2).toString().padEnd(4, '0'))
         }
     }
 

@@ -13,7 +13,11 @@ object BasicShapes {
 
     val polygon5 = getPolygonVertices(5)
 
+    val polygon6 = getPolygonVertices(6)
+
     val polygon7 = getPolygonVertices(7)
+
+    val polygon8 = getPolygonVertices(8)
 
     val polygon9 = getPolygonVertices(9)
 
@@ -27,10 +31,11 @@ object BasicShapes {
 
     val verticalLine = listOf(0f, 1f, 0f, -1f)
 
-    private fun getPolygonVertices(corners: Int, rotate: Double = .25): List<Float> = (0 until corners).flatMap {
-        val t = 2 * PI * (it / corners.toFloat()) + PI * rotate
-        listOf(cos(t).toFloat(), sin(t).toFloat())
-    }
+    private fun getPolygonVertices(corners: Int, rotate: Double = 1f.div(corners).toDouble()): List<Float> =
+        (0 until corners).flatMap {
+            val t = 2 * PI * (it / corners.toFloat()) + PI * rotate
+            listOf(cos(t).toFloat(), sin(t).toFloat())
+        }
 
     private fun getSpikedPolygon(corners: Int, smoothness: Float = .6f): List<Float> {
         return getPolygonVertices(corners).chunked(2)

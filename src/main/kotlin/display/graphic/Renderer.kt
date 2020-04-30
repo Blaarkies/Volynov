@@ -111,8 +111,7 @@ class Renderer {
         scale: Vec2 = vectorUnit,
         useCamera: Boolean = true,
         snipRegion: SnipRegion? = null
-    ) =
-        drawEntity(data, offset, h, scale, GL_TRIANGLE_STRIP, useCamera, snipRegion)
+    ) = drawEntity(data, offset, h, scale, GL_TRIANGLE_STRIP, useCamera, snipRegion)
 
     private fun drawEntity(
         data: FloatArray,

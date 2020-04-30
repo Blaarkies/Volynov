@@ -73,6 +73,12 @@ object Common {
     fun getTimingFunctionSigmoid(interpolateStep: Float, centerGradient: Float = 1f) =
         (1f / (1f + exp((-(interpolateStep - .5f) * 10f)) * centerGradient)) * 1.023f - 0.0022f
 
+    fun getRandomDirection() = Math.random().toFloat() * 2f * PI.toFloat()
+
+    fun getRandomMixed() = Math.random().toFloat() * 2f - 1f
+
+    fun getRandomSign() = if (Math.random() > .5) -1f else 1f
+
 }
 
 fun Vec2.toList(): List<Float> = listOf(this.x, this.y)

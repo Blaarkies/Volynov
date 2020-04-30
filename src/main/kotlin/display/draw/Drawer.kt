@@ -5,6 +5,7 @@ import display.graphic.Color
 import display.graphic.Renderer
 import display.graphic.SnipRegion
 import display.text.TextJustify
+import engine.freeBody.MapBorder
 import engine.freeBody.FreeBody
 import engine.freeBody.Particle
 import engine.freeBody.Vehicle
@@ -50,6 +51,16 @@ class Drawer(val renderer: Renderer) {
         //        renderer.drawStrip(data)
 
         renderer.drawText(freeBody.id, freeBody.worldBody.position, vectorUnit, Color.WHITE, TextJustify.LEFT)
+    }
+
+    fun drawBorder(mapBorder: MapBorder) {
+        textures.getTexture(mapBorder.textureConfig.texture).bind()
+        renderer.drawStrip(
+            mapBorder.textureConfig.gpuBufferData,
+            mapBorder.worldBody.position,
+            mapBorder.worldBody.angle,
+            vectorUnit
+        )
     }
 
     fun drawTrail(freeBody: FreeBody) {

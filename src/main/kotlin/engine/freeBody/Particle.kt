@@ -34,7 +34,7 @@ class Particle(val id: String,
         shapeBox.radius = radius
 
         val velocity = impacted.linearVelocity
-        val bodyDef = FreeBody.createBodyDef(BodyType.STATIC, location.x, location.y, 0f,
+        val bodyDef = FreeBody.createBodyDef(BodyType.KINEMATIC, location.x, location.y, 0f,
             velocity.x, velocity.y, 0f)
         worldBody = world.createBody(bodyDef)
 
@@ -44,13 +44,11 @@ class Particle(val id: String,
         particles.add(this)
     }
 
-    fun update(timeStep: Float, particles: MutableList<Particle>) {
+    fun update(particles: MutableList<Particle>) {
         if (ageTime > duration) {
             particles.remove(this)
             return
         }
-
-        worldBody.position.addLocal(worldBody.linearVelocity.mul(timeStep))
 
         val scale = Common.getTimingFunctionEaseOut(ageTime / duration)
         radius = fullRadius * scale

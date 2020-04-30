@@ -1,10 +1,7 @@
 package engine
 
 import display.Window
-import engine.freeBody.Particle
-import engine.freeBody.Planet
-import engine.freeBody.Vehicle
-import engine.freeBody.Warhead
+import engine.freeBody.*
 import engine.motion.Motion
 import engine.physics.CellLocation
 import engine.physics.Gravity
@@ -16,11 +13,10 @@ import org.jbox2d.dynamics.Body
 import org.jbox2d.dynamics.World
 import org.jbox2d.dynamics.contacts.Contact
 import org.jbox2d.dynamics.contacts.ContactEdge
-import utility.Common.makeVec2Circle
-import kotlin.math.PI
 
 class GameState {
 
+    var mapBorder: MapBorder? = null
     val gamePlayers = mutableListOf<GamePlayer>()
     var playerOnTurn: GamePlayer? = null
 
@@ -72,15 +68,17 @@ class GameState {
         tickVehicles()
 
         tickWarheads()
-        tickParticles(timeStep)
+        tickParticles()
+
+        mapBorder?.update()
     }
 
     private fun tickVehicles() {
         vehicles.forEach { it.update() }
     }
 
-    private fun tickParticles(timeStep: Float) {
-        particles.toList().forEach { it.update(timeStep, particles) }
+    private fun tickParticles() {
+        particles.toList().forEach { it.update(particles) }
     }
 
     private fun tickWarheads() {
@@ -94,7 +92,7 @@ class GameState {
         vehicles.clear()
         planets.clear()
 
-        world.setContactListener(ContactListener(this))
+        world.setContactListener(GameContactListener(this))
     }
 
     companion object {
