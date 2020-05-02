@@ -9,13 +9,13 @@ import engine.freeBody.Vehicle
 import engine.motion.Director
 import engine.physics.Gravity
 import engine.physics.LocationVelocity
+import org.jbox2d.common.MathUtils.ceil
 import org.jbox2d.common.Vec2
 import org.jbox2d.dynamics.World
 import utility.Common.getRandomDirection
 import utility.Common.getRandomMixed
 import utility.Common.getRandomSign
 import utility.Common.makeVec2Circle
-import java.lang.Math.random
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.pow
@@ -27,23 +27,29 @@ object MapGenerator {
         val planet = Planet("terra", gameState.planets, gameState.world, 0f, 0f, 0f, 0f, 0f, .1f * getRandomSign(),
             1600f, 4.5f, texture = TextureEnum.marble_earth)
 
-        val orbitalLevels = (1 until gameState.gamePlayers.size).map { OrbitalLevel(it, it) }
-        val moons = gameState.gamePlayers.map {
+        val orbitalLevels = (1..gameState.gamePlayers.size).map { OrbitalLevel(it, it) }
+        val moons = (1..ceil(gameState.gamePlayers.size * .7f)).map {
             val (x, y, h, dx, dy, dh) = getSafeOrbitLocationVelocity(orbitalLevels, planet)
-            Planet("luna of ${it.name}", gameState.planets, gameState.world, x, y, h, dx, dy, dh, 50f, 1.25f,
+            Planet("luna $it", gameState.planets, gameState.world, x, y, h, dx, dy, dh, 70f, 1.25f,
                 texture = TextureEnum.full_moon)
         }
 
         gameState.gamePlayers
-            .zip(Color.PALETTE_TINT10.shuffled())
-            .zip(moons.shuffled())
-            .map { (playerColor, moon) ->
-                val (player, color) = playerColor
-                val location = moon.worldBody.position.add(makeVec2Circle(getRandomDirection()).mul(moon.radius + 1f))
+            .zip(Color.PALETTE_TINT10.shuffled()).chunked(2)
+            .zip(moons.map { Pair(it, VehiclePlacement(2)) })
+            .flatMap { (players, moon) ->
+                players.map { (player, color) -> VehicleMoonCombination(player, color, moon.first, moon.second) }
+            }
+            .forEach { (player, color, moon, placement) ->
+                val vehicleDefaultRadius = .7f
+                placement.addBody()
+                val location = moon.worldBody.position.add(
+                    makeVec2Circle(placement.nowDirection + getRandomMixed() * .9f)
+                        .mul(moon.radius + vehicleDefaultRadius))
                 val velocity = moon.worldBody.linearVelocity
 
                 Vehicle(gameState.vehicles, gameState.world, player,
-                    location.x, location.y, 0f,
+                    location.x, location.y, placement.nowDirection + PI.toFloat(),
                     velocity.x, velocity.y, getRandomMixed(),
                     3f, texture = TextureEnum.metal, color = color)
             }
@@ -77,7 +83,7 @@ object MapGenerator {
             .withIndex()
             .map { (i, _) ->
                 val meanLongitude = (2 * PI * .07 * i).toFloat()
-                val beltRadius = 50f
+                val beltRadius = 60f
                 val dispersion = .8f
                 floatArrayOf(
                     (i * dispersion + beltRadius) * cos(meanLongitude),
