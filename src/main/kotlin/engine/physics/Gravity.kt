@@ -1,10 +1,13 @@
 package engine.physics
 
 import engine.freeBody.FreeBody
+import engine.freeBody.Planet
 import engine.motion.Director.getDirection
 import engine.motion.Director.getDistance
 import kotlinx.coroutines.*
 import org.jbox2d.common.Vec2
+import utility.Common
+import utility.Common.makeVec2Circle
 import java.util.concurrent.ForkJoinPool
 import kotlin.math.cos
 import kotlin.math.roundToInt
@@ -105,6 +108,15 @@ object Gravity {
             }
 
         Pair(gravityMap, resolution)
+    }
+
+    fun getVelocityToOrbitParent(location: Vec2, direction: Float, parent: Planet): Vec2 {
+        val distance = parent.worldBody.position.add(location.negate()).length()
+        val speed = sqrt(
+            G * parent.worldBody.mass * ((2f / distance) - (1f / distance))
+        )
+
+        return makeVec2Circle(direction).mul(speed)
     }
 
 }

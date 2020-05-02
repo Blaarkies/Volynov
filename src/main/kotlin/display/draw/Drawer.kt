@@ -5,6 +5,7 @@ import display.graphic.Color
 import display.graphic.Renderer
 import display.graphic.SnipRegion
 import display.text.TextJustify
+import engine.freeBody.MapBorder
 import engine.freeBody.FreeBody
 import engine.freeBody.Particle
 import engine.freeBody.Vehicle
@@ -46,10 +47,20 @@ class Drawer(val renderer: Renderer) {
         //            Color(0f, 1f, 1f, 1f), Color(0f, 1f, 1f, 0.0f)
         //        ).toFloatArray()
 
-        textures.getTexture(TextureEnum.white_pixel).bind()
+        //        textures.getTexture(TextureEnum.white_pixel).bind()
         //        renderer.drawStrip(data)
 
         renderer.drawText(freeBody.id, freeBody.worldBody.position, vectorUnit, Color.WHITE, TextJustify.LEFT)
+    }
+
+    fun drawBorder(mapBorder: MapBorder) {
+        textures.getTexture(mapBorder.textureConfig.texture).bind()
+        renderer.drawStrip(
+            mapBorder.textureConfig.gpuBufferData,
+            mapBorder.worldBody.position,
+            mapBorder.worldBody.angle,
+            vectorUnit
+        )
     }
 
     fun drawTrail(freeBody: FreeBody) {
@@ -80,7 +91,7 @@ class Drawer(val renderer: Renderer) {
 
     fun drawGravityCells(gravityMap: HashMap<CellLocation, GravityCell>, resolution: Float) {
         textures.getTexture(TextureEnum.white_pixel).bind()
-        val maxMass = gravityMap.maxBy { (_, cell) -> cell.totalMass }!!.value.totalMass
+        val maxMass = gravityMap.maxBy { (_, cell) -> cell.totalMass }?.value?.totalMass ?: .001f
         val scale = 0.707106781f * resolution
         gravityMap.forEach { (key, cell) ->
             val data = BasicShapes.polygon4.chunked(2)
