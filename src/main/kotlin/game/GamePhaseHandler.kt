@@ -58,7 +58,7 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
                 gameState.gamePlayers.forEach { it.vehicle?.shield = VehicleShield() }
                 gameState.playerOnTurn = gameState.gamePlayers.first()
 
-                setupNextPlayersTurn()
+                setupNextPlayersFireTurn()
             }
             else -> throw Throwable("Enter a debug step number to start game")
         }
@@ -121,16 +121,17 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
             else -> drawPlayPhase()
         }
 
+        val debugColor = Color.GREEN.setAlpha(.7f)
         drawer.renderer.drawText(
             "Animating: ${isTransitioning.toString().padEnd(5, ' ')} ${currentPhase.name}",
             Vec2(5f - camera.windowWidth * .5f, -10f + camera.windowHeight * .5f),
-            vectorUnit.mul(0.1f), Color.GREEN, TextJustify.LEFT, false
+            vectorUnit.mul(0.1f), debugColor, TextJustify.LEFT, false
         )
 
         drawer.renderer.drawText(
             "${elapsedTime.div(100f).roundToInt().div(10f)} s",
             Vec2(5f - camera.windowWidth * .5f, -30f + camera.windowHeight * .5f),
-            vectorUnit.mul(0.1f), Color.GREEN, TextJustify.LEFT, false
+            vectorUnit.mul(0.1f), debugColor, TextJustify.LEFT, false
         )
     }
 
@@ -138,7 +139,7 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
         addPlayerLabels()
         when {
             isTransitioning -> tickGamePausing()
-            else -> setupNextPlayersTurn()
+            else -> setupNextPlayersFireTurn()
         }
     }
 
@@ -148,7 +149,7 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
                 && gameState.vehicles.all { it.isStable })
         when {
             roundEndsEarly -> if (!checkStateEndOfRound()) startNewPhase(GamePhases.PLAYERS_TURN_FIRED_ENDS_EARLY)
-            elapsedTime > maxTurnDuration -> setupNextPlayersTurn()
+            elapsedTime > maxTurnDuration -> setupNextPlayersFireTurn()
             elapsedTime > (maxTurnDuration - pauseTime) -> tickGamePausing(
                 pauseTime, calculatedElapsedTime = (elapsedTime - maxTurnDuration + pauseTime)
             )
@@ -170,7 +171,7 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
         player?.vehicle?.shield = VehicleShield()
 
         if (gameState.gamePlayers.all { it.vehicle?.shield != null }) {
-            setupNextPlayersTurn()
+            setupNextPlayersFireTurn()
             return
         }
 
@@ -182,7 +183,7 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
         addPlayerLabels()
     }
 
-    private fun setupNextPlayersTurn() {
+    private fun setupNextPlayersFireTurn() {
         if (checkStateEndOfRound()) {
             return
         }
@@ -227,7 +228,7 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
     }
 
     private fun setNextPlayerOnTurn() {
-        checkNotNull(gameState.playerOnTurn) { "No player is on turn." }
+        checkNotNull(gameState.playerOnTurn) { "No player is on turn" }
         val playerOnTurn = gameState.playerOnTurn!!
         val players = gameState.gamePlayers.filter { it.vehicle!!.hitPoints > 0 }
         gameState.playerOnTurn = players[(players.indexOf(playerOnTurn) + 1).rem(players.size)]
@@ -249,6 +250,7 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
 
     private fun drawPlayPhase() {
         drawer.drawBackground(TextureEnum.stars_2k)
+        drawer.drawBorder(gameState.mapBorder!!)
 
         val allFreeBodies = gameState.gravityBodies
         allFreeBodies.forEach { drawer.drawTrail(it) }
@@ -256,7 +258,6 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
         allFreeBodies.forEach { drawer.drawFreeBody(it) }
         //        allFreeBodies.forEach { drawDebugForces(it) }
         //        drawer.drawGravityCells(gameState.gravityMap, gameState.resolution)
-        drawer.drawBorder(gameState.mapBorder!!)
     }
 
     private fun tickGameUnpausing(
@@ -304,6 +305,7 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
             guiController.checkScroll(event.movement, screenLocation)
         } else {
             camera.moveZoom(event.movement.y * -.001f)
+            guiController.update()
         }
     }
 
@@ -361,7 +363,7 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
     }
 
     private fun getPlayerAndMouseLocations(location: Vec2): Triple<GamePlayer, Vec2, Vec2> {
-        checkNotNull(gameState.playerOnTurn) { "No player is on turn." }
+        checkNotNull(gameState.playerOnTurn) { "No player is on turn" }
         val playerOnTurn = gameState.playerOnTurn!!
         val transformedLocation = camera.getWorldLocation(location)
         val playerLocation = playerOnTurn.vehicle!!.worldBody.position
@@ -450,7 +452,7 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
 
         MapGenerator.populateNewGameMap(gameState)
 
-        check(gameState.gamePlayers.size > 1) { "Cannot play a game with less than 2 players." }
+        check(gameState.gamePlayers.size > 1) { "Cannot play a game with less than 2 players" }
         gameState.playerOnTurn = gameState.gamePlayers.random()
     }
 

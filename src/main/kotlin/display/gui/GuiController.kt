@@ -69,7 +69,10 @@ class GuiController(private val drawer: Drawer) {
         playerList: MutableList<GamePlayer>
     ) {
         clear()
-        elements.add(GuiLabel(drawer, Vec2(0f, 250f), TextJustify.CENTER, "Select player names", .2f))
+        elements.add(GuiLabel(drawer, Vec2(0f, 250f), TextJustify.CENTER, "Select Players", .2f))
+        elements.add(GuiLabel(drawer, Vec2(-200f, 200f), TextJustify.LEFT,
+            "Press the [+] button to add more players", .12f))
+        elements.add(GuiLabel(drawer, Vec2(-200f, 180f), TextJustify.LEFT, "Use the input box to type in names", .12f))
 
         updateMainMenuSelectPlayers(playerList, onAddPlayer, onRemovePlayer)
 
@@ -99,7 +102,7 @@ class GuiController(private val drawer: Drawer) {
 
         val addPlayerButton = GuiButton(
             drawer, scale = playerButtonHalfSize, title = " + ", textSize = .3f,
-            onClick = if (players.size < 4) onAddPlayer else noOpCallback
+            onClick = if (players.size < 6) onAddPlayer else noOpCallback
         )
         val removePlayerButton = GuiButton(
             drawer, scale = playerButtonHalfSize, title = " - ", textSize = .3f,
@@ -167,10 +170,32 @@ class GuiController(private val drawer: Drawer) {
                 drawer, Vec2(710f, -340f), Vec2(250f, 200f), title = "${player.name} to pick a shield",
                 draggable = true
             )
-        shieldPickerPanel.addChild(
-            GuiButton(drawer, scale = Vec2(100f, 25f), title = "Pick one", onClick = { onClickShield(player) })
+        val shieldsList = GuiScroll(drawer, Vec2(50f, -50f), Vec2(100f, 100f)).addChildren(
+            (1..5).map {
+                GuiButton(drawer, scale = Vec2(100f, 25f), title = "Shield $it", textSize = .15f,
+                    onClick = {
+                        onClickShield(player)
+                        println("clicked [Shield $it]")
+                    })
+            }
         )
+        shieldPickerPanel.addChild(GuiLabel(drawer, Vec2(-200f, 100f), TextJustify.LEFT,
+            "Shields not yet implemented", .12f))
+        shieldPickerPanel.addChild(shieldsList)
+
         elements.add(shieldPickerPanel)
+
+        listOf(
+            GuiLabel(drawer, title = "Right-click drag to move the camera", textSize = .12f),
+            GuiLabel(drawer, title = "Mouse scroll to zoom the camera", textSize = .12f),
+            GuiLabel(drawer, title = "Double-click on a planet to camera-track it", textSize = .12f),
+            GuiLabel(drawer, title = "Left-click drag on a panel to move it", textSize = .12f),
+            GuiLabel(drawer, title = "Destroy all opponents to win the round", textSize = .12f)
+        ).also { labels ->
+            setElementsInRows(labels, centered = false)
+            labels.forEach { it.addOffset(Vec2(70f, -360f)) }
+            elements.addAll(labels)
+        }
     }
 
     fun createPlayerCommandPanel(
@@ -205,12 +230,13 @@ class GuiController(private val drawer: Drawer) {
                     + listOf(
                 GuiLabel(drawer, Vec2(-210f, 110f), TextJustify.LEFT, getPlayerAimAngleDisplay(player), .15f,
                     updateCallback = { it.title = getPlayerAimAngleDisplay(player) }),
+                GuiIcon(drawer, Vec2(-230f, 110f), vectorUnit.mul(20f), texture = TextureEnum.icon_aim),
+
                 GuiLabel(drawer, Vec2(-210f, 80f), TextJustify.LEFT, getPlayerAimPowerDisplay(player), .15f,
                     updateCallback = { it.title = getPlayerAimPowerDisplay(player) }),
 
-                weaponsList,
-
-                GuiIcon(drawer, Vec2(-230f, 110f), vectorUnit.mul(20f), texture = TextureEnum.icon_aim)
+                GuiLabel(drawer, Vec2(-80f, 70f), TextJustify.LEFT, "Weapons not yet implemented", .12f),
+                weaponsList
             )
                     + listOf(
                 GuiLabel(drawer, statsOffset.clone(), TextJustify.LEFT,
@@ -222,6 +248,9 @@ class GuiController(private val drawer: Drawer) {
             ).also { setElementsInRows(it, centered = false) }
         )
         elements.add(commandPanel)
+
+        elements.add(GuiLabel(drawer, Vec2(-130f, -500f),
+            title = "When setting aim/power, hover the mouse cursor near your vehicle", textSize = .12f))
     }
 
     private fun getPlayerAimPowerDisplay(player: GamePlayer): String =

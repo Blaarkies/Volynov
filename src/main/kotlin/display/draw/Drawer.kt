@@ -47,7 +47,7 @@ class Drawer(val renderer: Renderer) {
         //            Color(0f, 1f, 1f, 1f), Color(0f, 1f, 1f, 0.0f)
         //        ).toFloatArray()
 
-        textures.getTexture(TextureEnum.white_pixel).bind()
+        //        textures.getTexture(TextureEnum.white_pixel).bind()
         //        renderer.drawStrip(data)
 
         renderer.drawText(freeBody.id, freeBody.worldBody.position, vectorUnit, Color.WHITE, TextJustify.LEFT)
@@ -91,7 +91,7 @@ class Drawer(val renderer: Renderer) {
 
     fun drawGravityCells(gravityMap: HashMap<CellLocation, GravityCell>, resolution: Float) {
         textures.getTexture(TextureEnum.white_pixel).bind()
-        val maxMass = gravityMap.maxBy { (_, cell) -> cell.totalMass }!!.value.totalMass
+        val maxMass = gravityMap.maxBy { (_, cell) -> cell.totalMass }?.value?.totalMass ?: .001f
         val scale = 0.707106781f * resolution
         gravityMap.forEach { (key, cell) ->
             val data = BasicShapes.polygon4.chunked(2)

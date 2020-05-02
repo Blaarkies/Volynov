@@ -113,7 +113,7 @@ object Gravity {
     fun getVelocityToOrbitParent(location: Vec2, direction: Float, parent: Planet): Vec2 {
         val distance = parent.worldBody.position.add(location.negate()).length()
         val speed = sqrt(
-            G * parent.worldBody.mass * ((2f / distance) - (1 / distance))
+            G * parent.worldBody.mass * ((2f / distance) - (1f / distance))
         )
 
         return makeVec2Circle(direction).mul(speed)
