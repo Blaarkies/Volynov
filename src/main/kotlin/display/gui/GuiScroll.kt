@@ -46,10 +46,10 @@ class GuiScroll(
         super.render(snipRegion)
 
         childElements.filter {
-            it.offset.add(it.scale.negate()).y < offset.add(scale).y
-                    && it.offset.add(it.scale).y > offset.add(scale.negate()).y
+            it.offset.sub(it.scale).y < offset.add(scale).y
+                    && it.offset.add(it.scale).y > offset.sub(scale).y
         }
-            .forEach { it.render(SnipRegion(offset.add(scale.negate()), scale.mul(2f))) }
+            .forEach { it.render(SnipRegion(offset.sub(scale), scale.mul(2f))) }
     }
 
     override fun update() {

@@ -94,8 +94,8 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
             cp == GamePhases.PLAYERS_TURN_FIRED && isTransitioning -> tickGameUnpausing(quickStartTime)
             cp == GamePhases.PLAYERS_TURN_FIRED -> handlePlayerShot()
             cp == GamePhases.PLAYERS_TURN_FIRED_ENDS_EARLY -> handlePlayerShotEndsEarly()
-            cp == GamePhases.PLAYERS_TURN_AIMING -> return
-            cp == GamePhases.PLAYERS_TURN_POWERING -> return
+            cp == GamePhases.PLAYERS_TURN_AIMING -> guiController.update()
+            cp == GamePhases.PLAYERS_TURN_POWERING -> guiController.update()
             cp == GamePhases.END_ROUND && isTransitioning -> tickGamePausing(outroDuration, endSpeed = .1f)
             cp == GamePhases.END_ROUND -> gameState.tickClock(timeStep * .1f, velocityIterations, positionIterations)
 

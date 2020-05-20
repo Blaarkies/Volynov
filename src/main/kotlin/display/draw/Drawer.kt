@@ -150,7 +150,7 @@ class Drawer(val renderer: Renderer) {
             }.toFloatArray()
 
         renderer.drawShape(data, offset, 0f, scale, useCamera = false,
-            snipRegion = SnipRegion(offset.add(scale.negate()), scale.mul(2f)))
+            snipRegion = SnipRegion(offset.sub(scale), scale.mul(2f)))
     }
 
     fun drawPlayerAimingPointer(player: GamePlayer) {
