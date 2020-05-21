@@ -31,6 +31,10 @@ object BasicShapes {
 
     val verticalLine = listOf(0f, 1f, 0f, -1f)
 
+    val squareHouse = polygon4.chunked(2)
+        .let { it.subList(0, 1) + listOf(listOf(0f, 1.05f)) + it.subList(1, 4) }
+        .flatten()
+
     private fun getPolygonVertices(corners: Int, rotate: Double = 1f.div(corners).toDouble()): List<Float> =
         (0 until corners).flatMap {
             val t = 2 * PI * (it / corners.toFloat()) + PI * rotate

@@ -7,6 +7,8 @@ import display.graphic.Color
 import display.graphic.SnipRegion
 import display.gui.GuiController.Companion.setElementsInRows
 import org.jbox2d.common.Vec2
+import utility.PidController
+import kotlin.math.absoluteValue
 
 class GuiScroll(
     drawer: Drawer,
@@ -20,6 +22,9 @@ class GuiScroll(
     private val childElementOffsets = HashMap<GuiElement, Vec2>()
 
     private var scrollBarPosition = 0f
+    private var scrollBarPositionTarget = scrollBarPosition
+    private val scrollController = PidController(-.06f, -.0001f, -.08f)
+
     private var scrollBarMin: Float = 0f
     private var scrollBarMax: Float = 0f
 
@@ -41,13 +46,21 @@ class GuiScroll(
         super.render(snipRegion)
 
         childElements.filter {
-            it.offset.add(it.scale.negate()).y < offset.add(scale).y
-                    && it.offset.add(it.scale).y > offset.add(scale.negate()).y
+            it.offset.sub(it.scale).y < offset.add(scale).y
+                    && it.offset.add(it.scale).y > offset.sub(scale).y
         }
-            .forEach { it.render(SnipRegion(offset.add(scale.negate()), scale.mul(2f))) }
+            .forEach { it.render(SnipRegion(offset.sub(scale), scale.mul(2f))) }
     }
 
-    override fun update() = childElements.forEach { it.update() }
+    override fun update() {
+        if (scrollBarPosition.minus(scrollBarPositionTarget).absoluteValue > .1f) {
+            val movement = scrollController.getReaction(scrollBarPosition, scrollBarPositionTarget)
+            scrollBarPosition = (scrollBarPosition + movement).coerceIn(scrollBarMin, scrollBarMax)
+            calculateNewOffsets()
+        }
+
+        childElements.forEach { it.update() }
+    }
 
     override fun addOffset(newOffset: Vec2) {
         addOffset(this, newOffset)
@@ -85,12 +98,11 @@ class GuiScroll(
     override fun handleScroll(location: Vec2, movement: Vec2) {
         if (isHover(location)) {
             addScrollBarPosition(movement.y)
-            calculateNewOffsets()
         }
     }
 
     private fun addScrollBarPosition(movement: Float) {
-        scrollBarPosition = (scrollBarPosition + movement * 10f).coerceIn(scrollBarMin, scrollBarMax)
+        scrollBarPositionTarget = (scrollBarPositionTarget + movement * scale.y * 1.8f).coerceIn(scrollBarMin, scrollBarMax)
     }
 
     private fun updateScrollBarRange() {

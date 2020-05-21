@@ -64,7 +64,7 @@ open class GuiElement(
             snipRegion)
 
         fun calculateElementRegion(element: GuiElement) {
-            element.bottomLeft = element.offset.add(element.scale.negate())
+            element.bottomLeft = element.offset.sub(element.scale)
             element.topRight = element.offset.add(element.scale)
         }
 

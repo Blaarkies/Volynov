@@ -8,17 +8,21 @@ class PidControllerVec2(private val kp: Float = .3f,
 
     private var proportional = Vec2()
     private var integral = Vec2()
-    private var derivative = Vec2()
 
     fun getReaction(sensor: Vec2, target: Vec2): Vec2 {
         val lastProportional = proportional.clone()
 
-        proportional = target.negate().add(sensor)
+        proportional = sensor.sub(target)
         integral.addLocal(proportional)
-        derivative = lastProportional.negate().add(proportional)
+        val derivative = proportional.sub(lastProportional)
 
 
         return proportional.mul(kp).add(integral.mul(ki)).add(derivative.mul(kd))
+    }
+
+    fun reset() {
+        proportional.setZero()
+        integral.setZero()
     }
 
 }

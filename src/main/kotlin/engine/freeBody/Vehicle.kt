@@ -5,7 +5,6 @@ import display.draw.TextureEnum
 import display.graphic.BasicShapes
 import display.graphic.Color
 import engine.GameState
-import engine.motion.Director
 import engine.shields.VehicleShield
 import game.GamePlayer
 import org.jbox2d.collision.shapes.PolygonShape
@@ -128,16 +127,18 @@ class Vehicle(
         gameState.activeCallbacks.add {
             knock(warheadMass * warheadVelocity.length(), angle + PI.toFloat())
 
-            Particle("1", gameState.particles, gameState.world, worldBody, warheadLocation, .3f, 250f)
+            Particle("1", gameState.particles, gameState.world, worldBody, warheadLocation, .3f, 250f,
+                createdAt = gameState.tickTime)
 
             Warhead("1", gameState.warheads,
-                gameState.world, player, warheadLocation.x, warheadLocation.y, angle,
+                gameState.world, player, warheadLocation.x, warheadLocation.y, angle + 1.5f * PI.toFloat(),
                 warheadVelocity.x, warheadVelocity.y, 0f,
                 warheadMass, warheadRadius, .1f, .1f,
                 onCollision = { self, impacted ->
-                    (self as Warhead).detonate(gameState.world, gameState.warheads, gameState.particles,
-                        gameState.vehicles, gameState.gravityBodies, impacted)
-                }
+                    (self as Warhead).detonate(gameState.world, gameState.tickTime, gameState.warheads,
+                        gameState.particles, gameState.vehicles, gameState.gravityBodies, impacted)
+                },
+                createdAt = gameState.tickTime
             ).also { callback(it) }
         }
 

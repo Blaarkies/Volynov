@@ -19,6 +19,10 @@ open class FreeBody(val id: String, var radius: Float) {
         worldBody.applyLinearImpulse(makeVec2Circle(direction).mul(momentum / 9.81f), worldBody.position)
     }
 
+    fun twist(momentum: Float) {
+        worldBody.applyAngularImpulse(momentum / 9.81f)
+    }
+
     companion object {
 
         fun createWorldBody(

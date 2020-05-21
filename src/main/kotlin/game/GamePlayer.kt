@@ -18,17 +18,19 @@ class GamePlayer(
     private val scoreConstant = 10f
     private val cashConstant = 40f
     private val maxStyleConstant = 7.5f
-
     private val selfHarmConstant = -.5f
 
-    fun scoreDamage(warhead: Warhead, totalDamage: Float, vehicle: Vehicle) {
+    fun scoreDamage(warhead: Warhead,
+                    totalDamage: Float,
+                    vehicle: Vehicle,
+                    tickTime: Float) {
         val selfHarmMultiplier = when (vehicle) {
             this.vehicle -> selfHarmConstant
             else -> 1f
         }
         val noAgeBonusTimeConstant = 2000f
 
-        val age = warhead.ageTime
+        val age = warhead.getAgeTime(tickTime)
             .minus(noAgeBonusTimeConstant)
             .coerceAtLeast(0f)
             .div(warhead.selfDestructTime - noAgeBonusTimeConstant)

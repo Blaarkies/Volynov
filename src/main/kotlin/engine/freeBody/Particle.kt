@@ -3,6 +3,7 @@ package engine.freeBody
 import display.draw.TextureConfig
 import display.draw.TextureEnum
 import display.graphic.BasicShapes
+import display.graphic.Color
 import org.jbox2d.collision.shapes.CircleShape
 import org.jbox2d.common.Vec2
 import org.jbox2d.dynamics.Body
@@ -16,15 +17,11 @@ class Particle(val id: String,
                impacted: Body,
                location: Vec2,
                var radius: Float = 2f,
-               private val duration: Float = 1000f) {
+               private val duration: Float = 1000f,
+               val texture: TextureEnum = TextureEnum.white_pixel,
+               val color: Color = Color.WHITE,
+               val createdAt: Float) {
 
-    private val currentTime
-        get() = System.currentTimeMillis()
-
-    private val ageTime
-        get() = (currentTime - createdAt)
-
-    private val createdAt = currentTime
     val worldBody: Body
     private var fullRadius = radius
     val textureConfig: TextureConfig
@@ -38,13 +35,14 @@ class Particle(val id: String,
             velocity.x, velocity.y, 0f)
         worldBody = world.createBody(bodyDef)
 
-        textureConfig = TextureConfig(TextureEnum.white_pixel, chunkedVertices = BasicShapes.polygon30.chunked(2))
-                .updateGpuBufferData()
+        textureConfig = TextureConfig(texture, chunkedVertices = BasicShapes.polygon30.chunked(2), color = color)
+            .updateGpuBufferData()
 
         particles.add(this)
     }
 
-    fun update(particles: MutableList<Particle>) {
+    fun update(tickTime: Float, particles: MutableList<Particle>) {
+        val ageTime = getAgeTime(tickTime)
         if (ageTime > duration) {
             particles.remove(this)
             return
@@ -53,5 +51,7 @@ class Particle(val id: String,
         val scale = Common.getTimingFunctionEaseOut(ageTime / duration)
         radius = fullRadius * scale
     }
+
+    private fun getAgeTime(tickTime: Float) = tickTime - createdAt
 
 }
