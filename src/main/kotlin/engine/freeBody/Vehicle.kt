@@ -5,7 +5,6 @@ import display.draw.TextureEnum
 import display.graphic.BasicShapes
 import display.graphic.Color
 import engine.GameState
-import engine.motion.Director
 import engine.shields.VehicleShield
 import game.GamePlayer
 import org.jbox2d.collision.shapes.PolygonShape
@@ -131,7 +130,7 @@ class Vehicle(
             Particle("1", gameState.particles, gameState.world, worldBody, warheadLocation, .3f, 250f)
 
             Warhead("1", gameState.warheads,
-                gameState.world, player, warheadLocation.x, warheadLocation.y, angle,
+                gameState.world, player, warheadLocation.x, warheadLocation.y, angle + 1.5f * PI.toFloat(),
                 warheadVelocity.x, warheadVelocity.y, 0f,
                 warheadMass, warheadRadius, .1f, .1f,
                 onCollision = { self, impacted ->

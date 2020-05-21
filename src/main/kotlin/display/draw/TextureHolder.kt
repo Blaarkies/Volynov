@@ -16,6 +16,7 @@ class TextureHolder {
         hMap[TextureEnum.stars_2k] = Texture.loadTexture("./textures/stars_2k.png")
         hMap[TextureEnum.icon_aim] = Texture.loadTexture("./textures/icon_aim.png")
         hMap[TextureEnum.danger] = Texture.loadTexture("./textures/danger.png")
+        hMap[TextureEnum.rcs_puff] = Texture.loadTexture("./textures/rcs_puff.png")
     }
 
     fun getTexture(texture: TextureEnum): Texture = textureHashMap[texture].let {

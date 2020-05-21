@@ -8,5 +8,6 @@ enum class TextureEnum {
     white_pixel,
     stars_2k,
     icon_aim,
-    danger
+    danger,
+    rcs_puff
 }

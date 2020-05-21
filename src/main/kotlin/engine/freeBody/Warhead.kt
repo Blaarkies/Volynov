@@ -13,6 +13,10 @@ import org.jbox2d.dynamics.Body
 import org.jbox2d.dynamics.BodyType
 import org.jbox2d.dynamics.World
 import utility.Common
+import utility.PidController
+import kotlin.math.PI
+import kotlin.math.absoluteValue
+import kotlin.math.sqrt
 
 class Warhead(
     id: String,
@@ -37,7 +41,8 @@ class Warhead(
     init {
         val shapeBox = PolygonShape()
         val vertices = BasicShapes.polygon4.chunked(2)
-            .map { Vec2(it[0] * radius * 2f, it[1] * radius) }
+            .let { it.subList(0, 1) + listOf(listOf(0f, 1.1f)) + it.subList(1, 4) }
+            .map { Vec2(it[0] * radius, it[1] * radius * 2f) }
             .toTypedArray()
         shapeBox.set(vertices, vertices.size)
 
@@ -133,15 +138,46 @@ class Warhead(
             }
     }
 
+    var fuel = 5f
+    var count = 0f
+    private val angleController = PidController(-.7f, -.01f, -.6f)
+
     fun update(world: World,
                warheads: MutableList<Warhead>,
                particles: MutableList<Particle>,
                vehicles: MutableList<Vehicle>,
                gravityBodies: List<FreeBody>) {
+        count++
+        if (fuel > 0f && count.rem(20) == 0f) rotateTowardsVelocity(world, particles)
+
         if (ageTime > selfDestructTime || isOutOfGravityField) {
             detonate(world, warheads, particles, vehicles, gravityBodies)
         }
         updateLastGravityForce()
+    }
+
+    private fun rotateTowardsVelocity(world: World,
+                                      particles: MutableList<Particle>) {
+        val a = worldBody.linearVelocity.clone().also { it.normalize() }
+        val b = Common.makeVec2Circle(worldBody.angle)
+
+        val dotProduct = a.x * b.x + a.y * b.y
+
+        val reaction = angleController.getReaction(dotProduct, 0f)
+
+        twist(reaction)
+        val reactionSize = reaction.absoluteValue
+        fuel = (fuel - reactionSize).coerceAtLeast(0f)
+
+        if (reactionSize > .03f) {
+            val scaledReaction = reactionSize * 3f
+            val side = if (reaction < 0f) PI.toFloat() else 0f
+            val location = worldBody.position
+                .add(Common.makeVec2Circle(worldBody.angle - side).mul(sqrt(scaledReaction) * .4f))
+            particles.add(Particle("puff", particles, world, worldBody, location,
+                sqrt(scaledReaction), scaledReaction * 100f + 100f,
+                TextureEnum.rcs_puff, Color.WHITE.setAlpha(.3f)))
+        }
     }
 
 }

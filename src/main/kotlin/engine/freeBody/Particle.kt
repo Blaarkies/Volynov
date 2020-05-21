@@ -3,6 +3,7 @@ package engine.freeBody
 import display.draw.TextureConfig
 import display.draw.TextureEnum
 import display.graphic.BasicShapes
+import display.graphic.Color
 import org.jbox2d.collision.shapes.CircleShape
 import org.jbox2d.common.Vec2
 import org.jbox2d.dynamics.Body
@@ -16,7 +17,9 @@ class Particle(val id: String,
                impacted: Body,
                location: Vec2,
                var radius: Float = 2f,
-               private val duration: Float = 1000f) {
+               private val duration: Float = 1000f,
+               val texture: TextureEnum = TextureEnum.white_pixel,
+               val color: Color = Color.WHITE) {
 
     private val currentTime
         get() = System.currentTimeMillis()
@@ -38,7 +41,7 @@ class Particle(val id: String,
             velocity.x, velocity.y, 0f)
         worldBody = world.createBody(bodyDef)
 
-        textureConfig = TextureConfig(TextureEnum.white_pixel, chunkedVertices = BasicShapes.polygon30.chunked(2))
+        textureConfig = TextureConfig(texture, chunkedVertices = BasicShapes.polygon30.chunked(2), color = color)
                 .updateGpuBufferData()
 
         particles.add(this)
