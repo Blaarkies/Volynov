@@ -33,16 +33,16 @@ class Warhead(
     radius: Float = .7F,
     restitution: Float = .3f,
     friction: Float = .6f,
-    onCollision: (FreeBody, Body?) -> Unit
+    onCollision: (FreeBody, Body?) -> Unit,
+    val createdAt: Float
 ) : FreeBody(id, radius) {
 
     val freeBodyCallback = FreeBodyCallback(this, onCollision)
 
     init {
         val shapeBox = PolygonShape()
-        val vertices = BasicShapes.polygon4.chunked(2)
-            .let { it.subList(0, 1) + listOf(listOf(0f, 1.1f)) + it.subList(1, 4) }
-            .map { Vec2(it[0] * radius, it[1] * radius * 2f) }
+        val vertices = BasicShapes.squareHouse.chunked(2)
+            .map { Vec2(it[0] * radius, it[1] * radius * 1.5f) }
             .toTypedArray()
         shapeBox.set(vertices, vertices.size)
 
@@ -60,40 +60,26 @@ class Warhead(
         warheads.add(this)
     }
 
-    private val currentTime
-        get() = System.currentTimeMillis()
-
-    val ageTime
-        get() = (currentTime - createdAt)
-
-    private val createdAt = currentTime
     val selfDestructTime = 45000f
-    // TODO: player in current aiming phase could just wait out this time if they wanted to
-    // also influences score
+    private var lastUpdatedAt = createdAt
+    private val updateInterval = 333f
 
-    val damage = 50f
-    val energy = 50f
-
-    var lastGravityForce: Float = 0f
-    val isOutOfGravityField: Boolean
-        get() {
-            val nowGravityForce = worldBody.m_force.length()
-            return false //nowGravityForce < 0.02f
-        }
-
-    fun updateLastGravityForce() {
-        lastGravityForce = worldBody.m_force.length()
-    }
+    private val damage = 50f
+    private val energy = 50f
+    private var fuel = 5f
+    private val angleController = PidController(-.3f, .01f, -.2f)
 
     fun detonate(world: World,
+                 tickTime: Float,
                  warheads: MutableList<Warhead>,
                  particles: MutableList<Particle>,
                  vehicles: MutableList<Vehicle>,
                  gravityBodies: List<FreeBody>,
                  impacted: Body? = null) {
-        val particle = Particle("1", particles, world, impacted ?: worldBody, worldBody.position, 2f, 1000f)
+        val particle = Particle("1", particles, world, impacted ?: worldBody, worldBody.position, 2f, 1000f,
+            createdAt = tickTime)
 
-        checkToDamageVehicles(world, vehicles, particle)
+        checkToDamageVehicles(world, tickTime, vehicles, particle)
         knockFreeBodies(gravityBodies, particle)
 
         world.destroyBody(worldBody)
@@ -115,6 +101,7 @@ class Warhead(
     }
 
     private fun checkToDamageVehicles(world: World,
+                                      tickTime: Float,
                                       vehicles: MutableList<Vehicle>,
                                       particle: Particle) {
         vehicles.toList().map {
@@ -127,7 +114,7 @@ class Warhead(
                     .let { Common.getTimingFunctionEaseOut(it) }
                 val totalDamage = damageUnit * damage
                 vehicle.hitPoints -= totalDamage
-                firedBy.scoreDamage(this, totalDamage, vehicle)
+                firedBy.scoreDamage(this, totalDamage, vehicle, tickTime)
 
                 if (vehicle.hitPoints <= 0) {
                     firedBy.scoreKill(vehicle)
@@ -138,25 +125,31 @@ class Warhead(
             }
     }
 
-    var fuel = 5f
-    var count = 0f
-    private val angleController = PidController(-.7f, -.01f, -.6f)
-
     fun update(world: World,
+               tickTime: Float,
                warheads: MutableList<Warhead>,
                particles: MutableList<Particle>,
                vehicles: MutableList<Vehicle>,
                gravityBodies: List<FreeBody>) {
-        count++
-        if (fuel > 0f && count.rem(20) == 0f) rotateTowardsVelocity(world, particles)
+        if (getRestTime(tickTime) > updateInterval) {
+            lastUpdatedAt = tickTime
 
-        if (ageTime > selfDestructTime || isOutOfGravityField) {
-            detonate(world, warheads, particles, vehicles, gravityBodies)
+            if (fuel > 0f) {
+                rotateTowardsVelocity(world, tickTime, particles)
+            }
+
+            if (getAgeTime(tickTime) > selfDestructTime) {
+                detonate(world, tickTime, warheads, particles, vehicles, gravityBodies)
+            }
         }
-        updateLastGravityForce()
     }
 
+    private fun getRestTime(tickTime: Float) = tickTime - lastUpdatedAt
+
+    fun getAgeTime(tickTime: Float) = tickTime - createdAt
+
     private fun rotateTowardsVelocity(world: World,
+                                      tickTime: Float,
                                       particles: MutableList<Particle>) {
         val a = worldBody.linearVelocity.clone().also { it.normalize() }
         val b = Common.makeVec2Circle(worldBody.angle)
@@ -174,9 +167,11 @@ class Warhead(
             val side = if (reaction < 0f) PI.toFloat() else 0f
             val location = worldBody.position
                 .add(Common.makeVec2Circle(worldBody.angle - side).mul(sqrt(scaledReaction) * .4f))
-            particles.add(Particle("puff", particles, world, worldBody, location,
-                sqrt(scaledReaction), scaledReaction * 100f + 100f,
-                TextureEnum.rcs_puff, Color.WHITE.setAlpha(.3f)))
+
+            particles.add(
+                Particle("puff", particles, world, worldBody, location,
+                    sqrt(scaledReaction), scaledReaction * 100f + 100f,
+                    TextureEnum.rcs_puff, Color.WHITE.setAlpha(.3f), tickTime))
         }
     }
 

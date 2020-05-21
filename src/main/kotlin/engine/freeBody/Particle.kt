@@ -19,15 +19,9 @@ class Particle(val id: String,
                var radius: Float = 2f,
                private val duration: Float = 1000f,
                val texture: TextureEnum = TextureEnum.white_pixel,
-               val color: Color = Color.WHITE) {
+               val color: Color = Color.WHITE,
+               val createdAt: Float) {
 
-    private val currentTime
-        get() = System.currentTimeMillis()
-
-    private val ageTime
-        get() = (currentTime - createdAt)
-
-    private val createdAt = currentTime
     val worldBody: Body
     private var fullRadius = radius
     val textureConfig: TextureConfig
@@ -42,12 +36,13 @@ class Particle(val id: String,
         worldBody = world.createBody(bodyDef)
 
         textureConfig = TextureConfig(texture, chunkedVertices = BasicShapes.polygon30.chunked(2), color = color)
-                .updateGpuBufferData()
+            .updateGpuBufferData()
 
         particles.add(this)
     }
 
-    fun update(particles: MutableList<Particle>) {
+    fun update(tickTime: Float, particles: MutableList<Particle>) {
+        val ageTime = getAgeTime(tickTime)
         if (ageTime > duration) {
             particles.remove(this)
             return
@@ -56,5 +51,7 @@ class Particle(val id: String,
         val scale = Common.getTimingFunctionEaseOut(ageTime / duration)
         radius = fullRadius * scale
     }
+
+    private fun getAgeTime(tickTime: Float) = tickTime - createdAt
 
 }

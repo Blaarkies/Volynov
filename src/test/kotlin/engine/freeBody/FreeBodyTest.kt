@@ -93,19 +93,22 @@ internal class FreeBodyTest {
 
         val particles = mutableListOf<Particle>()
         val warheads = mutableListOf<Warhead>()
+        val tickTime = 0f
         Warhead("dud", warheads, world, player, 1f, -1f, 0f, 0f, 0f, 0f, 1f, .1f,
             onCollision = { self, impacted ->
-                (self as Warhead).detonate(world, warheads, particles, vehicles, gravityBodies, impacted)
-            })
+                (self as Warhead).detonate(world, tickTime, warheads, particles, vehicles, gravityBodies, impacted)
+            },
+            createdAt = tickTime)
 
         val boom = Warhead("boom", warheads, world, player, 0f, 0f, 0f, 0f, 0f, 0f, 1f, .1f,
             onCollision = { self, impacted ->
-                (self as Warhead).detonate(world, warheads, particles, vehicles, gravityBodies, impacted)
-            })
+                (self as Warhead).detonate(world, tickTime, warheads, particles, vehicles, gravityBodies, impacted)
+            },
+            createdAt = tickTime)
 
         gravityBodies.addAll(planets + vehicles + warheads)
 
-        (boom.worldBody.userData as FreeBodyCallback).callback(boom, boom.worldBody)
+        boom.freeBodyCallback.callback(boom, boom.worldBody)
         world.step(timeStep, velocityIterations, positionIterations)
 
         gravityBodies.forEach {

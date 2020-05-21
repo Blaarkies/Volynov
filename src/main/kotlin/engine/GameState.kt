@@ -23,6 +23,7 @@ class GameState {
     lateinit var camera: CameraView
 
     var world = World(Vec2())
+    var tickTime = 0f
     val vehicles = mutableListOf<Vehicle>()
     val planets = mutableListOf<Planet>()
     val warheads = mutableListOf<Warhead>()
@@ -59,6 +60,7 @@ class GameState {
         positionIterations: Int
     ) {
         world.step(timeStep, velocityIterations, positionIterations)
+        tickTime += timeStep * 1000f
 
         activeCallbacks.forEach { it() }
         activeCallbacks.clear()
@@ -78,17 +80,18 @@ class GameState {
     }
 
     private fun tickParticles() {
-        particles.toList().forEach { it.update(particles) }
+        particles.toList().forEach { it.update(tickTime, particles) }
     }
 
     private fun tickWarheads() {
-        warheads.toList().forEach { it.update(world, warheads, particles, vehicles, gravityBodies) }
+        warheads.toList().forEach { it.update(world, tickTime, warheads, particles, vehicles, gravityBodies) }
     }
 
     fun reset() {
         gamePlayers.clear()
         camera.reset()
         world = World(Vec2())
+        tickTime = 0f
         vehicles.clear()
         planets.clear()
 
