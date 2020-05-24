@@ -12,7 +12,6 @@ import engine.physics.LocationVelocity
 import org.jbox2d.common.MathUtils.ceil
 import org.jbox2d.common.Vec2
 import org.jbox2d.dynamics.World
-import utility.Common.getRandomDirection
 import utility.Common.getRandomMixed
 import utility.Common.getRandomSign
 import utility.Common.makeVec2Circle
@@ -30,7 +29,7 @@ object MapGenerator {
         val orbitalLevels = (1..gameState.gamePlayers.size).map { OrbitalLevel(it, it) }
         val moons = (1..ceil(gameState.gamePlayers.size * .7f)).map {
             val (x, y, h, dx, dy, dh) = getSafeOrbitLocationVelocity(orbitalLevels, planet)
-            Planet("luna $it", gameState.planets, gameState.world, x, y, h, dx, dy, dh, 70f, 1.25f,
+            Planet("luna $it", gameState.planets, gameState.world, x, y, h, dx, dy, dh, 110f, 1.25f,
                 texture = TextureEnum.full_moon)
         }
 
@@ -58,7 +57,7 @@ object MapGenerator {
 
         val largestOrbitRadius =
             gameState.planets.map { Director.getDistance(planet.worldBody, it.worldBody) }.max() ?: planet.radius
-        gameState.mapBorder = MapBorder(planet.worldBody, gameState.world, largestOrbitRadius)
+        gameState.mapBorder = MapBorder(planet, gameState.world, largestOrbitRadius)
     }
 
     private fun getSafeOrbitLocationVelocity(orbitalLevels: List<OrbitalLevel>, parent: Planet): LocationVelocity {

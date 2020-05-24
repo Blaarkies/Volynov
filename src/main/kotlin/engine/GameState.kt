@@ -98,6 +98,38 @@ class GameState {
         world.setContactListener(GameContactListener(this))
     }
 
+    fun clone(): GameState {
+        return GameState().also {
+            it.world = World(Vec2())
+            it.world.setContactListener(GameContactListener(it))
+            it.gamePlayers.addAll(gamePlayers.map { oldPlayer -> cloneGamePlayer(oldPlayer) })
+            it.playerOnTurn = it.gamePlayers.find { newPlayer -> newPlayer.name == playerOnTurn?.name }
+            it.camera = camera
+            vehicles.forEach { oldVehicle ->
+                cloneVehicle(oldVehicle, it.vehicles, it.world,
+                    gamePlayers.find { oldPlayer -> oldPlayer.vehicle == oldVehicle }!!.name
+                        .let { oldName ->
+                            it.gamePlayers.find { newPlayer -> newPlayer.name == oldName }!!
+                        }
+                )
+            }
+            planets.forEach { planet -> clonePlanet(planet, it.planets, it.world) }
+            warheads.forEach { warhead ->
+                cloneWarhead(warhead, it.warheads, it.world,
+                    gamePlayers.find { oldPlayer -> oldPlayer.warheads.contains(warhead) }!!.name
+                        .let { oldName ->
+                            it.gamePlayers.find { newPlayer -> newPlayer.name == oldName }!!
+                        },
+                    it
+                )
+            }
+            //            it.particles = mutableListOf<Particle>()
+            it.mapBorder = cloneMapBorder(mapBorder!!,
+                planets.find { planet -> planet.id == mapBorder!!.mapCenterBody.id }!!,
+                it.world)
+        }
+    }
+
     companion object {
 
         fun getContactBodies(contactEdge: ContactEdge): Sequence<Body> = sequence {
@@ -119,6 +151,55 @@ class GameState {
                 currentContact = currentContact.next
             }
         }
+
+        fun cloneGamePlayer(it: GamePlayer): GamePlayer =
+            GamePlayer(it.name, it.type, null, PlayerAim(it.playerAim.angle, it.playerAim.power), 0f, 0f)
+
+        fun cloneVehicle(it: Vehicle,
+                         vehicles: MutableList<Vehicle>,
+                         world: World,
+                         player: GamePlayer): Vehicle {
+            val body = it.worldBody
+            return Vehicle(vehicles, world, player,
+                body.position.x, body.position.y, body.angle,
+                body.linearVelocity.x, body.linearVelocity.y, body.angularVelocity,
+                body.mass, it.radius,
+                body.fixtureList.restitution, body.fixtureList.friction,
+                it.textureConfig.texture, it.textureConfig.color)
+        }
+
+        fun clonePlanet(it: Planet,
+                        planets: MutableList<Planet>,
+                        world: World): Planet {
+            val body = it.worldBody
+            return Planet(it.id, planets, world,
+                body.position.x, body.position.y, body.angle,
+                body.linearVelocity.x, body.linearVelocity.y, body.angularVelocity,
+                body.mass, it.radius,
+                body.fixtureList.restitution, body.fixtureList.friction,
+                it.textureConfig.texture)
+        }
+
+        fun cloneWarhead(it: Warhead,
+                         warheads: MutableList<Warhead>,
+                         world: World,
+                         firedBy: GamePlayer,
+                         gameState: GameState): Warhead {
+            val body = it.worldBody
+            return Warhead(it.id, warheads, world, firedBy,
+                body.position.x, body.position.y, body.angle,
+                body.linearVelocity.x, body.linearVelocity.y, body.angularVelocity,
+                body.mass, it.radius,
+                body.fixtureList.restitution, body.fixtureList.friction,
+                onCollision = { self, impacted ->
+                    (self as Warhead).detonate(gameState.world, gameState.tickTime, gameState.warheads,
+                        gameState.particles, gameState.vehicles, gameState.gravityBodies, impacted)
+                },
+                createdAt = it.createdAt)
+        }
+
+        fun cloneMapBorder(it: MapBorder, mapCenterBody: FreeBody, world: World): MapBorder =
+            MapBorder(mapCenterBody, world, it.radius)
 
     }
 }

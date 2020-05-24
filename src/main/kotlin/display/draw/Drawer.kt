@@ -12,10 +12,12 @@ import engine.freeBody.Vehicle
 import engine.physics.CellLocation
 import engine.physics.GravityCell
 import game.GamePlayer
+import game.TrajectoryPrediction
 import org.jbox2d.common.Vec2
 import utility.Common.makeVec2
 import utility.Common.makeVec2Circle
 import utility.Common.vectorUnit
+import utility.toList
 import java.util.*
 import kotlin.math.sqrt
 
@@ -184,6 +186,57 @@ class Drawer(val renderer: Renderer) {
         )
     }
 
+    fun drawWarheadTrajectory(prediction: TrajectoryPrediction) {
+        val color = Color("#A0505080")
+        prediction.nearbyFreeBodies.forEach {
+//            it.textureConfig = TextureConfig(TextureEnum.white_pixel, chunkedVertices = it.textureConfig.chunkedVertices, color = color)
+            it.textureConfig.color = color
+            it.textureConfig.updateGpuBufferData()
+            drawFreeBody(it)
+        }
+
+        val locations = prediction.warheadPath
+        val maxDistance = 15f
+        val interpolationStep = prediction.totalDistance.div(maxDistance).coerceIn(0f, 1f)
+
+        val endColor = Color.TRANSPARENT //.WHITE.setAlpha(1f - interpolationStep)
+        val startColor = Color.WHITE.setAlpha(.5f)
+        val endWidth = .2f //2f * interpolationStep
+        val startWidth = .2f //.05f
+        val data = getLine(locations.flatMap { it.toList() }, endColor, startColor, endWidth, startWidth)
+
+        val newData = data.toList().chunked(9)
+            .withIndex()
+            .flatMap { (index, vertex) ->
+                listOf(
+                    vertex[0],
+                    vertex[1],
+                    vertex[2],
+                    vertex[3],
+                    vertex[4],
+                    vertex[5],
+                    vertex[6],
+                    if (index.rem(2) == 0) 1f else 0f,
+                    (index.div(2) + if (index.rem(2) < 2) 1f else 0f)*3f
+                )
+            }.toFloatArray()
+
+//            .chunked(2)
+//            .withIndex()
+//            .flatMap { (index, chunk) ->
+//                val interpolationDistance = index.toFloat() / pointsLastIndex
+//                val color = startColor * interpolationDistance + endColor * (1f - interpolationDistance)
+//                listOf(
+//                    chunk[0], chunk[1], 0f, /* pos*/
+//                    color.red, color.green, color.blue, color.alpha, /* color*/
+//                    0f, 0f /* texture*/
+//                )
+//            }
+
+        textures.getTexture(TextureEnum.white_dot).bind()
+        renderer.drawStrip(newData)
+    }
+
     companion object {
 
         fun getColoredData(
@@ -215,6 +268,9 @@ class Drawer(val renderer: Renderer) {
             endWidth: Float = startWidth,
             wrapAround: Boolean = false
         ): FloatArray {
+            if (points.size < 3) {
+                return floatArrayOf()
+            }
             val triangleStripPoints = BasicShapes.getLineTriangleStrip(points, startWidth, endWidth, wrapAround)
             return getColoredData(triangleStripPoints, startColor, endColor).toFloatArray()
         }
