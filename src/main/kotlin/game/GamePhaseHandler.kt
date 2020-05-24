@@ -78,7 +78,8 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
                 val a = PublishSubject.create<TrajectoryPrediction>()
 
                 thread {
-                    a.onNext(getNewPrediction())
+                    a.onNext(GameState.getNewPrediction(15f, .75f, gameState, velocityIterations,
+                        positionIterations, timeStep, latestPrediction))
                     a.onComplete()
                 }
                 a
@@ -135,10 +136,12 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
             GamePhases.PLAYERS_TURN_AIMING -> {
                 drawWorldAndGui()
                 drawer.drawPlayerAimingPointer(gameState.playerOnTurn!!)
+                drawer.drawWarheadTrajectory(latestPrediction)
             }
             GamePhases.PLAYERS_TURN_POWERING -> {
                 drawWorldAndGui()
                 drawer.drawPlayerAimingPointer(gameState.playerOnTurn!!)
+                drawer.drawWarheadTrajectory(latestPrediction)
             }
             GamePhases.END_ROUND -> drawWorldAndGui()
             else -> drawPlayPhase()
@@ -146,13 +149,13 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
 
         val debugColor = Color.GREEN.setAlpha(.7f)
         drawer.renderer.drawText(
-            "Animating: ${isTransitioning.toString().padEnd(5, ' ')} ${currentPhase.name}",
+            "${if (isTransitioning) "Active" else "Idle  "} / Phase ${currentPhase.name}",
             Vec2(5f - camera.windowWidth * .5f, -10f + camera.windowHeight * .5f),
             vectorUnit.mul(0.1f), debugColor, TextJustify.LEFT, false
         )
 
         drawer.renderer.drawText(
-            "${elapsedTime.div(100f).roundToInt().div(10f)} s",
+            "GameTime ${gameState.tickTime.div(100f).roundToInt().div(10f)}s / PhaseTime ${elapsedTime.div(100f).roundToInt().div(10f)}s",
             Vec2(5f - camera.windowWidth * .5f, -30f + camera.windowHeight * .5f),
             vectorUnit.mul(0.1f), debugColor, TextJustify.LEFT, false
         )
@@ -281,7 +284,6 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
         allFreeBodies.forEach { drawer.drawFreeBody(it) }
         //        allFreeBodies.forEach { drawDebugForces(it) }
         //        drawer.drawGravityCells(gameState.gravityMap, gameState.resolution)
-        drawer.drawWarheadTrajectory(latestPrediction)
     }
 
     private fun tickGameUnpausing(
@@ -387,52 +389,6 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
 
                 playerAimChanged.onNext(true)
             }
-        }
-    }
-
-    private fun getNewPrediction(): TrajectoryPrediction {
-        val accuracy = 1f
-        val maxDistance = 15f
-
-        val timeStamp = currentTime
-        val clonedState = gameState.clone()
-        val player = clonedState.playerOnTurn!!
-        player.vehicle?.fireWarhead(clonedState, player, "") {}
-
-        val errorScale = 2f / accuracy
-        clonedState.tickClock(timeStep * errorScale, velocityIterations, 2)
-        val predictionWarhead = player.warheads.last()
-        var totalDistance = 0f
-
-        return sequence<Vec2> {
-            var lastLocation: Vec2? = null
-
-
-            repeat(200.times(accuracy).toInt().coerceAtLeast(1)) {
-                if (totalDistance > maxDistance
-                    || clonedState.warheads.isEmpty()
-                    || clonedState.warheads.last() != predictionWarhead
-                    || timeStamp < latestPrediction.timeStamp) {
-                    return@sequence
-                }
-                val location = predictionWarhead.worldBody.position.clone()
-                yield(location)
-
-                totalDistance += lastLocation?.sub(location)?.length() ?: 0f
-                lastLocation = location
-                clonedState.tickClock(timeStep * errorScale, velocityIterations, 2)
-            }
-        }.windowed(1, 4.times(accuracy).toInt().coerceAtLeast(1)).flatten()
-            .toList().let {
-                val lastLocation = it.last()
-                val nearbyFreeBodies = clonedState.gravityBodies
-                    .filter { body ->
-                        body !is Vehicle
-                                && body !is Warhead
-                                && body.worldBody.position.sub(lastLocation).length()
-                            .minus(body.radius) < 7f
-            }
-                TrajectoryPrediction(timeStamp, it, totalDistance, nearbyFreeBodies)
         }
     }
 

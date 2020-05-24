@@ -6,8 +6,12 @@ enum class TextureEnum {
     metal,
     pavement,
     white_pixel,
+    white_dot,
     stars_2k,
     icon_aim,
     danger,
-    rcs_puff
+    rcs_puff,
+    white_dot_50_pad,
+    white_dot_100_pad,
+    debug_square
 }

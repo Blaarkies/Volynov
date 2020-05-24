@@ -27,6 +27,9 @@ class Color {
         getIntToFloat(alpha)
     )
 
+    /**
+     * HEX color value requires format #rrggbbaa
+     */
     constructor(hexValue: String) {
         val (red, green, blue, alpha) = hexValue.dropWhile { it == '#' }.chunked(2)
         this.red = getHexToFloat(red)

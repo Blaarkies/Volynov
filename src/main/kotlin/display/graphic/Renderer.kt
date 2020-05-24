@@ -146,7 +146,7 @@ class Renderer {
     private fun setupShaderProgram() {
         vao = VertexArrayObject().bind()
         vbo = VertexBufferObject().bind(GL_ARRAY_BUFFER)
-        vertices = MemoryUtil.memAllocFloat(4096)
+        vertices = MemoryUtil.memAllocFloat(4096 * 2)
         /* Upload null data to allocate storage for the VBO */
         val size = (vertices.capacity() * java.lang.Float.BYTES).toLong()
         vbo.uploadData(GL_ARRAY_BUFFER, size, GL_DYNAMIC_DRAW)
@@ -179,7 +179,6 @@ class Renderer {
         val gameCamera = cameraView.getRenderCamera()
         val guiCamera = Matrix4f()
         glDisable(GL_SCISSOR_TEST)
-
 
         val model = Matrix4f.translate(offset.x, offset.y, z)
             .multiply(Matrix4f.rotate(h * Common.radianToDegree, 0f, 0f, 1f))

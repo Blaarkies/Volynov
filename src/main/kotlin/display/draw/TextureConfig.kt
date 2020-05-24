@@ -10,7 +10,7 @@ class TextureConfig(
     val offset: Vec2 = Vec2(),
     var chunkedVertices: List<List<Float>> = listOf(),
     var gpuBufferData: FloatArray = floatArrayOf(),
-    val color: Color = Color.WHITE
+    var color: Color = Color.WHITE
 ) {
 
     fun updateGpuBufferData(): TextureConfig {

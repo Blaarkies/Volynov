@@ -14,7 +14,7 @@ import java.lang.NullPointerException
 import kotlin.math.hypot
 import java.awt.Color as AwtColor
 
-class Font constructor(font: Font = Font(MONOSPACED, BOLD, 32), antiAlias: Boolean = true) {
+class Font(font: Font = Font(MONOSPACED, BOLD, 32), antiAlias: Boolean = true) {
 
     private val glyphs: MutableMap<Char, Glyph>
     private var fontBitMapShadow: Texture = Texture()
@@ -214,7 +214,7 @@ class Font constructor(font: Font = Font(MONOSPACED, BOLD, 32), antiAlias: Boole
             TextJustify.RIGHT -> Vec2()
         }
 
-        var x = 0f//glyphs[0].width * scale.x
+        var x = 0f //glyphs[0].width * scale.x
         var y = 0f
         glyphs.forEach {
             x += it.width * scale.x
