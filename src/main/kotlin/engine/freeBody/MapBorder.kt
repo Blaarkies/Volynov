@@ -12,7 +12,7 @@ import org.jbox2d.dynamics.World
 import utility.Common.makeVec2
 import utility.PidControllerVec2
 
-class MapBorder(private val mapCenterBody: Body, world: World, radius: Float) {
+class MapBorder(val mapCenterBody: FreeBody, world: World, val radius: Float) {
 
     var worldBody: Body
     var textureConfig: TextureConfig
@@ -20,7 +20,7 @@ class MapBorder(private val mapCenterBody: Body, world: World, radius: Float) {
 
     init {
         val bodyDef = FreeBody.createBodyDef(BodyType.DYNAMIC,
-            mapCenterBody.position.x, mapCenterBody.position.y, 0f, 0f, 0f, 0f)
+            mapCenterBody.worldBody.position.x, mapCenterBody.worldBody.position.y, 0f, 0f, 0f, 0f)
         worldBody = world.createBody(bodyDef)
         worldBody.userData = this
 
@@ -59,7 +59,7 @@ class MapBorder(private val mapCenterBody: Body, world: World, radius: Float) {
     }
 
     fun update() {
-        movementController.getReaction(mapCenterBody.position, worldBody.position)
+        movementController.getReaction(mapCenterBody.worldBody.position, worldBody.position)
             .also { worldBody.applyLinearImpulse(it.mul(worldBody.mass), worldBody.position) }
     }
 }

@@ -12,10 +12,13 @@ import engine.freeBody.Vehicle
 import engine.physics.CellLocation
 import engine.physics.GravityCell
 import game.GamePlayer
+import game.TrajectoryPrediction
 import org.jbox2d.common.Vec2
+import utility.Common.getTimingFunctionEaseIn
 import utility.Common.makeVec2
 import utility.Common.makeVec2Circle
 import utility.Common.vectorUnit
+import utility.toList
 import java.util.*
 import kotlin.math.sqrt
 
@@ -65,7 +68,7 @@ class Drawer(val renderer: Renderer) {
 
     fun drawTrail(freeBody: FreeBody) {
         val position = freeBody.worldBody.position
-        val linePoints = (freeBody.motion.trailers + listOf(position.x, position.y))
+        val linePoints = (listOf(position.x, position.y) + freeBody.motion.trailers.chunked(2).reversed().flatten())
         if (linePoints.size < 4) {
             return
         }
@@ -166,8 +169,8 @@ class Drawer(val renderer: Renderer) {
         )
         val triangleStripPoints = BasicShapes.getLineTriangleStrip(linePoints, .2f)
         val arrowHeadPoints = BasicShapes.getArrowHeadPoints(linePoints, .5f)
-        val data = getColoredData(
-            triangleStripPoints + arrowHeadPoints, Color.RED.setAlpha(.5f), Color.RED.setAlpha(.1f)
+        val data = getColoredData(triangleStripPoints + arrowHeadPoints,
+            Color.RED.setAlpha(.1f), Color.RED.setAlpha(.5f)
         ).toFloatArray()
 
         textures.getTexture(TextureEnum.white_pixel).bind()
@@ -184,12 +187,26 @@ class Drawer(val renderer: Renderer) {
         )
     }
 
+    fun drawWarheadTrajectory(prediction: TrajectoryPrediction) {
+        val color = Color("#A0505080")
+        prediction.nearbyFreeBodies.forEach {
+            it.textureConfig.color = color
+            it.textureConfig.updateGpuBufferData()
+            drawFreeBody(it)
+        }
+
+        val data = getLineTextured(prediction.warheadPath.flatMap { it.toList() },
+            Color("#02eded99"), Color.TRANSPARENT, .4f, timingFunction = { step -> getTimingFunctionEaseIn(step) })
+
+        textures.getTexture(TextureEnum.white_dot_100_pad).bind()
+        renderer.drawStrip(data)
+    }
+
     companion object {
 
-        fun getColoredData(
-            points: List<Float>,
-            startColor: Color = Color.WHITE,
-            endColor: Color = startColor
+        fun getColoredData(points: List<Float>,
+                           startColor: Color = Color.WHITE,
+                           endColor: Color = startColor
         ): List<Float> {
             val pointsLastIndex = points.lastIndex.toFloat() / 2f
 
@@ -198,7 +215,7 @@ class Drawer(val renderer: Renderer) {
                 .withIndex()
                 .flatMap { (index, chunk) ->
                     val interpolationDistance = index.toFloat() / pointsLastIndex
-                    val color = startColor * interpolationDistance + endColor * (1f - interpolationDistance)
+                    val color = endColor * interpolationDistance + startColor * (1f - interpolationDistance)
                     listOf(
                         chunk[0], chunk[1], 0f, /* pos*/
                         color.red, color.green, color.blue, color.alpha, /* color*/
@@ -207,16 +224,81 @@ class Drawer(val renderer: Renderer) {
                 }
         }
 
-        fun getLine(
-            points: List<Float>,
-            startColor: Color = Color.WHITE,
-            endColor: Color = startColor,
-            startWidth: Float = 1f,
-            endWidth: Float = startWidth,
-            wrapAround: Boolean = false
+        fun getTexturedData(points: List<Float>,
+                            basePoints: List<Float>,
+                            startColor: Color = Color.WHITE,
+                            endColor: Color = startColor,
+                            startWidth: Float,
+                            endWidth: Float,
+                            timingFunction: (Float) -> Float
+        ): List<Float> {
+            val pointsLastIndex = points.lastIndex.toFloat() / 2f
+
+            var lastDistance = 0f
+            return points
+                .chunked(2)
+                .withIndex()
+                .zip(
+                    basePoints.chunked(2)
+                        .map { (x, y) -> Vec2(x, y) }
+                        .windowed(2)
+                        .map { (a, b) -> a.sub(b).length() }
+                        .let { listOf(0f) + it }
+                        .flatMap { listOf(it, it) })
+                .flatMap { (strip, distance) ->
+                    val (index, location) = strip
+
+                    val progress = index.toFloat().div(pointsLastIndex).let { timingFunction(it) }
+                    val inverseProgress = 1f - progress
+                    val color = endColor * progress + startColor * inverseProgress
+
+                    val isLeftHandVertex = index.rem(2) == 0
+                    val textureX = if (isLeftHandVertex) 0f else 1f
+
+                    val scale = .5f
+                    val distanceScale = (scale / endWidth) * progress + (scale / startWidth) * inverseProgress
+
+                    if (isLeftHandVertex) {
+                        lastDistance += distance
+                    }
+                    val textureY = lastDistance * distanceScale
+
+                    listOf(
+                        location[0], location[1], 0f, /* pos*/
+                        color.red, color.green, color.blue, color.alpha, /* color*/
+                        textureX, textureY /* texture*/
+                    )
+                }
+        }
+
+        fun getLine(points: List<Float>,
+                    startColor: Color = Color.WHITE,
+                    endColor: Color = startColor,
+                    startWidth: Float = 1f,
+                    endWidth: Float = startWidth,
+                    wrapAround: Boolean = false
         ): FloatArray {
+            if (points.size < 3) {
+                return floatArrayOf()
+            }
             val triangleStripPoints = BasicShapes.getLineTriangleStrip(points, startWidth, endWidth, wrapAround)
             return getColoredData(triangleStripPoints, startColor, endColor).toFloatArray()
+        }
+
+        fun getLineTextured(points: List<Float>,
+                            startColor: Color = Color.WHITE,
+                            endColor: Color = startColor,
+                            startWidth: Float = 1f,
+                            endWidth: Float = startWidth,
+                            wrapAround: Boolean = false,
+                            timingFunction: (Float) -> Float): FloatArray {
+            if (points.size < 3) {
+                return floatArrayOf()
+            }
+            val triangleStripPoints = BasicShapes.getLineTriangleStrip(points, startWidth, endWidth, wrapAround)
+            return getTexturedData(triangleStripPoints, points, startColor, endColor, startWidth, endWidth,
+                timingFunction = timingFunction)
+                .toFloatArray()
         }
 
     }

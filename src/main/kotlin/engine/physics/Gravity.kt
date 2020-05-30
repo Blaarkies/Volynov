@@ -6,7 +6,6 @@ import engine.motion.Director.getDirection
 import engine.motion.Director.getDistance
 import kotlinx.coroutines.*
 import org.jbox2d.common.Vec2
-import utility.Common
 import utility.Common.makeVec2Circle
 import java.util.concurrent.ForkJoinPool
 import kotlin.math.cos

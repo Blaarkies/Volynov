@@ -7,6 +7,8 @@ import engine.physics.CellLocation
 import engine.physics.Gravity
 import engine.physics.GravityCell
 import game.GamePlayer
+import game.PlayerAim
+import game.TrajectoryPrediction
 import input.CameraView
 import org.jbox2d.common.Vec2
 import org.jbox2d.dynamics.Body
@@ -54,11 +56,7 @@ class GameState {
             }
     }
 
-    fun tickClock(
-        timeStep: Float,
-        velocityIterations: Int,
-        positionIterations: Int
-    ) {
+    fun tickClock(timeStep: Float, velocityIterations: Int, positionIterations: Int) {
         world.step(timeStep, velocityIterations, positionIterations)
         tickTime += timeStep * 1000f
 
@@ -98,6 +96,38 @@ class GameState {
         world.setContactListener(GameContactListener(this))
     }
 
+    fun clone(): GameState {
+        return GameState().also {
+            it.world = World(Vec2())
+            it.world.setContactListener(GameContactListener(it))
+            it.gamePlayers.addAll(gamePlayers.map { oldPlayer -> cloneGamePlayer(oldPlayer) })
+            it.playerOnTurn = it.gamePlayers.find { newPlayer -> newPlayer.name == playerOnTurn?.name }
+            it.camera = camera
+            vehicles.forEach { oldVehicle ->
+                cloneVehicle(oldVehicle, it.vehicles, it.world,
+                    gamePlayers.find { oldPlayer -> oldPlayer.vehicle == oldVehicle }!!.name
+                        .let { oldName ->
+                            it.gamePlayers.find { newPlayer -> newPlayer.name == oldName }!!
+                        }
+                )
+            }
+            planets.forEach { planet -> clonePlanet(planet, it.planets, it.world) }
+            warheads.forEach { warhead ->
+                cloneWarhead(warhead, it.warheads, it.world,
+                    gamePlayers.find { oldPlayer -> oldPlayer.warheads.contains(warhead) }!!.name
+                        .let { oldName ->
+                            it.gamePlayers.find { newPlayer -> newPlayer.name == oldName }!!
+                        },
+                    it
+                )
+            }
+            //            it.particles = mutableListOf<Particle>()
+            it.mapBorder = cloneMapBorder(mapBorder!!,
+                planets.find { planet -> planet.id == mapBorder!!.mapCenterBody.id }!!,
+                it.world)
+        }
+    }
+
     companion object {
 
         fun getContactBodies(contactEdge: ContactEdge): Sequence<Body> = sequence {
@@ -118,6 +148,107 @@ class GameState {
                 yield(currentContact.contact)
                 currentContact = currentContact.next
             }
+        }
+
+        fun cloneGamePlayer(it: GamePlayer): GamePlayer =
+            GamePlayer(it.name, it.type, null, PlayerAim(it.playerAim.angle, it.playerAim.power), 0f, 0f)
+
+        fun cloneVehicle(it: Vehicle,
+                         vehicles: MutableList<Vehicle>,
+                         world: World,
+                         player: GamePlayer): Vehicle {
+            val body = it.worldBody
+            return Vehicle(vehicles, world, player,
+                body.position.x, body.position.y, body.angle,
+                body.linearVelocity.x, body.linearVelocity.y, body.angularVelocity,
+                body.mass, it.radius,
+                body.fixtureList.restitution, body.fixtureList.friction,
+                it.textureConfig.texture, it.textureConfig.color)
+        }
+
+        fun clonePlanet(it: Planet,
+                        planets: MutableList<Planet>,
+                        world: World): Planet {
+            val body = it.worldBody
+            return Planet(it.id, planets, world,
+                body.position.x, body.position.y, body.angle,
+                body.linearVelocity.x, body.linearVelocity.y, body.angularVelocity,
+                body.mass, it.radius,
+                body.fixtureList.restitution, body.fixtureList.friction,
+                it.textureConfig.texture)
+        }
+
+        fun cloneWarhead(it: Warhead,
+                         warheads: MutableList<Warhead>,
+                         world: World,
+                         firedBy: GamePlayer,
+                         gameState: GameState): Warhead {
+            val body = it.worldBody
+            return Warhead(it.id, warheads, world, firedBy,
+                body.position.x, body.position.y, body.angle,
+                body.linearVelocity.x, body.linearVelocity.y, body.angularVelocity,
+                body.mass, it.radius,
+                body.fixtureList.restitution, body.fixtureList.friction,
+                onCollision = { self, impacted ->
+                    (self as Warhead).detonate(gameState.world, gameState.tickTime, gameState.warheads,
+                        gameState.particles, gameState.vehicles, gameState.gravityBodies, impacted)
+                },
+                createdAt = it.createdAt)
+        }
+
+        fun cloneMapBorder(it: MapBorder, mapCenterBody: FreeBody, world: World): MapBorder =
+            MapBorder(mapCenterBody, world, it.radius)
+
+        fun getNewPrediction(maxDistance: Float,
+                             accuracy: Float,
+                             parentGameState: GameState,
+                             parentVelocityIterations: Int,
+                             parentPositionIterations: Int,
+                             parentTimeStep: Float,
+                             lastPrediction: TrajectoryPrediction): TrajectoryPrediction {
+            val timeStamp = System.currentTimeMillis()
+            val clonedState = parentGameState.clone()
+            val player = clonedState.playerOnTurn!!
+            player.vehicle?.fireWarhead(clonedState, player, "") {}
+
+            val errorScale = 1f / accuracy
+            val predictionVelocityIterations = parentVelocityIterations.times(accuracy).toInt().coerceAtLeast(1)
+            val predictionPositionIterations = parentPositionIterations.times(accuracy).toInt().coerceAtLeast(1)
+            clonedState.tickClock(parentTimeStep * errorScale, predictionVelocityIterations,
+                predictionPositionIterations)
+            val predictionWarhead = player.warheads.last()
+            var totalDistance = 0f
+
+            return sequence<Vec2> {
+                var lastLocation: Vec2? = null
+
+                repeat(400.times(accuracy).toInt().coerceAtLeast(1)) {
+                    if (totalDistance > maxDistance
+                        || clonedState.warheads.isEmpty()
+                        || clonedState.warheads.last() != predictionWarhead
+                        || timeStamp < lastPrediction.timeStamp) {
+                        return@sequence
+                    }
+                    val location = predictionWarhead.worldBody.position.clone()
+                    yield(location)
+
+                    totalDistance += lastLocation?.sub(location)?.length() ?: 0f
+                    lastLocation = location
+                    clonedState.tickClock(parentTimeStep * errorScale, predictionVelocityIterations,
+                        predictionPositionIterations)
+                }
+            }.windowed(1, 4.times(accuracy).toInt().coerceAtLeast(1)).flatten()
+                .toList().let {
+                    val lastLocation = it.last()
+                    val nearbyFreeBodies = clonedState.gravityBodies
+                        .filter { body ->
+                            body !is Vehicle
+                                    && body !is Warhead
+                                    && body.worldBody.position.sub(lastLocation).length()
+                                .minus(body.radius) < 7f
+                        }
+                    TrajectoryPrediction(timeStamp, it, totalDistance, nearbyFreeBodies)
+                }
         }
 
     }

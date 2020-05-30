@@ -4,7 +4,6 @@ import TestConstants.positionIterations
 import TestConstants.timeStep
 import TestConstants.velocityIterations
 import display.draw.TextureEnum
-import engine.FreeBodyCallback
 import engine.physics.Gravity
 import game.GamePlayer
 import org.jbox2d.common.Vec2

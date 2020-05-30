@@ -10,12 +10,17 @@ import display.graphic.Color
 import display.gui.GuiController
 import display.text.TextJustify
 import engine.GameState
+import engine.freeBody.Vehicle
+import engine.freeBody.Warhead
 import engine.motion.Director
 import engine.shields.VehicleShield
+import io.reactivex.subjects.PublishSubject
 import org.jbox2d.common.Vec2
 import utility.Common.getTimingFunctionEaseIn
 import utility.Common.getTimingFunctionEaseOut
 import utility.Common.vectorUnit
+import java.util.concurrent.TimeUnit
+import kotlin.concurrent.thread
 import kotlin.math.roundToInt
 
 class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
@@ -43,6 +48,10 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
         get() = guiController.textInputIsBusy()
     private lateinit var exitCallback: () -> Unit
 
+    var latestPrediction = TrajectoryPrediction(currentTime)
+    var playerAimChanged = PublishSubject.create<Boolean>()
+    private val unsubscribe = PublishSubject.create<Boolean>()
+
     fun init(window: Window) {
         exitCallback = { window.exit() }
         when (0) {
@@ -62,6 +71,21 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
             }
             else -> throw Throwable("Enter a debug step number to start game")
         }
+
+        playerAimChanged.takeUntil(unsubscribe)
+            .sample(33, TimeUnit.MILLISECONDS)
+            .flatMap {
+                val a = PublishSubject.create<TrajectoryPrediction>()
+
+                thread {
+                    a.onNext(GameState.getNewPrediction(15f, .75f, gameState, velocityIterations,
+                        positionIterations, timeStep, latestPrediction))
+                    a.onComplete()
+                }
+                a
+            }
+            .filter { latestPrediction.timeStamp < it.timeStamp }
+            .subscribe { latestPrediction = it }
     }
 
     private fun startTransition() {
@@ -112,10 +136,12 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
             GamePhases.PLAYERS_TURN_AIMING -> {
                 drawWorldAndGui()
                 drawer.drawPlayerAimingPointer(gameState.playerOnTurn!!)
+                drawer.drawWarheadTrajectory(latestPrediction)
             }
             GamePhases.PLAYERS_TURN_POWERING -> {
                 drawWorldAndGui()
                 drawer.drawPlayerAimingPointer(gameState.playerOnTurn!!)
+                drawer.drawWarheadTrajectory(latestPrediction)
             }
             GamePhases.END_ROUND -> drawWorldAndGui()
             else -> drawPlayPhase()
@@ -123,13 +149,13 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
 
         val debugColor = Color.GREEN.setAlpha(.7f)
         drawer.renderer.drawText(
-            "Animating: ${isTransitioning.toString().padEnd(5, ' ')} ${currentPhase.name}",
+            "${if (isTransitioning) "Active" else "Idle  "} / Phase ${currentPhase.name}",
             Vec2(5f - camera.windowWidth * .5f, -10f + camera.windowHeight * .5f),
             vectorUnit.mul(0.1f), debugColor, TextJustify.LEFT, false
         )
 
         drawer.renderer.drawText(
-            "${elapsedTime.div(100f).roundToInt().div(10f)} s",
+            "GameTime ${gameState.tickTime.div(100f).roundToInt().div(10f)}s / PhaseTime ${elapsedTime.div(100f).roundToInt().div(10f)}s",
             Vec2(5f - camera.windowWidth * .5f, -30f + camera.windowHeight * .5f),
             vectorUnit.mul(0.1f), debugColor, TextJustify.LEFT, false
         )
@@ -350,6 +376,8 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
                 )
                 playerOnTurn.playerAim.angle = aimDirection
                 guiController.update()
+
+                playerAimChanged.onNext(true)
             }
             currentPhase == GamePhases.PLAYERS_TURN_POWERING -> {
                 val (playerOnTurn, transformedLocation, playerLocation) = getPlayerAndMouseLocations(location)
@@ -358,6 +386,8 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
                 )
                 playerOnTurn.playerAim.power = (distance - 1f) * 10f
                 guiController.update()
+
+                playerAimChanged.onNext(true)
             }
         }
     }

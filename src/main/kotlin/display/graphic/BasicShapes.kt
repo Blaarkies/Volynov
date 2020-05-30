@@ -150,7 +150,7 @@ object BasicShapes {
                 val (ax, ay) = location
 
                 val interpolationDistance = index.toFloat() / lineSegmentsLastIndex
-                val width = startWidth * interpolationDistance + endWidth * (1f - interpolationDistance)
+                val width = endWidth * interpolationDistance + startWidth * (1f - interpolationDistance)
                 val x = width * normal.x
                 val y = width * normal.y
                 listOf(
