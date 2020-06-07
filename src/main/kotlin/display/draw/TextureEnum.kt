@@ -13,5 +13,7 @@ enum class TextureEnum {
     rcs_puff,
     white_dot_50_pad,
     white_dot_100_pad,
+    white_line_100,
+    white_line_200,
     debug_square
 }

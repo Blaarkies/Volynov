@@ -147,8 +147,7 @@ class Drawer(val renderer: Renderer) {
                 listOf(
                     it[0], it[1], 0f,
                     color.red, color.green, color.blue, color.alpha,
-                    (it[0] / 2f - 0.5f),
-                    (it[1] / 2f - 0.5f)
+                    (it[0] / 2f - 0.5f), (it[1] / 2f - 0.5f)
                 )
             }.toFloatArray()
 
@@ -170,7 +169,7 @@ class Drawer(val renderer: Renderer) {
         val triangleStripPoints = BasicShapes.getLineTriangleStrip(linePoints, .2f)
         val arrowHeadPoints = BasicShapes.getArrowHeadPoints(linePoints, .5f)
         val data = getColoredData(triangleStripPoints + arrowHeadPoints,
-            Color.RED.setAlpha(.1f), Color.RED.setAlpha(.5f)
+            Color.RED.setAlpha(.05f), Color.RED.setAlpha(.5f)
         ).toFloatArray()
 
         textures.getTexture(TextureEnum.white_pixel).bind()
@@ -202,6 +201,25 @@ class Drawer(val renderer: Renderer) {
         renderer.drawStrip(data)
     }
 
+    fun drawMotionPredictors(freeBody: FreeBody) {
+        val worldBody = freeBody.worldBody
+        val velocityUnitVector = worldBody.linearVelocity.clone().also { it.normalize() }
+        val startPosition = worldBody.position.add(velocityUnitVector.mul(freeBody.radius + .1f))
+        val scaledVelocity = worldBody.linearVelocity.mul(.1f)
+        val points = listOf(
+            startPosition,
+            startPosition.add(scaledVelocity.mul(.5f)),
+            startPosition.add(scaledVelocity)
+        )
+
+        val data = getLineTextured(points.flatMap { it.toList() }, Color.GREEN.setAlpha(.5f),
+            startWidth = .15f,
+            scale = 1.75f)
+
+        textures.getTexture(TextureEnum.white_line_200).bind()
+        renderer.drawStrip(data)
+    }
+
     companion object {
 
         fun getColoredData(points: List<Float>,
@@ -230,8 +248,8 @@ class Drawer(val renderer: Renderer) {
                             endColor: Color = startColor,
                             startWidth: Float,
                             endWidth: Float,
-                            timingFunction: (Float) -> Float
-        ): List<Float> {
+                            timingFunction: (Float) -> Float,
+                            textureScale: Float = 1f): List<Float> {
             val pointsLastIndex = points.lastIndex.toFloat() / 2f
 
             var lastDistance = 0f
@@ -242,7 +260,7 @@ class Drawer(val renderer: Renderer) {
                     basePoints.chunked(2)
                         .map { (x, y) -> Vec2(x, y) }
                         .windowed(2)
-                        .map { (a, b) -> a.sub(b).length() }
+                        .map { (a, b) -> a.sub(b).length() * textureScale }
                         .let { listOf(0f) + it }
                         .flatMap { listOf(it, it) })
                 .flatMap { (strip, distance) ->
@@ -291,13 +309,14 @@ class Drawer(val renderer: Renderer) {
                             startWidth: Float = 1f,
                             endWidth: Float = startWidth,
                             wrapAround: Boolean = false,
-                            timingFunction: (Float) -> Float): FloatArray {
+                            timingFunction: (Float) -> Float = { input -> input },
+                            scale: Float = 1f): FloatArray {
             if (points.size < 3) {
                 return floatArrayOf()
             }
             val triangleStripPoints = BasicShapes.getLineTriangleStrip(points, startWidth, endWidth, wrapAround)
             return getTexturedData(triangleStripPoints, points, startColor, endColor, startWidth, endWidth,
-                timingFunction = timingFunction)
+                timingFunction = timingFunction, textureScale = scale)
                 .toFloatArray()
         }
 

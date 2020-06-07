@@ -132,16 +132,17 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
             GamePhases.MAIN_MENU -> guiController.render()
             GamePhases.MAIN_MENU_SELECT_PLAYERS -> guiController.render()
             GamePhases.PLAYERS_PICK_SHIELDS -> drawWorldAndGui()
-            GamePhases.PLAYERS_TURN -> drawWorldAndGui()
+            GamePhases.PLAYERS_TURN -> {
+                drawWorldAndGui()
+                gameState.gravityBodies.forEach { drawer.drawMotionPredictors(it) }
+            }
             GamePhases.PLAYERS_TURN_AIMING -> {
                 drawWorldAndGui()
-                drawer.drawPlayerAimingPointer(gameState.playerOnTurn!!)
-                drawer.drawWarheadTrajectory(latestPrediction)
+                drawPlayerAimingGui()
             }
             GamePhases.PLAYERS_TURN_POWERING -> {
                 drawWorldAndGui()
-                drawer.drawPlayerAimingPointer(gameState.playerOnTurn!!)
-                drawer.drawWarheadTrajectory(latestPrediction)
+                drawPlayerAimingGui()
             }
             GamePhases.END_ROUND -> drawWorldAndGui()
             else -> drawPlayPhase()
@@ -159,6 +160,12 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
             Vec2(5f - camera.windowWidth * .5f, -30f + camera.windowHeight * .5f),
             vectorUnit.mul(0.1f), debugColor, TextJustify.LEFT, false
         )
+    }
+
+    private fun drawPlayerAimingGui() {
+        drawer.drawPlayerAimingPointer(gameState.playerOnTurn!!)
+        drawer.drawWarheadTrajectory(latestPrediction)
+        gameState.gravityBodies.forEach { drawer.drawMotionPredictors(it) }
     }
 
     private fun handlePlayerShotEndsEarly() {
