@@ -4,7 +4,7 @@ import display.draw.TextureConfig
 import display.draw.TextureEnum
 import display.graphic.BasicShapes
 import display.graphic.Color
-import engine.FreeBodyCallback
+import engine.gameState.GameState
 import engine.motion.Director
 import game.GamePlayer
 import org.jbox2d.collision.shapes.PolygonShape
@@ -173,6 +173,24 @@ class Warhead(
                     sqrt(scaledReaction), scaledReaction * 100f + 100f,
                     TextureEnum.rcs_puff, Color.WHITE.setAlpha(.3f), tickTime))
         }
+    }
+
+    fun clone(warheads: MutableList<Warhead>,
+              world: World,
+              firedBy: GamePlayer,
+              gameState: GameState): Warhead {
+        val body = worldBody
+        return Warhead(id, warheads, world, firedBy,
+            body.position.x, body.position.y, body.angle,
+            body.linearVelocity.x, body.linearVelocity.y, body.angularVelocity,
+            body.mass, radius,
+            body.fixtureList.restitution, body.fixtureList.friction,
+            onCollision = { self, impacted ->
+                (self as Warhead).detonate(gameState.world, gameState.tickTime,
+                    gameState.warheads,
+                    gameState.particles, gameState.vehicles, gameState.gravityBodies, impacted)
+            },
+            createdAt = createdAt)
     }
 
 }

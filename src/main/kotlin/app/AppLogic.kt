@@ -3,7 +3,7 @@ package app
 import display.Window
 import display.draw.Drawer
 import display.graphic.Renderer
-import engine.GameState
+import engine.gameState.GameState
 import game.GamePhaseHandler
 import input.InputHandler
 

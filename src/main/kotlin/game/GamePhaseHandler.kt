@@ -9,9 +9,8 @@ import display.events.MouseScrollEvent
 import display.graphic.Color
 import display.gui.GuiController
 import display.text.TextJustify
-import engine.GameState
-import engine.freeBody.Vehicle
-import engine.freeBody.Warhead
+import engine.gameState.GameState
+import engine.gameState.GameStateSimulator.getNewPrediction
 import engine.motion.Director
 import engine.shields.VehicleShield
 import io.reactivex.subjects.PublishSubject
@@ -43,7 +42,7 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
 
     private var lastPhaseTimestamp = currentTime
 
-    private val guiController = GuiController(drawer)
+    private lateinit var guiController: GuiController
     private val textInputIsBusy
         get() = guiController.textInputIsBusy()
     private lateinit var exitCallback: () -> Unit
@@ -53,6 +52,7 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
     private val unsubscribe = PublishSubject.create<Boolean>()
 
     fun init(window: Window) {
+        guiController = GuiController(drawer, window)
         exitCallback = { window.exit() }
         when (0) {
             0 -> setupMainMenu()
@@ -78,7 +78,7 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
                 val a = PublishSubject.create<TrajectoryPrediction>()
 
                 thread {
-                    a.onNext(GameState.getNewPrediction(15f, .75f, gameState, velocityIterations,
+                    a.onNext(getNewPrediction(15f, .75f, gameState, velocityIterations,
                         positionIterations, timeStep, latestPrediction))
                     a.onComplete()
                 }

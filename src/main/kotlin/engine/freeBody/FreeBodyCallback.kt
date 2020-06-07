@@ -1,6 +1,5 @@
-package engine
+package engine.freeBody
 
-import engine.freeBody.FreeBody
 import org.jbox2d.dynamics.Body
 
 class FreeBodyCallback(val freeBody: FreeBody,

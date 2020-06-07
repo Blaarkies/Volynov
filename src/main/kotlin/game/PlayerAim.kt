@@ -12,4 +12,6 @@ class PlayerAim(var angle: Float = 0f, power: Float = 100f) {
 
     fun getDegreesAngle() = (angle + Pi2) % Pi2 * radianToDegree
 
+    fun clone(): PlayerAim = PlayerAim(angle, power)
+
 }

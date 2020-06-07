@@ -2,7 +2,7 @@ package game
 
 import display.draw.TextureEnum
 import display.graphic.Color
-import engine.GameState
+import engine.gameState.GameState
 import engine.freeBody.MapBorder
 import engine.freeBody.Planet
 import engine.freeBody.Vehicle
@@ -23,8 +23,8 @@ import kotlin.math.sin
 object MapGenerator {
 
     fun populateNewGameMap(gameState: GameState) {
-        val planet = Planet("terra", gameState.planets, gameState.world, 0f, 0f, 0f, 0f, 0f, .1f * getRandomSign(),
-            1600f, 4.5f, texture = TextureEnum.marble_earth)
+        val planet = Planet("terra", gameState.planets, gameState.world, 0f, 0f, 0f, 0f, 0f, .05f * getRandomSign(),
+            3000f, 9f, texture = TextureEnum.marble_earth)
 
         val orbitalLevels = (1..gameState.gamePlayers.size).map { OrbitalLevel(it, it) }
         val moons = (1..ceil(gameState.gamePlayers.size * .7f)).map {

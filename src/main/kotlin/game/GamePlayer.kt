@@ -52,4 +52,6 @@ class GamePlayer(
         cash += (addition * cashConstant).coerceAtLeast(0f)
     }
 
+    fun clone(): GamePlayer = GamePlayer(name, type, null, playerAim.clone(), 0f, 0f)
+
 }
