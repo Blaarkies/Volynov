@@ -11,10 +11,10 @@ open class GuiElement(
     protected val drawer: Drawer,
     override var offset: Vec2,
     override val scale: Vec2 = vectorUnit,
-    override var title: String,
-    override val textSize: Float,
-    override val color: Color,
-    override val updateCallback: (GuiElement) -> Unit,
+    override var title: String = "",
+    override val textSize: Float = .15f,
+    override val color: Color = Color.WHITE,
+    override val updateCallback: (GuiElement) -> Unit = {},
     override var id: GuiElementIdentifierType = GuiElementIdentifierType.DEFAULT
 ) : GuiElementInterface {
 

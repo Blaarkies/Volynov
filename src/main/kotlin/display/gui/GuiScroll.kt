@@ -5,7 +5,7 @@ import display.draw.TextureEnum
 import display.graphic.BasicShapes
 import display.graphic.Color
 import display.graphic.SnipRegion
-import display.gui.GuiController.Companion.setElementsInRows
+import display.gui.LayoutController.setElementsInRows
 import org.jbox2d.common.Vec2
 import utility.PidController
 import kotlin.math.absoluteValue

@@ -17,7 +17,7 @@ class GuiLabel(
 ) : GuiElement(
     drawer,
     offset,
-    Vec2(title.length * 16f, textSize * 100f),
+    Vec2(title.length * textSize * 60f, textSize * 100f),
     title,
     textSize,
     color,
