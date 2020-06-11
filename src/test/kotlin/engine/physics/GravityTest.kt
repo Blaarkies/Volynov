@@ -13,7 +13,7 @@ import org.junit.jupiter.api.Test
 internal class GravityTest {
 
     @Test
-    fun direction_of_gravitational_force() {
+    fun `gravitationalForce when called, returns correct direction force`() {
         val forceUpRight = getGravityForceBetweenPlanetSatellite(-100f, -100f)
         assertTrue(forceUpRight.x > 0)
         assertTrue(forceUpRight.y > 0)
@@ -32,7 +32,7 @@ internal class GravityTest {
     }
 
     @Test
-    fun in_binary_system_the_massive_body_moves_less() {
+    fun `addGravityForces when 2 bodies orbit, then the more massive body moves less`() {
         val world = World(Vec2())
 
         val planets = mutableListOf<Planet>()

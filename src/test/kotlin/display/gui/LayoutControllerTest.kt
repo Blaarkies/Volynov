@@ -1,115 +1,62 @@
 package display.gui
 
 import display.draw.Drawer
+import display.gui.LayoutController.getOffsetForLayoutPosition
 import io.mockk.mockk
 import org.jbox2d.common.Vec2
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertDoesNotThrow
+import org.junit.jupiter.api.*
 import utility.Common.makeVec2
+import utility.toSign
 
 internal class LayoutControllerTest {
 
     val mockDrawer: Drawer = mockk()
     val baseOffset = { Vec2() }
     val baseScale = { makeVec2(1) }
+    val directions = listOf(true, false)
 
-    @Test
-    fun `setElementsInColumns when empty list, it does nothing`() {
-        assertDoesNotThrow {
-            LayoutController.setElementsInColumns(listOf())
-        }
-    }
+    private fun getDirectionName(direction: Boolean): String = if (direction) "horizontal" else "vertical"
 
-    @Test
-    fun `setElementsInColumns when list of 1, it does nothing to the guiElement`() {
-        checkListOfN(null, true, 0f, false, 0f)
-    }
-
-    @Test
-    fun `setElementsInColumns when list of 2, it moves elements correctly`() {
-        checkListOfN(null, true, 0f, false, 0f, 2f)
-    }
-
-    @Test
-    fun `setElementsInColumns when list of 3, it moves elements correctly`() {
-        checkListOfN(null, true, 0f, false, 0f, 2f, 4f)
-    }
-
-    @Test
-    fun `setElementsInColumns when list of 2 and gap, it moves elements correctly`() {
-        checkListOfN(null, true, 10f, false, 0f, 12f)
-    }
-
-    @Test
-    fun `setElementsInColumns when list of 2 and centering, it moves elements correctly`() {
-        checkListOfN(null, true, 0f, true, -1f, 1f)
-    }
-
-    @Test
-    fun `setElementsInColumns when list of 2 and gap and centering, it moves elements correctly`() {
-        checkListOfN(null, true, 10f, true, -6f, 6f)
-    }
-
-    @Test
-    fun `setElementsInColumns when list of 3 and distinct sizes, it moves elements correctly`() {
-        checkListOfN(listOf(
-            ElementConfig(scale = makeVec2(1)),
-            ElementConfig(scale = makeVec2(3)),
-            ElementConfig(scale = makeVec2(2))
-        ), true, 0f, false, 0f, 4f, 9f)
-    }
-
-    @Test
-    fun `setElementsInRows when empty list, it does nothing`() {
-        assertDoesNotThrow {
-            LayoutController.setElementsInRows(listOf())
-        }
-    }
-
-    @Test
-    fun `setElementsInRows when list of 1, it does nothing to the guiElement`() {
-        checkListOfN(null, false, 0f, false, 0f)
-    }
-
-    @Test
-    fun `setElementsInRows when list of 2, it moves elements correctly`() {
-        checkListOfN(null, false, 0f, false, 0f, -2f)
-    }
-
-    @Test
-    fun `setElementsInRows when list of 3, it moves elements correctly`() {
-        checkListOfN(null, false, 0f, false, 0f, -2f, -4f)
-    }
-
-    @Test
-    fun `setElementsInRows when list of 2 and gap, it moves elements correctly`() {
-        checkListOfN(null, false, 10f, false, 0f, -12f)
-    }
-
-    @Test
-    fun `setElementsInRows when list of 2 and centering, it moves elements correctly`() {
-        checkListOfN(null, false, 0f, true, 1f, -1f)
-    }
-
-    @Test
-    fun `setElementsInRows when list of 2 and gap and centering, it moves elements correctly`() {
-        checkListOfN(null, false, 10f, true, 6f, -6f)
-    }
-
-    @Test
-    fun `setElementsInRows when list of 3 and distinct sizes, it moves elements correctly`() {
-        checkListOfN(listOf(
-            ElementConfig(scale = makeVec2(1)),
-            ElementConfig(scale = makeVec2(3)),
-            ElementConfig(scale = makeVec2(2))
-        ), false, 0f, false, 0f, -4f, -9f)
+    @TestFactory
+    fun `setElementsInStacks`(): List<DynamicTest> {
+        return listOf(
+            DynamicTest.dynamicTest("when horizontal empty list") { LayoutController.setElementsInColumns(listOf()) },
+            DynamicTest.dynamicTest("when vertical empty list") { LayoutController.setElementsInRows(listOf()) }
+        ) + listOf(
+            SetElementsInStacksTest("list of 1, it does nothing to the guiElement",
+                null, 0f, false, 0f),
+            SetElementsInStacksTest("list of 1, it does nothing to the guiElement",
+                null, 0f, false, 0f),
+            SetElementsInStacksTest("list of 2, it moves elements correctly",
+                null, 0f, false, 0f, 2f),
+            SetElementsInStacksTest("list of 3, it moves elements correctly",
+                null, 0f, false, 0f, 2f, 4f),
+            SetElementsInStacksTest("list of 2 and gap, it moves elements correctly",
+                null, 10f, false, 0f, 12f),
+            SetElementsInStacksTest("list of 2 and centering, it moves elements correctly",
+                null, 0f, true, -1f, 1f),
+            SetElementsInStacksTest("list of 2 and gap and centering, it moves elements correctly",
+                null, 10f, true, -6f, 6f),
+            SetElementsInStacksTest("list of 3 and distinct sizes, it moves elements correctly", listOf(
+                ElementConfig(scale = makeVec2(1)),
+                ElementConfig(scale = makeVec2(3)),
+                ElementConfig(scale = makeVec2(2))
+            ), 0f, false, 0f, 4f, 9f)
+        )
+            .flatMap { config -> directions.map { Pair(config, it) } }
+            .map { (config, isHorizontal) ->
+                DynamicTest.dynamicTest("when ${getDirectionName(isHorizontal)} ${config.name}") {
+                    checkListOfN(config.elementConfigs, isHorizontal, config.gap, config.centered,
+                        config.values.map { it * isHorizontal.toSign() }.toList())
+                }
+            }
     }
 
     private fun checkListOfN(configList: List<ElementConfig>?,
                              isHorizontal: Boolean,
                              gap: Float,
                              centered: Boolean,
-                             vararg expectedValues: Float) {
+                             expectedValues: List<Float>) {
         val elements = expectedValues
             .zip(configList
                 ?: (0..expectedValues.size).map { ElementConfig() })
@@ -129,12 +76,66 @@ internal class LayoutControllerTest {
         else { vec: Vec2 -> vec.y }
 
         elements.forEach { (element, expectedValue) ->
-            assert(getMeasure(element.offset) == expectedValue)
-            { "GuiElement at ${getMeasure(element.offset)} expected to be $expectedValue" }
+            assert(getMeasure(element.offset) == expectedValue) {
+                "When stacking ${getDirectionName(isHorizontal)}, GuiElement at ${getMeasure(element.offset)} " +
+                        "expected to be $expectedValue"
+            }
         }
     }
 
     inner class ElementConfig(val offset: Vec2 = baseOffset(),
                               val scale: Vec2 = baseScale())
+
+    class SetElementsInStacksTest(val name: String,
+                                  val elementConfigs: List<ElementConfig>? = listOf(),
+                                  val gap: Float,
+                                  val centered: Boolean,
+                                  vararg expectedValues: Float) {
+
+        val values = expectedValues
+    }
+
+    @TestFactory
+    fun `getOffsetForLayoutPosition when child is smaller than parent`(): List<DynamicTest> {
+        return listOf(
+            Pair(LayoutPosition.TOP_LEFT, Vec2(-1f, 1f)),
+            Pair(LayoutPosition.TOP_RIGHT, Vec2(1f, 1f)),
+            Pair(LayoutPosition.BOTTOM_LEFT, Vec2(-1f, -1f)),
+            Pair(LayoutPosition.BOTTOM_RIGHT, Vec2(1f, -1f))
+        ).let { makeLayoutPositionTest(it, 2, 1) }
+    }
+
+    @TestFactory
+    fun `getOffsetForLayoutPosition when child is larger than parent`(): List<DynamicTest> {
+        return listOf(
+            Pair(LayoutPosition.TOP_LEFT, Vec2(1f, -1f)),
+            Pair(LayoutPosition.TOP_RIGHT, Vec2(-1f, -1f)),
+            Pair(LayoutPosition.BOTTOM_LEFT, Vec2(1f, 1f)),
+            Pair(LayoutPosition.BOTTOM_RIGHT, Vec2(-1f, 1f))
+        ).let { makeLayoutPositionTest(it, 1, 2) }
+    }
+
+    private fun makeLayoutPositionTest(testCases: List<Pair<LayoutPosition, Vec2>>,
+                                       parentRadius: Int,
+                                       kidRadius: Int): List<DynamicTest> {
+        return testCases.map { (enum, expected) ->
+            DynamicTest.dynamicTest("${enum.name} corner placement") {
+                val parentScale = makeVec2(parentRadius)
+                val kidScale = makeVec2(kidRadius)
+                val kidOffset = getOffsetForLayoutPosition(enum, parentScale, kidScale)
+                assert(kidOffset.sub(expected).length() == 0f) {
+                    "Offset $kidOffset was expected to be $expected"
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `getOffsetForLayoutPosition when parameters are bad`() {
+        assertDoesNotThrow("") {
+            val kidOffset = getOffsetForLayoutPosition(LayoutPosition.TOP_LEFT, Vec2(), Vec2())
+            assert(kidOffset.length() == 0f) { "Offset $kidOffset was expected to be (0,0)" }
+        }
+    }
 
 }

@@ -59,9 +59,11 @@ object LayoutController {
                                    parent: Vec2,
                                    child: Vec2): Vec2 {
         return when (layoutPosition) {
-            LayoutPosition.BOTTOM_RIGHT -> parent.sub(child).also { it.y *= -1f }
-            LayoutPosition.TOP_LEFT -> child.sub(parent).also { it.y *= -1f }
-        }
+            LayoutPosition.TOP_LEFT -> child.sub(parent)
+            LayoutPosition.TOP_RIGHT -> child.sub(parent).also { it.x *= -1f }
+            LayoutPosition.BOTTOM_LEFT -> child.sub(parent).also { it.y *= -1f }
+            LayoutPosition.BOTTOM_RIGHT -> parent.sub(child)
+        }.also { it.y *= -1f }
     }
 
 }

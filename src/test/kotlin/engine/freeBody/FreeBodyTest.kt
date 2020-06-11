@@ -16,14 +16,14 @@ import kotlin.math.absoluteValue
 
 internal class FreeBodyTest {
 
-    val momentum = 1f
-    val direction = PI.toFloat()
+    private val momentum = 1f
+    private val direction = PI.toFloat()
 
-    lateinit var world: World
-    lateinit var aliceVehicle: Vehicle
-    lateinit var location: Vec2
-    lateinit var velocity: Vec2
-    var rotation: Float = 0f
+    private lateinit var world: World
+    private lateinit var aliceVehicle: Vehicle
+    private lateinit var location: Vec2
+    private lateinit var velocity: Vec2
+    private var rotation: Float = 0f
 
     @BeforeEach
     fun setUp() {
@@ -38,7 +38,7 @@ internal class FreeBodyTest {
     }
 
     @Test
-    fun created_vehicle_should_not_move() {
+    fun `step when vehicles created, they do not move in idle world`() {
         listOf(location.x, location.y, velocity.x, velocity.y, rotation)
             .forEach { assertTrue(it == 0f) }
 
@@ -49,7 +49,7 @@ internal class FreeBodyTest {
     }
 
     @Test
-    fun knocked_vehicle_should_recoil() {
+    fun `knock when vehicle is knocked, it should recoil`() {
         aliceVehicle.knock(momentum, direction)
 
         world.step(timeStep, velocityIterations, positionIterations)
@@ -59,7 +59,7 @@ internal class FreeBodyTest {
     }
 
     @Test
-    fun knocked_vehicle_should_recoil_with_gravity_field() {
+    fun `knock when vehicle is knocked in a gravity field, it should recoil`() {
         val planets = mutableListOf<Planet>()
         val terra = Planet("terra", planets, world, 10f, 0f, 0f, 0f, 0f, 0f, 1600f, 4.5f,
             texture = TextureEnum.white_pixel)
@@ -80,7 +80,7 @@ internal class FreeBodyTest {
     }
 
     @Test
-    fun detonation_should_knock_nearby_bodies() {
+    fun `detonate when warhead is near other bodies, it should knock nearby bodies`() {
         val gravityBodies = mutableListOf<FreeBody>()
 
         val planets = mutableListOf<Planet>()
