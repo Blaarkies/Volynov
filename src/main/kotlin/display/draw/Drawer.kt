@@ -296,9 +296,9 @@ class Drawer(val renderer: Renderer) {
                     endWidth: Float = startWidth,
                     wrapAround: Boolean = false
         ): FloatArray {
-            if (points.size < 3) {
-                return floatArrayOf()
-            }
+//            if (points.size < 3) {
+//                return floatArrayOf()
+//            }
             val triangleStripPoints = BasicShapes.getLineTriangleStrip(points, startWidth, endWidth, wrapAround)
             return getColoredData(triangleStripPoints, startColor, endColor).toFloatArray()
         }

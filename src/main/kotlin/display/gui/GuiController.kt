@@ -1,18 +1,26 @@
 package display.gui
 
+import display.Window
 import display.draw.Drawer
 import display.draw.TextureEnum
 import display.graphic.Color
+import display.gui.LayoutController.getOffsetForLayoutPosition
+import display.gui.LayoutController.setElementsInColumns
+import display.gui.LayoutController.setElementsInRows
 import display.text.TextJustify
 import game.GamePlayer
 import input.CameraView
 import org.jbox2d.common.Vec2
+import utility.Common.makeVec2
 import utility.Common.roundFloat
 import utility.Common.vectorUnit
 import kotlin.math.ceil
 import kotlin.math.roundToInt
 
-class GuiController(private val drawer: Drawer) {
+class GuiController(private val drawer: Drawer, val window: Window) {
+
+    private val windowSize
+        get() = makeVec2(window.width, window.height)
 
     private val elements = mutableListOf<GuiElement>()
 
@@ -48,16 +56,20 @@ class GuiController(private val drawer: Drawer) {
     ) {
         clear()
         val buttonScale = Vec2(200f, 44f)
+
+        val title = GuiLabel(drawer, Vec2(0f, 300f), TextJustify.CENTER, "Volynov", .6f)
+        val newGameButton = GuiButton(drawer, scale = buttonScale, title = "New Game",
+            textSize = .27f, onClick = onClickNewGame)
+        setElementsInRows(listOf(title, newGameButton), 80f, false)
+
         val menuButtons = listOf(
-            GuiButton(drawer, scale = buttonScale, title = "New Game", textSize = .27f, onClick = onClickNewGame),
+            newGameButton,
             GuiButton(drawer, scale = buttonScale, title = "Settings", textSize = .27f, onClick = onClickSettings),
             GuiButton(drawer, scale = buttonScale, title = "Credits", textSize = .27f, onClick = {}),
-            GuiButton(drawer, scale = buttonScale, title = "Quit", textSize = .27f, onClick = onClickQuit)
-        )
-        setElementsInRows(menuButtons, 40f, false)
-        menuButtons.forEach { it.addOffset(Vec2(0f, 150f)) }
+            GuiButton(drawer, scale = buttonScale, title = "Quit", textSize = .27f, onClick = onClickQuit))
+            .also { setElementsInRows(it, 40f, false) }
 
-        elements.add(GuiLabel(drawer, Vec2(-10f, 250f), TextJustify.CENTER, "Volynov", .6f))
+        elements.add(title)
         elements.addAll(menuButtons)
     }
 
@@ -78,11 +90,14 @@ class GuiController(private val drawer: Drawer) {
 
         val actionButtonSize = Vec2(100f, 25f)
         val actionButtons = listOf(
-            GuiButton(drawer, scale = actionButtonSize, title = "Cancel", textSize = .15f, onClick = onClickCancel),
-            GuiButton(drawer, scale = actionButtonSize, title = "Start", textSize = .15f, onClick = onClickStart)
-        )
-        setElementsInColumns(actionButtons, 40f)
-        actionButtons.forEach { it.addOffset(Vec2(0f, -150f)) }
+            GuiButton(drawer, scale = actionButtonSize, title = "Cancel",
+                textSize = .15f, onClick = onClickCancel),
+            GuiButton(drawer, scale = actionButtonSize, title = "Start", textSize = .15f, onClick = onClickStart))
+            .also { buttons ->
+                setElementsInColumns(buttons, 40f)
+                buttons.forEach { it.addOffset(Vec2(0f, -150f)) }
+            }
+
         elements.addAll(actionButtons)
     }
 
@@ -97,33 +112,28 @@ class GuiController(private val drawer: Drawer) {
         val noOpCallback = {}
 
         val playerButtonSize = Vec2(50f, 50f)
-        val playerButtonHalfSize = playerButtonSize.clone()
-        playerButtonHalfSize.y = playerButtonSize.y * .5f
+        val playerButtonHalfSize = playerButtonSize.clone().also { it.y *= .5f }
 
-        val addPlayerButton = GuiButton(
-            drawer, scale = playerButtonHalfSize, title = " + ", textSize = .3f,
-            onClick = if (players.size < 6) onAddPlayer else noOpCallback
-        )
-        val removePlayerButton = GuiButton(
-            drawer, scale = playerButtonHalfSize, title = " - ", textSize = .3f,
-            onClick = if (players.size > 2) onRemovePlayer else noOpCallback
-        )
-        val addRemoveButtonsList = listOf(addPlayerButton, removePlayerButton)
-        setElementsInRows(addRemoveButtonsList)
-        val addRemoveContainer = GuiPanel(
-            drawer, scale = playerButtonSize, color = Color.TRANSPARENT,
-            draggable = false, childElements = addRemoveButtonsList.toMutableList()
-        )
+        val addPlayerButton = GuiButton(drawer, scale = playerButtonHalfSize, title = " + ", textSize = .3f,
+            onClick = if (players.size < 6) onAddPlayer else noOpCallback)
+        val removePlayerButton = GuiButton(drawer, scale = playerButtonHalfSize, title = " - ", textSize = .3f,
+            onClick = if (players.size > 2) onRemovePlayer else noOpCallback)
+        val addRemoveButtons = listOf(addPlayerButton, removePlayerButton)
+            .also { setElementsInRows(it) }
 
-        val playerButtons = players.withIndex()
-            .map { (index, player) ->
-                val playerName = if (player.name.length == 1) "" else player.name
-                GuiInput(drawer, scale = Vec2(75f, 50f), placeholder = "Player ${index + 1}",
-                    onChange = { text -> player.name = text })
-                    .setTextValue(playerName)
-            }
-            .let { listOf(addRemoveContainer) + it }
-        setElementsInColumns(playerButtons, 40f)
+        val addRemoveContainer = GuiPanel(drawer, scale = playerButtonSize, color = Color.TRANSPARENT,
+            draggable = false).also { it.addChildren(addRemoveButtons) }
+
+        val playerButtons = (listOf(addRemoveContainer) +
+                players.withIndex()
+                    .map { (index, player) ->
+                        val playerName = if (player.name.length == 1) "" else player.name
+                        GuiInput(drawer, scale = Vec2(75f, 50f), placeholder = "Player ${index + 1}",
+                            onChange = { text -> player.name = text })
+                            .setTextValue(playerName)
+                    })
+            .also { setElementsInColumns(it, 40f) }
+
         when (indexOfPlayersButtons) {
             -1 -> elements.addAll(playerButtons)
             else -> elements.addAll(indexOfPlayersButtons, playerButtons)
@@ -165,11 +175,12 @@ class GuiController(private val drawer: Drawer) {
 
     fun createPlayersPickShields(player: GamePlayer, onClickShield: (player: GamePlayer) -> Unit) {
         clear()
-        val shieldPickerPanel =
-            GuiPanel(
-                drawer, Vec2(710f, -340f), Vec2(250f, 200f), title = "${player.name} to pick a shield",
-                draggable = true
-            )
+        val shieldPickerPanel = GuiPanel(drawer, scale = Vec2(250f, 200f),
+            title = "${player.name} to pick a shield", draggable = true)
+            .also {
+                it.updateOffset(getOffsetForLayoutPosition(
+                    LayoutPosition.BOTTOM_RIGHT, windowSize.mul(.5f), it.scale))
+            }
         val shieldsList = GuiScroll(drawer, Vec2(50f, -50f), Vec2(100f, 100f)).addChildren(
             (1..5).map {
                 GuiButton(drawer, scale = Vec2(100f, 25f), title = "Shield $it", textSize = .15f,
@@ -205,48 +216,85 @@ class GuiController(private val drawer: Drawer) {
         onClickFire: (player: GamePlayer) -> Unit
     ) {
         clear()
-        val commandPanel = GuiPanel(
-            drawer, Vec2(710f, -340f), Vec2(250f, 200f),
-            title = player.name, draggable = true
-        )
-        val weaponsList = GuiScroll(drawer, Vec2(50f, -50f), Vec2(100f, 100f)).addChildren(
-            (1..5).map {
-                GuiButton(drawer, scale = Vec2(100f, 25f), title = "Boom $it", textSize = .15f,
-                    onClick = { println("clicked [Boom $it]") })
+        val commandPanel = GuiPanel(drawer, scale = Vec2(250f, 200f), title = player.name, draggable = true)
+            .also {
+                it.updateOffset(getOffsetForLayoutPosition(
+                    LayoutPosition.BOTTOM_RIGHT, windowSize.mul(.5f), it.scale))
             }
-        )
+
+        val weaponButtonWidth = 150f
+        val weaponsList = GuiScroll(drawer, scale = Vec2(weaponButtonWidth, 100f)).addChildren(
+            (1..15).map {
+                GuiButton(drawer, scale = Vec2(weaponButtonWidth, 25f), title = "Boom $it", textSize = .15f,
+                    onClick = { println("clicked [Boom $it]") })
+            })
+            .also {
+                it.updateOffset(getOffsetForLayoutPosition(LayoutPosition.BOTTOM_RIGHT, commandPanel.scale, it.scale))
+            }
+
         val actionButtonScale = Vec2(50f, 25f)
-        val actionButtonsOffset = Vec2(-100f, -50f)
-        val statsOffset = Vec2(40f, 190f)
+        val actionButtonsOffset = Vec2(-200f, -75f)
+        val actionButtons = listOf(
+            GuiButton(drawer, actionButtonsOffset.clone(), actionButtonScale, title = "Aim",
+                onClick = { onClickAim(player) }),
+            GuiButton(drawer, actionButtonsOffset.clone(), actionButtonScale, title = "Power",
+                onClick = { onClickPower(player) }),
+            GuiButton(drawer, actionButtonsOffset.clone(), actionButtonScale, title = "Fire",
+                onClick = { onClickFire(player) }))
+            .also { setElementsInRows(it, centered = false) }
+
+        val iconAim = GuiIcon(drawer, scale = vectorUnit.mul(20f), texture = TextureEnum.icon_aim_direction)
+            .also {
+                it.updateOffset(
+                    getOffsetForLayoutPosition(LayoutPosition.TOP_LEFT, commandPanel.scale, it.scale))
+            }
+        val aimingInfo = listOf(
+            iconAim,
+            GuiIcon(drawer, scale = vectorUnit.mul(20f), texture = TextureEnum.icon_aim_power))
+            .also { icons ->
+                setElementsInRows(icons, centered = false)
+                icons.forEach { it.offset.x = iconAim.offset.x }
+            }
+            .zip(listOf(
+                GuiLabel(drawer, Vec2(), TextJustify.LEFT, getPlayerAimAngleDisplay(player), .15f,
+                    updateCallback = { it.title = getPlayerAimAngleDisplay(player) }).also {
+                    it.scale.set(makeVec2(20f))
+                },
+                GuiLabel(drawer, Vec2(), TextJustify.LEFT, getPlayerAimPowerDisplay(player), .15f,
+                    updateCallback = { it.title = getPlayerAimPowerDisplay(player) }).also {
+                    it.scale.set(makeVec2(20f))
+                }
+            ))
+            .also {
+                it.forEach { (icon, label) ->
+                    label.updateOffset(icon.offset)
+                    setElementsInColumns(listOf(icon, label), centered = false)
+                }
+            }
+            .flatMap { it.toList() }
+
+        val playerStats = listOf(
+            GuiLabel(drawer, justify = TextJustify.LEFT,
+                title = "HP      ${ceil(player.vehicle!!.hitPoints).toInt()}%", textSize = .15f)
+                .also {
+                    it.scale.addLocal(50f, 0f)
+                    it.updateOffset(
+                        getOffsetForLayoutPosition(LayoutPosition.TOP_RIGHT, commandPanel.scale, it.scale))
+                },
+            GuiLabel(drawer, justify = TextJustify.LEFT,
+                title = "Energy ${ceil(player.vehicle!!.shield!!.energy).toInt()}%", textSize = .15f),
+            GuiLabel(drawer, justify = TextJustify.LEFT,
+                title = "Wealth ${player.cash.toInt()}", textSize = .15f))
+            .also { labels ->
+                setElementsInRows(labels, centered = false)
+                val align = labels.first().offset.x
+                labels.forEach { it.offset.x = align }
+            }
+
         commandPanel.addChildren(
-            listOf(
-                GuiButton(drawer, actionButtonsOffset.clone(), actionButtonScale, title = "Aim",
-                    onClick = { onClickAim(player) }),
-                GuiButton(drawer, actionButtonsOffset.clone(), actionButtonScale, title = "Power",
-                    onClick = { onClickPower(player) }),
-                GuiButton(drawer, actionButtonsOffset.clone(), actionButtonScale, title = "Fire",
-                    onClick = { onClickFire(player) })
-            ).also { setElementsInRows(it, centered = false) }
-                    + listOf(
-                GuiLabel(drawer, Vec2(-210f, 110f), TextJustify.LEFT, getPlayerAimAngleDisplay(player), .15f,
-                    updateCallback = { it.title = getPlayerAimAngleDisplay(player) }),
-                GuiIcon(drawer, Vec2(-230f, 110f), vectorUnit.mul(20f), texture = TextureEnum.icon_aim),
-
-                GuiLabel(drawer, Vec2(-210f, 80f), TextJustify.LEFT, getPlayerAimPowerDisplay(player), .15f,
-                    updateCallback = { it.title = getPlayerAimPowerDisplay(player) }),
-
-                GuiLabel(drawer, Vec2(-80f, 70f), TextJustify.LEFT, "Weapons not yet implemented", .12f),
-                weaponsList
-            )
-                    + listOf(
-                GuiLabel(drawer, statsOffset.clone(), TextJustify.LEFT,
-                    "HP      ${ceil(player.vehicle!!.hitPoints).toInt()}%", .15f),
-                GuiLabel(drawer, statsOffset.clone(), TextJustify.LEFT,
-                    "Energy ${ceil(player.vehicle!!.shield!!.energy).toInt()}%", .15f),
-                GuiLabel(drawer, statsOffset.clone(), TextJustify.LEFT,
-                    "Wealth ${player.cash.toInt()}", .15f)
-            ).also { setElementsInRows(it, centered = false) }
-        )
+            actionButtons + aimingInfo + playerStats +
+                GuiLabel(drawer, Vec2(-30f, 30f), TextJustify.LEFT, "Weapons not yet implemented", .12f) +
+                weaponsList)
         elements.add(commandPanel)
 
         elements.add(GuiLabel(drawer, Vec2(-130f, -500f),
@@ -290,37 +338,5 @@ class GuiController(private val drawer: Drawer) {
     }
 
     private fun displayNumber(value: Float, decimals: Int): String = roundFloat(value, decimals).toString()
-
-    companion object {
-
-        fun setElementsInColumns(elements: List<GuiElement>, gap: Float = 0f, centered: Boolean = true) {
-            val totalWidth = elements.map { it.scale.x * 2f }.sum() + gap * (elements.size - 1)
-            val columnSize = totalWidth / elements.size
-
-            elements.withIndex()
-                .forEach { (index, element) ->
-                    val newXOffset = when (centered) {
-                        true -> columnSize * (index - (elements.size - 1) * .5f)
-                        else -> columnSize * index + columnSize * .5f
-                    }
-                    element.addOffset(Vec2(newXOffset, element.offset.y))
-                }
-        }
-
-        fun setElementsInRows(elements: List<GuiElement>, gap: Float = 0f, centered: Boolean = true) {
-            val totalHeight = elements.map { it.scale.y * 2f }.sum() + gap * (elements.size - 1)
-            val rowSize = totalHeight / elements.size
-
-            elements.withIndex()
-                .forEach { (index, element) ->
-                    val newYOffset = when (centered) {
-                        true -> rowSize * (index - (elements.size - 1) * .5f)
-                        else -> rowSize * index + rowSize * .5f
-                    } * -1f
-                    element.addOffset(Vec2(element.offset.x, newYOffset))
-                }
-        }
-
-    }
 
 }

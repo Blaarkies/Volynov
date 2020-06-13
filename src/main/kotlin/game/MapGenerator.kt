@@ -63,7 +63,7 @@ object MapGenerator {
     private fun getSafeOrbitLocationVelocity(orbitalLevels: List<OrbitalLevel>, parent: Planet): LocationVelocity {
         val level = orbitalLevels.first { it.hasSpace }.also { it.addBody() }
 
-        val distance = (1.25f + parent.radius).times(level.index).pow(1.6f).plus(5f)
+        val distance = (1.25f + parent.radius).times(level.index).pow(1.4f).plus(5f)
         val meanLongitude = level.nowDirection
         val location = makeVec2Circle(meanLongitude).mul(distance)
 

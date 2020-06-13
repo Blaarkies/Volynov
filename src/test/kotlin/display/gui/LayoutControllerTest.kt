@@ -132,7 +132,7 @@ internal class LayoutControllerTest {
 
     @Test
     fun `getOffsetForLayoutPosition when parameters are bad`() {
-        assertDoesNotThrow("") {
+        assertDoesNotThrow {
             val kidOffset = getOffsetForLayoutPosition(LayoutPosition.TOP_LEFT, Vec2(), Vec2())
             assert(kidOffset.length() == 0f) { "Offset $kidOffset was expected to be (0,0)" }
         }

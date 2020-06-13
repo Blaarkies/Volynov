@@ -22,6 +22,7 @@ dependencies {
     implementation("org.jbox2d:jbox2d-library:2.2.1.1")
 
     testImplementation("org.junit.jupiter:junit-jupiter:5.5.2")
+    testImplementation("io.mockk:mockk:1.10.0")
 
     implementation(platform("org.lwjgl:lwjgl-bom:$lwjglVersion"))
     listOf(

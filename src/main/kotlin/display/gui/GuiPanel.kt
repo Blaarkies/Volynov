@@ -58,6 +58,11 @@ class GuiPanel(
         calculateNewOffsets()
     }
 
+    override fun updateOffset(newOffset: Vec2) {
+        updateOffset(this, newOffset)
+        calculateNewOffsets()
+    }
+
     override fun handleHover(location: Vec2) {
         if (isHover(location)) {
             super.handleHover(location)

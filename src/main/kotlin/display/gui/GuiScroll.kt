@@ -18,23 +18,33 @@ class GuiScroll(
     private val childElements: MutableList<GuiElement> = mutableListOf()
 ) : GuiElement(drawer, offset, scale, "", 0f, color, {}) {
 
-    private var scrollOutline: FloatArray
+    private var outline: FloatArray
     private val childElementOffsets = HashMap<GuiElement, Vec2>()
 
     private var scrollBarPosition = 0f
     private var scrollBarPositionTarget = scrollBarPosition
     private val scrollController = PidController(-.06f, -.0001f, -.08f)
 
-    private var scrollBarMin: Float = 0f
     private var scrollBarMax: Float = 0f
+    private var scrollBarMin: Float = 0f
+
+    private var scrollBarOutline: FloatArray
+    private var scrollBarOffset: Vec2
+    private val scrollBarWidth = 6f
 
     init {
-        val linePoints = BasicShapes.square
+        val outlinePoints = BasicShapes.square
             .chunked(2)
             .flatMap { listOf(it[0] * scale.x, it[1] * scale.y) }
-        scrollOutline = Drawer.getLine(linePoints, color, startWidth = 1f, wrapAround = true)
+        outline = Drawer.getLine(outlinePoints, color, startWidth = 1f, wrapAround = true)
 
-        childElementOffsets.putAll(childElements.map { Pair(it, it.offset.clone()) })
+        val scrollBarPoints = BasicShapes.verticalLine
+            .chunked(2)
+            .flatMap { (x, y) -> listOf(x, y * scale.y * .5f) }
+        scrollBarOutline = Drawer.getLine(scrollBarPoints, color, startWidth = scrollBarWidth)
+        scrollBarOffset = getScrollBarElementOffset()
+
+        //        childElementOffsets.putAll(childElements.map { Pair(it, it.offset.add(Vec2(-scrollBarWidth, 0f))) })
         calculateElementRegion(this)
         calculateNewOffsets()
     }
@@ -42,7 +52,8 @@ class GuiScroll(
     override fun render(snipRegion: SnipRegion?) {
         // TODO: handle nested snipRegions, if this element is inside parent scroll
         drawer.textures.getTexture(TextureEnum.white_pixel).bind()
-        drawer.renderer.drawStrip(scrollOutline, offset, useCamera = false, snipRegion = snipRegion)
+        drawer.renderer.drawStrip(outline, offset, useCamera = false, snipRegion = snipRegion)
+        drawer.renderer.drawStrip(scrollBarOutline, scrollBarOffset, useCamera = false, snipRegion = snipRegion)
         super.render(snipRegion)
 
         childElements.filter {
@@ -102,28 +113,42 @@ class GuiScroll(
     }
 
     private fun addScrollBarPosition(movement: Float) {
-        scrollBarPositionTarget = (scrollBarPositionTarget + movement * scale.y * 1.8f).coerceIn(scrollBarMin, scrollBarMax)
+        scrollBarPositionTarget =
+            (scrollBarPositionTarget + movement * scale.y * 1.8f).coerceIn(scrollBarMin, scrollBarMax)
     }
 
     private fun updateScrollBarRange() {
-        scrollBarMin = childElements.minBy { it.offset.y }
-            .let { childElementOffsets[it]!!.y + scale.y * 2 - it!!.scale.y }
         scrollBarMax = 0f
+        scrollBarMin = childElements.minBy { it.offset.y }
+            .let { childElementOffsets[it]!!.y + 2 * (scale.y - it!!.scale.y) }
     }
 
     private fun calculateNewOffsets() {
+        scrollBarOffset = getScrollBarElementOffset()
+
+        if (childElements.isEmpty()) return
+
+        val firstElementScale = childElements.first().scale.y
         childElements.forEach {
             it.updateOffset(childElementOffsets[it]!!
                 .add(offset)
-                .add(Vec2(0f, scale.y - scrollBarPosition)))
+                .add(Vec2(0f, scale.y - scrollBarPosition - firstElementScale)))
         }
     }
 
+    private fun getScrollBarElementOffset(): Vec2 {
+        val scrollBarPercentage = scrollBarPosition / scrollBarMin
+        return offset.add(Vec2(scale.x - scrollBarWidth, scale.y * (.5f - scrollBarPercentage)))
+    }
+
     fun addChildren(elements: List<GuiElement>): GuiScroll {
+        elements.forEach { it.scale.addLocal(-scrollBarWidth, 0f) }
         childElements.addAll(elements)
         setElementsInRows(childElements, centered = false)
 
-        childElementOffsets.putAll(elements.map { Pair(it, it.offset.clone()) })
+        childElementOffsets.putAll(elements.map {
+            Pair(it, it.offset.add(Vec2(-scrollBarWidth * 2f, 0f)))
+        })
         calculateNewOffsets()
         updateScrollBarRange()
         return this
