@@ -12,13 +12,14 @@ class GuiButton(
     drawer: Drawer,
     offset: Vec2 = Vec2(),
     scale: Vec2 = Vec2(200f, 50f),
-    title: String,
+    title: String = "",
     textSize: Float = .2f,
     color: Color = Color.WHITE.setAlpha(.7f),
     private val onClick: () -> Unit = {},
     updateCallback: (GuiElement) -> Unit = {}
 ) : GuiElement(drawer, offset, scale, title, textSize, color, updateCallback) {
 
+    private var isPressed = false
     private var buttonOutline: FloatArray
     private var buttonBackground: FloatArray
     private var backgroundColor = color.setAlpha(.1f)
@@ -37,32 +38,49 @@ class GuiButton(
         drawer.textures.getTexture(TextureEnum.white_pixel).bind()
 
         when (currentPhase) {
-            GuiElementPhases.HOVERED -> drawer.renderer.drawShape(buttonBackground, offset, useCamera = false,
+            GuiElementPhases.HOVER -> drawer.renderer.drawShape(buttonBackground, offset, useCamera = false,
                 snipRegion = snipRegion)
         }
 
         when (currentPhase) {
-            GuiElementPhases.CLICKED -> drawer.renderer.drawStrip(
+            GuiElementPhases.ACTIVE -> drawer.renderer.drawStrip(
                 buttonOutline,
-                offset.add(Vec2(0f, -2f)),
+                offset,
+                scale = Vec2((scale.x - 2f) / scale.x, (scale.y - 2f) / scale.y),
                 useCamera = false,
                 snipRegion = snipRegion
             )
-            else -> drawer.renderer.drawStrip(buttonOutline, offset, useCamera = false, snipRegion = snipRegion)
+            else -> drawer.renderer.drawStrip(
+                buttonOutline,
+                offset,
+                useCamera = false,
+                snipRegion = snipRegion)
         }
 
         super.render(snipRegion)
         drawLabel(drawer, this, TextJustify.CENTER, snipRegion)
     }
 
-    override fun handleLeftClick(location: Vec2) {
-        when {
-            isHover(location) -> {
-                currentPhase = GuiElementPhases.CLICKED
-                onClick()
-            }
-            else -> currentPhase = GuiElementPhases.IDLE
+    override fun handleHover(location: Vec2) {
+        if (isPressed) return
+        super.handleHover(location)
+    }
+
+    override fun handleLeftClickPress(location: Vec2) {
+        if (isHover(location)) {
+            isPressed = true
+            currentPhase = GuiElementPhases.ACTIVE
         }
+    }
+
+    override fun handleLeftClickRelease(location: Vec2) {
+        if (!isPressed) return
+
+        if (isHover(location)) {
+            onClick()
+        }
+        isPressed = false
+        currentPhase = GuiElementPhases.IDLE
     }
 
 }

@@ -32,7 +32,9 @@ class GuiController(private val drawer: Drawer, val window: Window) {
 
     fun checkHover(location: Vec2) = elements.forEach { it.handleHover(location) }
 
-    fun checkLeftClick(location: Vec2) = elements.toList().forEach { it.handleLeftClick(location) }
+    fun checkLeftClickPress(location: Vec2) = elements.toList().forEach { it.handleLeftClickPress(location) }
+
+    fun checkLeftClickRelease(location: Vec2) = elements.toList().forEach { it.handleLeftClickRelease(location) }
 
     fun checkLeftClickDrag(location: Vec2, movement: Vec2) =
         elements.forEach { it.handleLeftClickDrag(location, movement) }
@@ -338,5 +340,6 @@ class GuiController(private val drawer: Drawer, val window: Window) {
     }
 
     private fun displayNumber(value: Float, decimals: Int): String = roundFloat(value, decimals).toString()
+
 
 }

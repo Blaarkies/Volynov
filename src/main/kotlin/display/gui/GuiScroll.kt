@@ -85,16 +85,23 @@ class GuiScroll(
 
     override fun handleHover(location: Vec2) {
         if (isHover(location)) {
-            super.handleHover(location)
             childElements.forEach { it.handleHover(location) }
         }
     }
 
-    override fun handleLeftClick(location: Vec2) {
+    override fun handleLeftClickPress(location: Vec2) {
         if (isHover(location)) {
-            super.handleLeftClick(location)
-            childElements.forEach { it.handleLeftClick(location) }
+            childElements.forEach { it.handleLeftClickPress(location) }
         }
+    }
+
+    override fun handleLeftClickRelease(location: Vec2) {
+        if (isHover(location)) {
+            childElements.forEach { it.handleLeftClickRelease(location) }
+        }
+    }
+
+    override fun handleLeftClick(location: Vec2) {
     }
 
     override fun handleLeftClickDrag(location: Vec2, movement: Vec2) {

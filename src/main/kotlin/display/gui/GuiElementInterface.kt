@@ -22,4 +22,7 @@ interface GuiElementInterface {
     fun addOffset(newOffset: Vec2)
     fun updateOffset(newOffset: Vec2)
 
+    fun handleLeftClickPress(location: Vec2)
+    fun handleLeftClickRelease(location: Vec2)
+
 }

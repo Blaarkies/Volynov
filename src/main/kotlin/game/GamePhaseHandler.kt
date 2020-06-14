@@ -407,15 +407,6 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
         return Triple(playerOnTurn, transformedLocation, playerLocation)
     }
 
-    fun leftClickMouse(event: MouseButtonEvent) {
-        when {
-            mouseElementPhases.any { currentPhase == it } -> guiController.checkLeftClick(
-                camera.getScreenLocation(event.location))
-            currentPhase == GamePhases.PLAYERS_TURN_AIMING -> currentPhase = GamePhases.PLAYERS_TURN
-            currentPhase == GamePhases.PLAYERS_TURN_POWERING -> currentPhase = GamePhases.PLAYERS_TURN
-        }
-    }
-
     fun keyPressEscape(event: KeyboardEvent) {
         if (textInputIsBusy) {
             guiController.stopTextInput()
@@ -491,6 +482,24 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
 
         check(gameState.gamePlayers.size > 1) { "Cannot play a game with less than 2 players" }
         gameState.playerOnTurn = gameState.gamePlayers.random()
+    }
+
+    fun leftClickMousePress(event: MouseButtonEvent) {
+        when {
+            mouseElementPhases.any { currentPhase == it } -> guiController.checkLeftClickPress(
+                camera.getScreenLocation(event.location))
+            currentPhase == GamePhases.PLAYERS_TURN_AIMING -> currentPhase = GamePhases.PLAYERS_TURN
+            currentPhase == GamePhases.PLAYERS_TURN_POWERING -> currentPhase = GamePhases.PLAYERS_TURN
+        }
+    }
+
+    fun leftClickMouseRelease(event: MouseButtonEvent) {
+        when {
+            mouseElementPhases.any { currentPhase == it } -> guiController.checkLeftClickRelease(
+                camera.getScreenLocation(event.location))
+            currentPhase == GamePhases.PLAYERS_TURN_AIMING -> currentPhase = GamePhases.PLAYERS_TURN
+            currentPhase == GamePhases.PLAYERS_TURN_POWERING -> currentPhase = GamePhases.PLAYERS_TURN
+        }
     }
 
     companion object {

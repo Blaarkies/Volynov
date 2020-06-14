@@ -29,9 +29,18 @@ class InputHandler(private val gamePhaseHandler: GamePhaseHandler) {
 
     private fun setupMouseClicks(window: Window) {
         window.mouseButtonEvent.takeUntil(unsubscribe).subscribe {
-            if (it.action == GLFW.GLFW_PRESS) {
-                when (it.button) {
-                    GLFW.GLFW_MOUSE_BUTTON_LEFT -> gamePhaseHandler.leftClickMouse(it)
+            when (it.action) {
+                GLFW.GLFW_PRESS -> {
+                    when (it.button) {
+                        GLFW.GLFW_MOUSE_BUTTON_LEFT -> gamePhaseHandler.leftClickMousePress(it)
+                        GLFW.GLFW_MOUSE_BUTTON_RIGHT -> {}
+                    }
+                }
+                GLFW.GLFW_RELEASE -> {
+                    when (it.button) {
+                        GLFW.GLFW_MOUSE_BUTTON_LEFT -> gamePhaseHandler.leftClickMouseRelease(it)
+                        GLFW.GLFW_MOUSE_BUTTON_RIGHT -> {}
+                    }
                 }
             }
         }

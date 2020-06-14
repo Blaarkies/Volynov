@@ -55,7 +55,7 @@ class GuiInput(
         drawer.textures.getTexture(TextureEnum.white_pixel).bind()
 
         when (currentPhase) {
-            GuiElementPhases.HOVERED -> drawer.renderer.drawShape(buttonBackground, offset, useCamera = false,
+            GuiElementPhases.HOVER -> drawer.renderer.drawShape(buttonBackground, offset, useCamera = false,
                 snipRegion = snipRegion)
             GuiElementPhases.INPUT -> {
                 drawer.renderer.drawShape(buttonBackground, offset, useCamera = false, snipRegion = snipRegion)

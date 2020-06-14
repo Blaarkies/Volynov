@@ -18,7 +18,7 @@ open class GuiElement(
     override var id: GuiElementIdentifierType = GuiElementIdentifierType.DEFAULT
 ) : GuiElementInterface {
 
-    protected var currentPhase = GuiElementPhases.IDLE
+    internal var currentPhase = GuiElementPhases.IDLE
 
     protected var topRight: Vec2 = Vec2()
     protected var bottomLeft: Vec2 = Vec2()
@@ -32,11 +32,16 @@ open class GuiElement(
     override fun updateOffset(newOffset: Vec2) = updateOffset(this, newOffset)
 
     override fun handleHover(location: Vec2) = when {
-        isHover(location) -> currentPhase = GuiElementPhases.HOVERED
+        isHover(location) -> currentPhase = GuiElementPhases.HOVER
         else -> currentPhase = GuiElementPhases.IDLE
     }
 
     override fun handleLeftClick(location: Vec2) = Unit
+
+    override fun handleLeftClickPress(location: Vec2) = Unit
+
+    override fun handleLeftClickRelease(location: Vec2) = Unit
+
 
     override fun handleLeftClickDrag(location: Vec2, movement: Vec2) = Unit
 

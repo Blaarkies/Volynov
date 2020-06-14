@@ -2,8 +2,9 @@ package display.gui
 
 enum class GuiElementPhases {
     IDLE,
-    HOVERED,
+    HOVER,
     CLICKED,
-    INPUT
+    INPUT,
+    ACTIVE
 
 }
