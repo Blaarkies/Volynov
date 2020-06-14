@@ -36,12 +36,9 @@ open class GuiElement(
         else -> currentPhase = GuiElementPhases.IDLE
     }
 
-    override fun handleLeftClick(location: Vec2) = Unit
+    override fun handleLeftClickPress(location: Vec2): Boolean = false
 
-    override fun handleLeftClickPress(location: Vec2) = Unit
-
-    override fun handleLeftClickRelease(location: Vec2) = Unit
-
+    override fun handleLeftClickRelease(location: Vec2): Boolean = false
 
     override fun handleLeftClickDrag(location: Vec2, movement: Vec2) = Unit
 

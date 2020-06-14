@@ -266,6 +266,11 @@ class Font(font: Font = Font(MONOSPACED, BOLD, 32), antiAlias: Boolean = true) {
         fontBitMap.delete()
     }
 
+    fun getScale(text: String, size: Float): Vec2 {
+        // TODO: Implement real measurement
+        return Vec2(text.length * size * 60f, size * 100f)
+    }
+
     companion object {
 
         fun deepCopy(bufferedImage: BufferedImage): BufferedImage {

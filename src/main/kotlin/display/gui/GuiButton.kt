@@ -38,23 +38,17 @@ class GuiButton(
         drawer.textures.getTexture(TextureEnum.white_pixel).bind()
 
         when (currentPhase) {
-            GuiElementPhases.HOVER -> drawer.renderer.drawShape(buttonBackground, offset, useCamera = false,
-                snipRegion = snipRegion)
+            GuiElementPhases.HOVER ->
+                drawer.renderer.drawShape(buttonBackground, offset, useCamera = false, snipRegion = snipRegion)
         }
 
         when (currentPhase) {
-            GuiElementPhases.ACTIVE -> drawer.renderer.drawStrip(
-                buttonOutline,
-                offset,
-                scale = Vec2((scale.x - 2f) / scale.x, (scale.y - 2f) / scale.y),
-                useCamera = false,
-                snipRegion = snipRegion
-            )
-            else -> drawer.renderer.drawStrip(
-                buttonOutline,
-                offset,
-                useCamera = false,
-                snipRegion = snipRegion)
+            GuiElementPhases.ACTIVE ->
+                drawer.renderer.drawStrip(buttonOutline, offset,
+                    scale = Vec2((scale.x - 2f) / scale.x, (scale.y - 2f) / scale.y),
+                    useCamera = false, snipRegion = snipRegion)
+            else ->
+                drawer.renderer.drawStrip(buttonOutline, offset, useCamera = false, snipRegion = snipRegion)
         }
 
         super.render(snipRegion)
@@ -66,21 +60,24 @@ class GuiButton(
         super.handleHover(location)
     }
 
-    override fun handleLeftClickPress(location: Vec2) {
-        if (isHover(location)) {
+    override fun handleLeftClickPress(location: Vec2): Boolean {
+        val isHovered = isHover(location)
+        if (isHovered) {
             isPressed = true
             currentPhase = GuiElementPhases.ACTIVE
         }
+        return isHovered
     }
 
-    override fun handleLeftClickRelease(location: Vec2) {
-        if (!isPressed) return
+    override fun handleLeftClickRelease(location: Vec2): Boolean {
+        if (!isPressed) return false
 
         if (isHover(location)) {
             onClick()
         }
         isPressed = false
         currentPhase = GuiElementPhases.IDLE
+        return true
     }
 
 }

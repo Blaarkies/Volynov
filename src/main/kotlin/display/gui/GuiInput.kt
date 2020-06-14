@@ -25,6 +25,7 @@ class GuiInput(
 
     private val blinkRate = 400
     private var cursorLine: FloatArray
+    private var isPressed = false
     private var buttonOutline: FloatArray
     private var buttonBackground: FloatArray
     private var backgroundColor = color.setAlpha(.1f)
@@ -55,8 +56,8 @@ class GuiInput(
         drawer.textures.getTexture(TextureEnum.white_pixel).bind()
 
         when (currentPhase) {
-            GuiElementPhases.HOVER -> drawer.renderer.drawShape(buttonBackground, offset, useCamera = false,
-                snipRegion = snipRegion)
+            GuiElementPhases.HOVER ->
+                drawer.renderer.drawShape(buttonBackground, offset, useCamera = false, snipRegion = snipRegion)
             GuiElementPhases.INPUT -> {
                 drawer.renderer.drawShape(buttonBackground, offset, useCamera = false, snipRegion = snipRegion)
 
@@ -83,14 +84,26 @@ class GuiInput(
         super.handleHover(location)
     }
 
-    override fun handleLeftClick(location: Vec2) {
-        when {
-            isHover(location) -> {
-                currentPhase = GuiElementPhases.INPUT
-                onClick()
-            }
-            else -> currentPhase = GuiElementPhases.IDLE
+    override fun handleLeftClickPress(location: Vec2): Boolean {
+        val isHovered = isHover(location)
+        if (isHovered) {
+            isPressed = true
+            currentPhase = GuiElementPhases.ACTIVE
+        } else {
+            currentPhase = GuiElementPhases.IDLE
         }
+        return isHovered
+    }
+
+    override fun handleLeftClickRelease(location: Vec2): Boolean {
+        if (!isPressed) return false
+
+        if (isHover(location)) {
+            currentPhase = GuiElementPhases.INPUT
+            onClick()
+        }
+        isPressed = false
+        return true
     }
 
     fun handleAddTextInput(text: String) {

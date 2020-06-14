@@ -14,15 +14,9 @@ class GuiLabel(
     textSize: Float = 0f,
     color: Color = Color.WHITE.setAlpha(.7f),
     updateCallback: (GuiElement) -> Unit = {}
-) : GuiElement(
-    drawer,
-    offset,
-    Vec2(title.length * textSize * 60f, textSize * 100f),
-    title,
-    textSize,
-    color,
-    updateCallback
-) {
+) : GuiElement(drawer, offset,
+    drawer.renderer.font.getScale(title, textSize),
+    title, textSize, color, updateCallback) {
 
     override fun render(snipRegion: SnipRegion?) {
         super.render(snipRegion)

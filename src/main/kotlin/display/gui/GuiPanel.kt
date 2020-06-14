@@ -69,19 +69,13 @@ class GuiPanel(
         }
     }
 
-    override fun handleLeftClickPress(location: Vec2) {
-        if (isHover(location)) {
-            childElements.forEach { it.handleLeftClickPress(location) }
-        }
+    override fun handleLeftClickPress(location: Vec2): Boolean {
+        return isHover(location)
+                && childElements.any { it.handleLeftClickPress(location) }
     }
 
-    override fun handleLeftClickRelease(location: Vec2) {
-        if (isHover(location)) {
-            childElements.forEach { it.handleLeftClickRelease(location) }
-        }
-    }
-
-    override fun handleLeftClick(location: Vec2) {
+    override fun handleLeftClickRelease(location: Vec2): Boolean {
+        return childElements.any { it.handleLeftClickRelease(location) }
     }
 
     override fun handleLeftClickDrag(location: Vec2, movement: Vec2) {
