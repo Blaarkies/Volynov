@@ -40,11 +40,11 @@ class GuiController(private val drawer: Drawer, val window: Window) {
 
     fun checkScroll(movement: Vec2, location: Vec2) = elements.any { it.handleScroll(location, movement) }
 
-    fun checkAddTextInput(text: String) = elements.filterIsInstance<GuiInput>().forEach { it.handleAddTextInput(text) }
+    fun checkAddTextInput(text: String) = elements.filterIsInstance<GuiInput>().any { it.handleAddTextInput(text) }
 
-    fun checkRemoveTextInput() = elements.filterIsInstance<GuiInput>().forEach { it.handleRemoveTextInput() }
+    fun checkRemoveTextInput() = elements.filterIsInstance<GuiInput>().any { it.handleRemoveTextInput() }
 
-    fun stopTextInput() = elements.filterIsInstance<GuiInput>().forEach { it.stopTextInput() }
+    fun stopTextInput() = elements.filterIsInstance<GuiInput>().any { it.stopTextInput() }
 
     fun textInputIsBusy(): Boolean = elements.filterIsInstance<GuiInput>().toList().any { it.textInputIsBusy }
 

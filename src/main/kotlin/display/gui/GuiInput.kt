@@ -106,23 +106,35 @@ class GuiInput(
         return true
     }
 
-    fun handleAddTextInput(text: String) {
-        if (textInputIsBusy) {
-            inputText += text
-            onChange(inputText)
+    fun handleAddTextInput(text: String): Boolean {
+        return when {
+            textInputIsBusy -> {
+                inputText += text
+                onChange(inputText)
+                true
+            }
+            else -> false
         }
     }
 
-    fun handleRemoveTextInput() {
-        if (textInputIsBusy) {
-            inputText = inputText.dropLast(1)
-            onChange(inputText)
+    fun handleRemoveTextInput(): Boolean {
+        return when {
+            textInputIsBusy -> {
+                inputText = inputText.dropLast(1)
+                onChange(inputText)
+                true
+            }
+            else -> false
         }
     }
 
-    fun stopTextInput() {
-        if (textInputIsBusy) {
-            currentPhase = GuiElementPhases.IDLE
+    fun stopTextInput(): Boolean {
+        return when {
+            textInputIsBusy -> {
+                currentPhase = GuiElementPhases.IDLE
+                true
+            }
+            else -> false
         }
     }
 
