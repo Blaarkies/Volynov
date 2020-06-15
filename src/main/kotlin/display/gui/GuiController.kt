@@ -32,14 +32,13 @@ class GuiController(private val drawer: Drawer, val window: Window) {
 
     fun checkHover(location: Vec2) = elements.forEach { it.handleHover(location) }
 
-    fun checkLeftClickPress(location: Vec2) = elements.toList().forEach { it.handleLeftClickPress(location) }
+    fun checkLeftClickPress(location: Vec2) = elements.toList().any { it.handleLeftClickPress(location) }
 
-    fun checkLeftClickRelease(location: Vec2) = elements.toList().forEach { it.handleLeftClickRelease(location) }
+    fun checkLeftClickRelease(location: Vec2) = elements.toList().any { it.handleLeftClickRelease(location) }
 
-    fun checkLeftClickDrag(location: Vec2, movement: Vec2) =
-        elements.forEach { it.handleLeftClickDrag(location, movement) }
+    fun checkLeftClickDrag(location: Vec2, movement: Vec2) = elements.any { it.handleLeftClickDrag(location, movement) }
 
-    fun checkScroll(movement: Vec2, location: Vec2) = elements.forEach { it.handleScroll(location, movement) }
+    fun checkScroll(movement: Vec2, location: Vec2) = elements.any { it.handleScroll(location, movement) }
 
     fun checkAddTextInput(text: String) = elements.filterIsInstance<GuiInput>().forEach { it.handleAddTextInput(text) }
 
@@ -245,14 +244,14 @@ class GuiController(private val drawer: Drawer, val window: Window) {
                 onClick = { onClickFire(player) }))
             .also { setElementsInRows(it, centered = false) }
 
-        val iconAim = GuiIcon(drawer, scale = vectorUnit.mul(20f), texture = TextureEnum.icon_aim_direction)
+        val iconAim = GuiIcon(drawer, scale = makeVec2(7), texture = TextureEnum.icon_aim_direction)
             .also {
                 it.updateOffset(
                     getOffsetForLayoutPosition(LayoutPosition.TOP_LEFT, commandPanel.scale, it.scale))
             }
         val aimingInfo = listOf(
             iconAim,
-            GuiIcon(drawer, scale = vectorUnit.mul(20f), texture = TextureEnum.icon_aim_power))
+            GuiIcon(drawer, scale = makeVec2(7), texture = TextureEnum.icon_aim_power))
             .also { icons ->
                 setElementsInRows(icons, centered = false)
                 icons.forEach { it.offset.x = iconAim.offset.x }

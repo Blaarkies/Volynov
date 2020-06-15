@@ -20,16 +20,16 @@ class GuiButton(
 ) : GuiElement(drawer, offset, scale, title, textSize, color, updateCallback) {
 
     private var isPressed = false
-    private var buttonOutline: FloatArray
-    private var buttonBackground: FloatArray
+    private var outline: FloatArray
+    private var background: FloatArray
     private var backgroundColor = color.setAlpha(.1f)
 
     init {
         val linePoints = BasicShapes.square
             .chunked(2)
             .flatMap { listOf(it[0] * scale.x, it[1] * scale.y) }
-        buttonOutline = Drawer.getLine(linePoints, color, startWidth = 1f, wrapAround = true)
-        buttonBackground = Drawer.getColoredData(linePoints, backgroundColor).toFloatArray()
+        outline = Drawer.getLine(linePoints, color, startWidth = 1f, wrapAround = true)
+        background = Drawer.getColoredData(linePoints, backgroundColor).toFloatArray()
 
         calculateElementRegion(this)
     }
@@ -39,16 +39,16 @@ class GuiButton(
 
         when (currentPhase) {
             GuiElementPhases.HOVER ->
-                drawer.renderer.drawShape(buttonBackground, offset, useCamera = false, snipRegion = snipRegion)
+                drawer.renderer.drawShape(background, offset, useCamera = false, snipRegion = snipRegion)
         }
 
         when (currentPhase) {
             GuiElementPhases.ACTIVE ->
-                drawer.renderer.drawStrip(buttonOutline, offset,
+                drawer.renderer.drawStrip(outline, offset,
                     scale = Vec2((scale.x - 2f) / scale.x, (scale.y - 2f) / scale.y),
                     useCamera = false, snipRegion = snipRegion)
             else ->
-                drawer.renderer.drawStrip(buttonOutline, offset, useCamera = false, snipRegion = snipRegion)
+                drawer.renderer.drawStrip(outline, offset, useCamera = false, snipRegion = snipRegion)
         }
 
         super.render(snipRegion)

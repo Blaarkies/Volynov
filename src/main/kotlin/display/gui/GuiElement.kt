@@ -40,15 +40,11 @@ open class GuiElement(
 
     override fun handleLeftClickRelease(location: Vec2): Boolean = false
 
-    override fun handleLeftClickDrag(location: Vec2, movement: Vec2) = Unit
+    override fun handleLeftClickDrag(location: Vec2, movement: Vec2): Boolean = false
 
-    override fun handleScroll(location: Vec2, movement: Vec2) = Unit
+    override fun handleScroll(location: Vec2, movement: Vec2): Boolean = false
 
-    fun isHover(location: Vec2): Boolean =
-        location.x > bottomLeft.x
-                && location.x < topRight.x
-                && location.y > bottomLeft.y
-                && location.y < topRight.y
+    fun isHover(location: Vec2): Boolean = isInRegion(location, bottomLeft, topRight)
 
     companion object {
 
@@ -76,6 +72,12 @@ open class GuiElement(
             element.offset.set(newOffset)
             calculateElementRegion(element)
         }
+
+        fun isInRegion(location: Vec2, regionBottomLeft: Vec2, regionTopRight: Vec2): Boolean =
+            location.x > regionBottomLeft.x
+                    && location.x < regionTopRight.x
+                    && location.y > regionBottomLeft.y
+                    && location.y < regionTopRight.y
 
     }
 

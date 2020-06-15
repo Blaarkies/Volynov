@@ -2,7 +2,6 @@ package display.gui
 
 import display.draw.Drawer
 import display.draw.TextureEnum
-import display.graphic.BasicShapes
 import display.graphic.Color
 import display.graphic.SnipRegion
 import org.jbox2d.common.Vec2
@@ -16,7 +15,7 @@ class GuiIcon(
     textSize: Float = 0f,
     color: Color = Color.WHITE.setAlpha(.7f),
     val texture: TextureEnum = TextureEnum.white_pixel
-) : GuiElement(drawer, offset, scale, title, textSize, color, {}) {
+) : GuiElement(drawer, offset, scale.mul(2f), title, textSize, color, {}) {
 
     override fun render(snipRegion: SnipRegion?) {
         super.render(snipRegion)
