@@ -27,28 +27,28 @@ class GuiPanel(
     private val childElementOffsets = HashMap<GuiElement, Vec2>()
 
     private var isPressed = false
-    private val draggableScale: Vec2
-    private var draggableRelativeOffset: Vec2
+    private val dragHandleScale: Vec2
+    private var dragHandleRelativeOffset: Vec2
 
-    private lateinit var draggableOffset: Vec2
-    private lateinit var draggableTopRight: Vec2
-    private lateinit var draggableBottomLeft: Vec2
+    private lateinit var dragHandleOffset: Vec2
+    private lateinit var dragHandleTopRight: Vec2
+    private lateinit var dragHandleBottomLeft: Vec2
 
     init {
         background = BasicShapes.square
             .let { Drawer.getColoredData(it, color) }
             .toFloatArray()
 
-        draggableScale = Vec2(90f, 25f)
-        draggableRelativeOffset = Vec2(0f, scale.y - draggableScale.y)
+        dragHandleScale = Vec2(90f, 25f)
+        dragHandleRelativeOffset = Vec2(0f, scale.y - dragHandleScale.y)
         val linePoints = BasicShapes.square
             .chunked(2)
-            .flatMap { (x, y) -> listOf(x * draggableScale.x, y * draggableScale.y) }
+            .flatMap { (x, y) -> listOf(x * dragHandleScale.x, y * dragHandleScale.y) }
         draggableOutline = Drawer.getLine(linePoints, Color.WHITE.setAlpha(.3f), startWidth = 1f, wrapAround = true)
 
         if (draggable) {
             addChildren(listOf(-1f, 1f).map {
-                GuiIcon(drawer, draggableRelativeOffset.add(Vec2(it * (draggableScale.x - 20), 0f)),
+                GuiIcon(drawer, dragHandleRelativeOffset.add(Vec2(it * (dragHandleScale.x - 20), 0f)),
                     makeVec2(6), color = Color.WHITE.setAlpha(.5f), texture = TextureEnum.icon_draggable)
             })
         }
@@ -63,9 +63,9 @@ class GuiPanel(
         drawer.renderer.drawShape(background, offset, 0f, scale, useCamera = false, snipRegion = snipRegion)
 
         if (draggable) {
-            drawer.renderer.drawStrip(draggableOutline, draggableOffset, useCamera = false, snipRegion = snipRegion)
+            drawer.renderer.drawStrip(draggableOutline, dragHandleOffset, useCamera = false, snipRegion = snipRegion)
         }
-        
+
         drawer.renderer.drawText(
             title,
             offset.add(Vec2(0f, scale.y - 25f)),
@@ -132,7 +132,7 @@ class GuiPanel(
     }
 
     private fun isDragRegion(location: Vec2): Boolean =
-        isInRegion(location, draggableBottomLeft, draggableTopRight)
+        isInRegion(location, dragHandleBottomLeft, dragHandleTopRight)
 
     override fun handleScroll(location: Vec2, movement: Vec2): Boolean {
         return isHover(location)
@@ -144,10 +144,10 @@ class GuiPanel(
     }
 
     private fun calculateDraggableRegion() {
-        draggableOffset = offset.add(draggableRelativeOffset)
+        dragHandleOffset = offset.add(dragHandleRelativeOffset)
 
-        draggableTopRight = draggableOffset.add(draggableScale)
-        draggableBottomLeft = draggableOffset.sub(draggableScale)
+        dragHandleTopRight = dragHandleOffset.add(dragHandleScale)
+        dragHandleBottomLeft = dragHandleOffset.sub(dragHandleScale)
     }
 
     fun addChildren(elements: List<GuiElement>) {
