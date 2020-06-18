@@ -96,7 +96,7 @@ internal class LayoutControllerTest {
     }
 
     @TestFactory
-    fun `getOffsetForLayoutPosition when child is smaller than parent`(): List<DynamicTest> {
+    fun `getOffsetForLayoutPosition when kid is smaller than parent`(): List<DynamicTest> {
         return listOf(
             Pair(LayoutPosition.TOP_LEFT, Vec2(-1f, 1f)),
             Pair(LayoutPosition.TOP_RIGHT, Vec2(1f, 1f)),
@@ -106,7 +106,7 @@ internal class LayoutControllerTest {
     }
 
     @TestFactory
-    fun `getOffsetForLayoutPosition when child is larger than parent`(): List<DynamicTest> {
+    fun `getOffsetForLayoutPosition when kid is larger than parent`(): List<DynamicTest> {
         return listOf(
             Pair(LayoutPosition.TOP_LEFT, Vec2(1f, -1f)),
             Pair(LayoutPosition.TOP_RIGHT, Vec2(-1f, -1f)),
@@ -123,9 +123,7 @@ internal class LayoutControllerTest {
                 val parentScale = makeVec2(parentRadius)
                 val kidScale = makeVec2(kidRadius)
                 val kidOffset = getOffsetForLayoutPosition(enum, parentScale, kidScale)
-                assert(kidOffset.sub(expected).length() == 0f) {
-                    "Offset $kidOffset was expected to be $expected"
-                }
+                assert(kidOffset == expected) { "Offset $kidOffset was expected to be $expected" }
             }
         }
     }

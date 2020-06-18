@@ -20,18 +20,21 @@ class GuiButton(
 ) : GuiElement(drawer, offset, scale, title, textSize, color, updateCallback) {
 
     private var isPressed = false
-    private var outline: FloatArray
-    private var background: FloatArray
+    private lateinit var outline: FloatArray
+    private lateinit var background: FloatArray
     private var backgroundColor = color.setAlpha(.1f)
 
     init {
+        calculateVisuals()
+        calculateElementRegion(this)
+    }
+
+    private fun calculateVisuals() {
         val linePoints = BasicShapes.square
             .chunked(2)
             .flatMap { listOf(it[0] * scale.x, it[1] * scale.y) }
         outline = Drawer.getLine(linePoints, color, startWidth = 1f, wrapAround = true)
         background = Drawer.getColoredData(linePoints, backgroundColor).toFloatArray()
-
-        calculateElementRegion(this)
     }
 
     override fun render(snipRegion: SnipRegion?) {
@@ -78,6 +81,11 @@ class GuiButton(
         isPressed = false
         currentPhase = GuiElementPhases.IDLE
         return true
+    }
+
+    override fun updateScale(newScale: Vec2) {
+        super.updateScale(newScale)
+        calculateVisuals()
     }
 
 }

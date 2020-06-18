@@ -57,12 +57,12 @@ object LayoutController {
 
     fun getOffsetForLayoutPosition(layoutPosition: LayoutPosition,
                                    parent: Vec2,
-                                   child: Vec2): Vec2 {
+                                   kid: Vec2): Vec2 {
         return when (layoutPosition) {
-            LayoutPosition.TOP_LEFT -> child.sub(parent)
-            LayoutPosition.TOP_RIGHT -> child.sub(parent).also { it.x *= -1f }
-            LayoutPosition.BOTTOM_LEFT -> child.sub(parent).also { it.y *= -1f }
-            LayoutPosition.BOTTOM_RIGHT -> parent.sub(child)
+            LayoutPosition.TOP_LEFT -> kid.sub(parent)
+            LayoutPosition.TOP_RIGHT -> kid.sub(parent).also { it.x *= -1f }
+            LayoutPosition.BOTTOM_LEFT -> kid.sub(parent).also { it.y *= -1f }
+            LayoutPosition.BOTTOM_RIGHT -> parent.sub(kid)
         }.also { it.y *= -1f }
     }
 

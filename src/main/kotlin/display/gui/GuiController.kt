@@ -13,7 +13,6 @@ import input.CameraView
 import org.jbox2d.common.Vec2
 import utility.Common.makeVec2
 import utility.Common.roundFloat
-import utility.Common.vectorUnit
 import kotlin.math.ceil
 import kotlin.math.roundToInt
 
@@ -123,7 +122,7 @@ class GuiController(private val drawer: Drawer, val window: Window) {
             .also { setElementsInRows(it) }
 
         val addRemoveContainer = GuiPanel(drawer, scale = playerButtonSize, color = Color.TRANSPARENT,
-            draggable = false).also { it.addChildren(addRemoveButtons) }
+            draggable = false).also { it.addKids(addRemoveButtons) }
 
         val playerButtons = (listOf(addRemoveContainer) +
                 players.withIndex()
@@ -182,7 +181,7 @@ class GuiController(private val drawer: Drawer, val window: Window) {
                 it.updateOffset(getOffsetForLayoutPosition(
                     LayoutPosition.BOTTOM_RIGHT, windowSize.mul(.5f), it.scale))
             }
-        val shieldsList = GuiScroll(drawer, Vec2(50f, -50f), Vec2(100f, 100f)).addChildren(
+        val shieldsList = GuiScroll(drawer, Vec2(50f, -50f), Vec2(100f, 100f)).addKids(
             (1..5).map {
                 GuiButton(drawer, scale = Vec2(100f, 25f), title = "Shield $it", textSize = .15f,
                     onClick = {
@@ -191,9 +190,9 @@ class GuiController(private val drawer: Drawer, val window: Window) {
                     })
             }
         )
-        shieldPickerPanel.addChild(GuiLabel(drawer, Vec2(-200f, 100f), TextJustify.LEFT,
+        shieldPickerPanel.addKid(GuiLabel(drawer, Vec2(-200f, 100f), TextJustify.LEFT,
             "Shields not yet implemented", .12f))
-        shieldPickerPanel.addChild(shieldsList)
+        shieldPickerPanel.addKid(shieldsList)
 
         elements.add(shieldPickerPanel)
 
@@ -224,7 +223,7 @@ class GuiController(private val drawer: Drawer, val window: Window) {
             }
 
         val weaponButtonWidth = 150f
-        val weaponsList = GuiScroll(drawer, scale = Vec2(weaponButtonWidth, 100f)).addChildren(
+        val weaponsList = GuiScroll(drawer, scale = Vec2(weaponButtonWidth, 100f)).addKids(
             (1..15).map {
                 GuiButton(drawer, scale = Vec2(weaponButtonWidth, 25f), title = "Boom $it", textSize = .15f,
                     onClick = { println("clicked [Boom $it]") })
@@ -292,7 +291,7 @@ class GuiController(private val drawer: Drawer, val window: Window) {
                 labels.forEach { it.offset.x = align }
             }
 
-        commandPanel.addChildren(
+        commandPanel.addKids(
             actionButtons + aimingInfo + playerStats +
                 GuiLabel(drawer, Vec2(-30f, 30f), TextJustify.LEFT, "Weapons not yet implemented", .12f) +
                 weaponsList)
@@ -328,8 +327,8 @@ class GuiController(private val drawer: Drawer, val window: Window) {
         }
         setElementsInRows(playerLines, 10f)
 
-        leaderBoardPanel.addChildren(playerLines)
-        leaderBoardPanel.addChild(
+        leaderBoardPanel.addKids(playerLines)
+        leaderBoardPanel.addKid(
             GuiButton(
                 drawer, Vec2(0f, -250f), Vec2(100f, 25f), "Next Match",
                 onClick = onClickNextRound

@@ -17,14 +17,14 @@ class GuiPanel(
     title: String = "",
     textSize: Float = .3f,
     color: Color = Color.BLACK.setAlpha(.5f),
-    private val childElements: MutableList<GuiElement> = mutableListOf(),
+    private val kidElements: MutableList<GuiElement> = mutableListOf(),
     private val draggable: Boolean = true,
     updateCallback: (GuiElement) -> Unit = {}
 ) : GuiElement(drawer, offset, scale, title, textSize, color, updateCallback) {
 
     private val draggableOutline: FloatArray
     private val background: FloatArray
-    private val childElementOffsets = HashMap<GuiElement, Vec2>()
+    private val kidElementOffsets = HashMap<GuiElement, Vec2>()
 
     private var isPressed = false
     private val dragHandleScale: Vec2
@@ -47,13 +47,13 @@ class GuiPanel(
         draggableOutline = Drawer.getLine(linePoints, Color.WHITE.setAlpha(.3f), startWidth = 1f, wrapAround = true)
 
         if (draggable) {
-            addChildren(listOf(-1f, 1f).map {
+            addKids(listOf(-1f, 1f).map {
                 GuiIcon(drawer, dragHandleRelativeOffset.add(Vec2(it * (dragHandleScale.x - 20), 0f)),
                     makeVec2(6), color = Color.WHITE.setAlpha(.5f), texture = TextureEnum.icon_draggable)
             })
         }
 
-        childElementOffsets.putAll(childElements.map { Pair(it, it.offset.clone()) })
+        kidElementOffsets.putAll(kidElements.map { Pair(it, it.offset.clone()) })
         calculateElementRegion(this)
         calculateDraggableRegion()
     }
@@ -76,12 +76,12 @@ class GuiPanel(
             snipRegion
         )
 
-        childElements.forEach { it.render(snipRegion) }
+        kidElements.forEach { it.render(snipRegion) }
 
         super.render(snipRegion)
     }
 
-    override fun update() = childElements.forEach { it.update() }
+    override fun update() = kidElements.forEach { it.update() }
 
     override fun addOffset(newOffset: Vec2) {
         super.addOffset(newOffset)
@@ -97,13 +97,13 @@ class GuiPanel(
 
     override fun handleHover(location: Vec2) {
         if (isHover(location)) {
-            childElements.forEach { it.handleHover(location) }
+            kidElements.forEach { it.handleHover(location) }
         }
     }
 
     override fun handleLeftClickPress(location: Vec2): Boolean {
         return isHover(location)
-                && childElements.any { it.handleLeftClickPress(location) }
+                && kidElements.any { it.handleLeftClickPress(location) }
             .or(didParentPress(location))
     }
 
@@ -116,11 +116,11 @@ class GuiPanel(
 
     override fun handleLeftClickRelease(location: Vec2): Boolean {
         isPressed = false
-        return childElements.any { it.handleLeftClickRelease(location) }
+        return kidElements.any { it.handleLeftClickRelease(location) }
     }
 
     override fun handleLeftClickDrag(location: Vec2, movement: Vec2): Boolean {
-        val kidDragged = childElements.any { it.handleLeftClickDrag(location, movement) }
+        val kidDragged = kidElements.any { it.handleLeftClickDrag(location, movement) }
         return kidDragged || didParentDrag(location, movement)
     }
 
@@ -136,29 +136,28 @@ class GuiPanel(
 
     override fun handleScroll(location: Vec2, movement: Vec2): Boolean {
         return isHover(location)
-                && childElements.any { it.handleScroll(location, movement) }
+                && kidElements.any { it.handleScroll(location, movement) }
     }
 
     private fun calculateNewOffsets() {
-        childElements.forEach { it.updateOffset(childElementOffsets[it]!!.add(offset)) }
+        kidElements.forEach { it.updateOffset(kidElementOffsets[it]!!.add(offset)) }
     }
 
     private fun calculateDraggableRegion() {
         dragHandleOffset = offset.add(dragHandleRelativeOffset)
-
         dragHandleTopRight = dragHandleOffset.add(dragHandleScale)
         dragHandleBottomLeft = dragHandleOffset.sub(dragHandleScale)
     }
 
-    fun addChildren(elements: List<GuiElement>) {
-        childElements.addAll(elements)
-        childElementOffsets.putAll(elements.map { Pair(it, it.offset.clone()) })
+    fun addKids(elements: List<GuiElement>) {
+        kidElements.addAll(elements)
+        kidElementOffsets.putAll(elements.map { Pair(it, it.offset.clone()) })
         calculateNewOffsets()
     }
 
-    fun addChild(element: GuiElement) {
-        childElements.add(element)
-        childElementOffsets[element] = element.offset.clone()
+    fun addKid(element: GuiElement) {
+        kidElements.add(element)
+        kidElementOffsets[element] = element.offset.clone()
         calculateNewOffsets()
     }
 
