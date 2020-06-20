@@ -11,28 +11,33 @@ import utility.Common
 import utility.Common.makeVec2
 
 class GuiPanel(
-    drawer: Drawer,
-    offset: Vec2 = Vec2(),
-    scale: Vec2 = Vec2(100f, 100f),
-    title: String = "",
-    textSize: Float = .3f,
-    color: Color = Color.BLACK.setAlpha(.5f),
-    private val kidElements: MutableList<GuiElement> = mutableListOf(),
-    private val draggable: Boolean = true,
-    updateCallback: (GuiElement) -> Unit = {}
-) : GuiElement(drawer, offset, scale, title, textSize, color, updateCallback) {
+    override val drawer: Drawer,
+    override val offset: Vec2 = Vec2(),
+    override val scale: Vec2 = Vec2(100f, 100f),
+    var title: String = "",
+    override val color: Color = Color.BLACK.setAlpha(.5f),
+    override val kidElements: MutableList<GuiElement> = mutableListOf(),
+    override val draggable: Boolean = true,
+    override val updateCallback: (GuiElement) -> Unit = {}
+) : HasKids, HasDrag {
+
+    override var id = GuiElementIdentifierType.DEFAULT
+    override var currentPhase = GuiElementPhases.IDLE
+    override var topRight = Vec2()
+    override var bottomLeft = Vec2()
+    override val onClick: () -> Unit = {}
 
     private val draggableOutline: FloatArray
     private val background: FloatArray
-    private val kidElementOffsets = HashMap<GuiElement, Vec2>()
 
-    private var isPressed = false
-    private val dragHandleScale: Vec2
-    private var dragHandleRelativeOffset: Vec2
+    override val kidElementOffsets = HashMap<GuiElement, Vec2>()
+    override var isPressed = false
 
-    private lateinit var dragHandleOffset: Vec2
-    private lateinit var dragHandleTopRight: Vec2
-    private lateinit var dragHandleBottomLeft: Vec2
+    override val dragHandleScale: Vec2
+    override lateinit var dragHandleRelativeOffset: Vec2
+    override lateinit var dragHandleOffset: Vec2
+    override lateinit var dragHandleTopRight: Vec2
+    override lateinit var dragHandleBottomLeft: Vec2
 
     init {
         background = BasicShapes.square
@@ -49,21 +54,23 @@ class GuiPanel(
         if (draggable) {
             addKids(listOf(-1f, 1f).map {
                 GuiIcon(drawer, dragHandleRelativeOffset.add(Vec2(it * (dragHandleScale.x - 20), 0f)),
-                    makeVec2(6), color = Color.WHITE.setAlpha(.5f), texture = TextureEnum.icon_draggable)
+                    makeVec2(6), texture = TextureEnum.icon_draggable)
             })
         }
 
         kidElementOffsets.putAll(kidElements.map { Pair(it, it.offset.clone()) })
-        calculateElementRegion(this)
+        calculateElementRegion()
         calculateDraggableRegion()
     }
 
-    override fun render(snipRegion: SnipRegion?) {
+    override fun render(parentSnipRegion: SnipRegion?) {
         drawer.textures.getTexture(TextureEnum.white_pixel).bind()
-        drawer.renderer.drawShape(background, offset, 0f, scale, useCamera = false, snipRegion = snipRegion)
+
+        drawer.renderer.drawShape(background, offset, 0f, scale, useCamera = false, snipRegion = parentSnipRegion)
 
         if (draggable) {
-            drawer.renderer.drawStrip(draggableOutline, dragHandleOffset, useCamera = false, snipRegion = snipRegion)
+            drawer.renderer.drawStrip(draggableOutline, dragHandleOffset, useCamera = false,
+                snipRegion = parentSnipRegion)
         }
 
         drawer.renderer.drawText(
@@ -73,92 +80,33 @@ class GuiPanel(
             Color.WHITE,
             TextJustify.CENTER,
             false,
-            snipRegion
+            parentSnipRegion
         )
 
-        kidElements.forEach { it.render(snipRegion) }
+        kidElements.forEach { it.render(parentSnipRegion) }
 
-        super.render(snipRegion)
+        super<HasKids>.render(parentSnipRegion)
     }
 
-    override fun update() = kidElements.forEach { it.update() }
-
-    override fun addOffset(newOffset: Vec2) {
-        super.addOffset(newOffset)
-        calculateNewOffsets()
-        calculateDraggableRegion()
+    override fun addOffset(movement: Vec2) {
+        super<HasKids>.addOffset(movement)
+        super.calculateDraggableRegion()
     }
 
     override fun updateOffset(newOffset: Vec2) {
-        super.updateOffset(newOffset)
-        calculateNewOffsets()
-        calculateDraggableRegion()
-    }
-
-    override fun handleHover(location: Vec2) {
-        if (isHover(location)) {
-            kidElements.forEach { it.handleHover(location) }
-        }
+        super<HasKids>.updateOffset(newOffset)
+        super.calculateDraggableRegion()
     }
 
     override fun handleLeftClickPress(location: Vec2): Boolean {
-        return isHover(location)
-                && kidElements.any { it.handleLeftClickPress(location) }
-            .or(didParentPress(location))
-    }
-
-    private fun didParentPress(location: Vec2): Boolean {
-        return if (isDragRegion(location)) {
-            isPressed = true
-            true
-        } else false
-    }
-
-    override fun handleLeftClickRelease(location: Vec2): Boolean {
-        isPressed = false
-        return kidElements.any { it.handleLeftClickRelease(location) }
+        return super<HasKids>.handleLeftClickPress(location) or
+                super<HasDrag>.handleLeftClickPress(location)
     }
 
     override fun handleLeftClickDrag(location: Vec2, movement: Vec2): Boolean {
-        val kidDragged = kidElements.any { it.handleLeftClickDrag(location, movement) }
-        return kidDragged || didParentDrag(location, movement)
-    }
-
-    private fun didParentDrag(location: Vec2, movement: Vec2): Boolean {
-        return if (draggable && isPressed && isDragRegion(location)) {
-            addOffset(movement)
-            true
-        } else false
-    }
-
-    private fun isDragRegion(location: Vec2): Boolean =
-        isInRegion(location, dragHandleBottomLeft, dragHandleTopRight)
-
-    override fun handleScroll(location: Vec2, movement: Vec2): Boolean {
-        return isHover(location)
-                && kidElements.any { it.handleScroll(location, movement) }
-    }
-
-    private fun calculateNewOffsets() {
-        kidElements.forEach { it.updateOffset(kidElementOffsets[it]!!.add(offset)) }
-    }
-
-    private fun calculateDraggableRegion() {
-        dragHandleOffset = offset.add(dragHandleRelativeOffset)
-        dragHandleTopRight = dragHandleOffset.add(dragHandleScale)
-        dragHandleBottomLeft = dragHandleOffset.sub(dragHandleScale)
-    }
-
-    fun addKids(elements: List<GuiElement>) {
-        kidElements.addAll(elements)
-        kidElementOffsets.putAll(elements.map { Pair(it, it.offset.clone()) })
-        calculateNewOffsets()
-    }
-
-    fun addKid(element: GuiElement) {
-        kidElements.add(element)
-        kidElementOffsets[element] = element.offset.clone()
-        calculateNewOffsets()
+        val kidDragged = kidElements.filterIsInstance<HasScroll>()
+            .any { it.handleLeftClickDrag(location, movement) }
+        return kidDragged || super<HasDrag>.handleLeftClickDrag(location, movement)
     }
 
 }

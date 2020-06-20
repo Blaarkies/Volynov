@@ -3,86 +3,30 @@ package display.gui
 import display.draw.Drawer
 import display.graphic.Color
 import display.graphic.SnipRegion
-import display.text.TextJustify
 import org.jbox2d.common.Vec2
-import utility.Common.vectorUnit
 
-open class GuiElement(
-    protected val drawer: Drawer,
-    override var offset: Vec2,
-    override var scale: Vec2 = vectorUnit,
-    override var title: String = "",
-    override val textSize: Float = .15f,
-    override val color: Color = Color.WHITE,
-    override val updateCallback: (GuiElement) -> Unit = {},
-    override var id: GuiElementIdentifierType = GuiElementIdentifierType.DEFAULT
-) : GuiElementInterface {
+interface GuiElement {
 
-    internal var currentPhase = GuiElementPhases.IDLE
+    val drawer: Drawer
+    val offset: Vec2
+    val scale: Vec2
+    val color: Color
+    val updateCallback: (GuiElement) -> Unit
+    var id: GuiElementIdentifierType
+    var currentPhase: GuiElementPhases
 
-    protected var topRight: Vec2 = Vec2()
-    protected var bottomLeft: Vec2 = Vec2()
+    fun render(parentSnipRegion: SnipRegion?) = Unit
 
-    override fun render(snipRegion: SnipRegion?) = Unit
+    fun update() = updateCallback(this)
 
-    override fun update() = updateCallback(this)
+    fun addOffset(movement: Vec2): Unit = updateOffset(offset.add(movement))
 
-    override fun addOffset(newOffset: Vec2) = addOffset(this, newOffset)
-
-    override fun updateOffset(newOffset: Vec2) = updateOffset(this, newOffset)
-
-    override fun handleHover(location: Vec2) = when {
-        isHover(location) -> currentPhase = GuiElementPhases.HOVER
-        else -> currentPhase = GuiElementPhases.IDLE
+    fun updateOffset(newOffset: Vec2) {
+        offset.set(newOffset)
     }
 
-    override fun handleLeftClickPress(location: Vec2): Boolean = false
-
-    override fun handleLeftClickRelease(location: Vec2): Boolean = false
-
-    override fun handleLeftClickDrag(location: Vec2, movement: Vec2): Boolean = false
-
-    override fun handleScroll(location: Vec2, movement: Vec2): Boolean = false
-
-    fun isHover(location: Vec2): Boolean = isInRegion(location, bottomLeft, topRight)
-
-    override fun updateScale(newScale: Vec2) {
-        scale = newScale
-    }
+    fun updateScale(newScale: Vec2): Vec2 = scale.set(newScale)
 
     companion object {
-
-        fun drawLabel(drawer: Drawer,
-                      element: GuiElementInterface,
-                      justify: TextJustify = TextJustify.CENTER,
-                      snipRegion: SnipRegion?
-        ) = drawer.renderer.drawText(
-            element.title,
-            element.offset,
-            vectorUnit.mul(element.textSize),
-            element.color,
-            justify,
-            false,
-            snipRegion)
-
-        fun calculateElementRegion(element: GuiElement) {
-            element.bottomLeft = element.offset.sub(element.scale)
-            element.topRight = element.offset.add(element.scale)
-        }
-
-        fun addOffset(element: GuiElement, newOffset: Vec2) = updateOffset(element, element.offset.add(newOffset))
-
-        fun updateOffset(element: GuiElement, newOffset: Vec2) {
-            element.offset.set(newOffset)
-            calculateElementRegion(element)
-        }
-
-        fun isInRegion(location: Vec2, regionBottomLeft: Vec2, regionTopRight: Vec2): Boolean =
-            location.x > regionBottomLeft.x
-                    && location.x < regionTopRight.x
-                    && location.y > regionBottomLeft.y
-                    && location.y < regionTopRight.y
-
     }
-
 }

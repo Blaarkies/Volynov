@@ -29,15 +29,26 @@ class GuiController(private val drawer: Drawer, val window: Window) {
 
     fun clear() = elements.clear()
 
-    fun checkHover(location: Vec2) = elements.forEach { it.handleHover(location) }
+    fun checkHover(location: Vec2) = elements.filterIsInstance<HasHover>()
+        .forEach { it.handleHover(location) }
 
-    fun checkLeftClickPress(location: Vec2) = elements.toList().any { it.handleLeftClickPress(location) }
+    fun checkLeftClickPress(location: Vec2) = elements.toList().filterIsInstance<HasClick>()
+        .any { it.handleLeftClickPress(location) }
 
-    fun checkLeftClickRelease(location: Vec2) = elements.toList().any { it.handleLeftClickRelease(location) }
+    fun checkLeftClickRelease(location: Vec2) = elements.toList().filterIsInstance<HasClick>()
+        .any { it.handleLeftClickRelease(location) }
 
-    fun checkLeftClickDrag(location: Vec2, movement: Vec2) = elements.any { it.handleLeftClickDrag(location, movement) }
+    fun checkLeftClickDrag(location: Vec2, movement: Vec2): Boolean {
+        return elements.filterIsInstance<HasDrag>()
+            .any { it.handleLeftClickDrag(location, movement) }
+    }
 
-    fun checkScroll(movement: Vec2, location: Vec2) = elements.any { it.handleScroll(location, movement) }
+    fun checkScroll(movement: Vec2, location: Vec2): Boolean {
+        return elements.filterIsInstance<HasScroll>()
+            .any { it.handleScroll(location, movement) } or
+                elements.filterIsInstance<HasKids>()
+                    .any { it.handleScroll(location, movement) }
+    }
 
     fun checkAddTextInput(text: String) = elements.filterIsInstance<GuiInput>().any { it.handleAddTextInput(text) }
 
@@ -47,7 +58,8 @@ class GuiController(private val drawer: Drawer, val window: Window) {
 
     fun textInputIsBusy(): Boolean = elements.filterIsInstance<GuiInput>().toList().any { it.textInputIsBusy }
 
-    fun locationIsGui(location: Vec2): Boolean = elements.any { it.isHover(location) }
+    fun locationIsGui(location: Vec2): Boolean = elements.filterIsInstance<HasHover>()
+        .any { it.isHover(location) }
 
     fun createMainMenu(
         onClickNewGame: () -> Unit,
@@ -160,7 +172,7 @@ class GuiController(private val drawer: Drawer, val window: Window) {
                 val updateHpCallback = { element: GuiElement ->
                     val screenLocation = name.offset.add(Vec2(0f, -15f))
                     element.updateOffset(screenLocation)
-                    element.title = "HP ${ceil(vehicle.hitPoints).toInt()}"
+                    (element as HasLabel).title = "HP ${ceil(vehicle.hitPoints).toInt()}"
                 }
                 val hitPoints = GuiLabel(drawer, Vec2(), justify, "", textSize, color, updateHpCallback)
 
@@ -257,11 +269,11 @@ class GuiController(private val drawer: Drawer, val window: Window) {
             }
             .zip(listOf(
                 GuiLabel(drawer, Vec2(), TextJustify.LEFT, getPlayerAimAngleDisplay(player), .15f,
-                    updateCallback = { it.title = getPlayerAimAngleDisplay(player) }).also {
+                    updateCallback = { (it as HasLabel).title = getPlayerAimAngleDisplay(player) }).also {
                     it.scale.set(makeVec2(20f))
                 },
                 GuiLabel(drawer, Vec2(), TextJustify.LEFT, getPlayerAimPowerDisplay(player), .15f,
-                    updateCallback = { it.title = getPlayerAimPowerDisplay(player) }).also {
+                    updateCallback = { (it as HasLabel).title = getPlayerAimPowerDisplay(player) }).also {
                     it.scale.set(makeVec2(20f))
                 }
             ))
@@ -293,8 +305,8 @@ class GuiController(private val drawer: Drawer, val window: Window) {
 
         commandPanel.addKids(
             actionButtons + aimingInfo + playerStats +
-                GuiLabel(drawer, Vec2(-30f, 30f), TextJustify.LEFT, "Weapons not yet implemented", .12f) +
-                weaponsList)
+                    GuiLabel(drawer, Vec2(-30f, 30f), TextJustify.LEFT, "Weapons not yet implemented", .12f) +
+                    weaponsList)
         elements.add(commandPanel)
 
         elements.add(GuiLabel(drawer, Vec2(-130f, -500f),
@@ -338,6 +350,5 @@ class GuiController(private val drawer: Drawer, val window: Window) {
     }
 
     private fun displayNumber(value: Float, decimals: Int): String = roundFloat(value, decimals).toString()
-
 
 }

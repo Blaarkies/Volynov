@@ -156,7 +156,8 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
         )
 
         drawer.renderer.drawText(
-            "GameTime ${gameState.tickTime.div(100f).roundToInt().div(10f)}s / PhaseTime ${elapsedTime.div(100f).roundToInt().div(10f)}s",
+            "GameTime ${gameState.tickTime.div(100f).roundToInt().div(10f)}s / PhaseTime ${elapsedTime.div(100f)
+                .roundToInt().div(10f)}s",
             Vec2(5f - camera.windowWidth * .5f, -30f + camera.windowHeight * .5f),
             vectorUnit.mul(0.1f), debugColor, TextJustify.LEFT, false
         )

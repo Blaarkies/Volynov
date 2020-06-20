@@ -2,65 +2,56 @@ package display.gui
 
 import display.draw.Drawer
 import display.draw.TextureEnum
-import display.graphic.BasicShapes
 import display.graphic.Color
 import display.graphic.SnipRegion
 import display.text.TextJustify
 import org.jbox2d.common.Vec2
 
 class GuiButton(
-    drawer: Drawer,
-    offset: Vec2 = Vec2(),
-    scale: Vec2 = Vec2(200f, 50f),
-    title: String = "",
-    textSize: Float = .2f,
-    color: Color = Color.WHITE.setAlpha(.7f),
-    private val onClick: () -> Unit = {},
-    updateCallback: (GuiElement) -> Unit = {}
-) : GuiElement(drawer, offset, scale, title, textSize, color, updateCallback) {
+    override val drawer: Drawer,
+    override val offset: Vec2 = Vec2(),
+    override val scale: Vec2 = Vec2(200f, 50f),
+    override var title: String = "",
+    override val textSize: Float = .2f,
+    override val color: Color = Color.WHITE.setAlpha(.7f),
+    override val onClick: () -> Unit = {},
+    override val updateCallback: (GuiElement) -> Unit = {}
+) : HasClick, HasOutline, HasLabel {
 
-    private var isPressed = false
-    private lateinit var outline: FloatArray
-    private lateinit var background: FloatArray
-    private var backgroundColor = color.setAlpha(.1f)
+    override lateinit var outline: FloatArray
+    override lateinit var activeBackground: FloatArray
+    override var backgroundColor = color.setAlpha(.1f)
+
+    override val justify = TextJustify.CENTER
+    override var isPressed = false
+    override lateinit var topRight: Vec2
+    override lateinit var bottomLeft: Vec2
+    override var id = GuiElementIdentifierType.DEFAULT
+    override var currentPhase = GuiElementPhases.IDLE
 
     init {
         calculateVisuals()
-        calculateElementRegion(this)
+        calculateElementRegion()
     }
 
-    private fun calculateVisuals() {
-        val linePoints = BasicShapes.square
-            .chunked(2)
-            .flatMap { listOf(it[0] * scale.x, it[1] * scale.y) }
-        outline = Drawer.getLine(linePoints, color, startWidth = 1f, wrapAround = true)
-        background = Drawer.getColoredData(linePoints, backgroundColor).toFloatArray()
-    }
-
-    override fun render(snipRegion: SnipRegion?) {
+    override fun render(parentSnipRegion: SnipRegion?) {
         drawer.textures.getTexture(TextureEnum.white_pixel).bind()
 
         when (currentPhase) {
             GuiElementPhases.HOVER ->
-                drawer.renderer.drawShape(background, offset, useCamera = false, snipRegion = snipRegion)
+                drawer.renderer.drawShape(activeBackground, offset, useCamera = false, snipRegion = parentSnipRegion)
         }
 
         when (currentPhase) {
             GuiElementPhases.ACTIVE ->
                 drawer.renderer.drawStrip(outline, offset,
                     scale = Vec2((scale.x - 2f) / scale.x, (scale.y - 2f) / scale.y),
-                    useCamera = false, snipRegion = snipRegion)
-            else ->
-                drawer.renderer.drawStrip(outline, offset, useCamera = false, snipRegion = snipRegion)
+                    useCamera = false, snipRegion = parentSnipRegion)
+            else -> super<HasOutline>.render(parentSnipRegion)
         }
 
-        super.render(snipRegion)
-        drawLabel(drawer, this, TextJustify.CENTER, snipRegion)
-    }
-
-    override fun handleHover(location: Vec2) {
-        if (isPressed) return
-        super.handleHover(location)
+        super<HasClick>.render(parentSnipRegion)
+        super<HasLabel>.render(parentSnipRegion)
     }
 
     override fun handleLeftClickPress(location: Vec2): Boolean {
@@ -83,9 +74,8 @@ class GuiButton(
         return true
     }
 
-    override fun updateScale(newScale: Vec2) {
-        super.updateScale(newScale)
-        calculateVisuals()
-    }
+    override fun updateScale(newScale: Vec2): Vec2 =
+        super<HasOutline>.updateScale(newScale)
+            .also { calculateVisuals() }
 
 }

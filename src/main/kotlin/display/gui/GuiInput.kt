@@ -12,20 +12,25 @@ import utility.Common.vectorUnit
 import utility.toList
 
 class GuiInput(
-    drawer: Drawer,
-    offset: Vec2 = Vec2(),
-    scale: Vec2 = Vec2(200f, 50f),
-    placeholder: String,
-    textSize: Float = .15f,
-    color: Color = Color.WHITE.setAlpha(.7f),
-    private val onClick: () -> Unit = {},
-    updateCallback: (GuiElement) -> Unit = {},
+    override val drawer: Drawer,
+    override val offset: Vec2 = Vec2(),
+    override val scale: Vec2 = Vec2(200f, 50f),
+    val placeholder: String,
+    private val textSize: Float = .15f,
+    override val color: Color = Color.WHITE.setAlpha(.7f),
+    override val onClick: () -> Unit = {},
+    override val updateCallback: (GuiElement) -> Unit = {},
     val onChange: (String) -> Unit
-) : GuiElement(drawer, offset, scale, placeholder, textSize, color, updateCallback) {
+) : HasClick {
+
+    override var isPressed = false
+    override var topRight = Vec2()
+    override var bottomLeft = Vec2()
+    override var id = GuiElementIdentifierType.DEFAULT
+    override var currentPhase = GuiElementPhases.IDLE
 
     private val blinkRate = 400
     private var cursorLine: FloatArray
-    private var isPressed = false
     private var buttonOutline: FloatArray
     private var buttonBackground: FloatArray
     private var backgroundColor = color.setAlpha(.1f)
@@ -49,20 +54,20 @@ class GuiInput(
         buttonOutline = Drawer.getLine(linePoints, color, startWidth = 1f, wrapAround = true)
         buttonBackground = Drawer.getColoredData(linePoints, backgroundColor).toFloatArray()
 
-        calculateElementRegion(this)
+        calculateElementRegion()
     }
 
-    override fun render(snipRegion: SnipRegion?) {
+    override fun render(parentSnipRegion: SnipRegion?) {
         drawer.textures.getTexture(TextureEnum.white_pixel).bind()
 
         when (currentPhase) {
             GuiElementPhases.HOVER ->
-                drawer.renderer.drawShape(buttonBackground, offset, useCamera = false, snipRegion = snipRegion)
+                drawer.renderer.drawShape(buttonBackground, offset, useCamera = false, snipRegion = parentSnipRegion)
             GuiElementPhases.INPUT -> {
-                drawer.renderer.drawShape(buttonBackground, offset, useCamera = false, snipRegion = snipRegion)
+                drawer.renderer.drawShape(buttonBackground, offset, useCamera = false, snipRegion = parentSnipRegion)
 
                 if (System.currentTimeMillis().rem(blinkRate * 2) < blinkRate) {
-                    drawer.renderer.drawStrip(cursorLine, offset, useCamera = false, snipRegion = snipRegion)
+                    drawer.renderer.drawStrip(cursorLine, offset, useCamera = false, snipRegion = parentSnipRegion)
                 }
             }
         }
@@ -71,25 +76,31 @@ class GuiInput(
 
         val paddedOffset = offset.clone().also { it.x -= paddedScale.x }
         when (inputText.length) {
-            0 -> drawer.renderer.drawText(title, paddedOffset, vectorUnit.mul(textSize),
-                color.setAlpha(.4f), TextJustify.LEFT, false, snipRegion)
+            0 -> drawer.renderer.drawText(placeholder, paddedOffset, vectorUnit.mul(textSize),
+                color.setAlpha(.4f), TextJustify.LEFT, false, parentSnipRegion)
             else -> drawer.renderer.drawText(inputText, paddedOffset, vectorUnit.mul(textSize),
-                color, TextJustify.LEFT, false, snipRegion)
+                color, TextJustify.LEFT, false, parentSnipRegion)
         }
-        super.render(snipRegion)
+        super.render(parentSnipRegion)
     }
 
-    override fun handleHover(location: Vec2) {
-        if (textInputIsBusy) return
-        super.handleHover(location)
+    override fun handleHover(location: Vec2): Boolean {
+        return when {
+            textInputIsBusy -> false
+            super.isHover(location) -> {
+                currentPhase = GuiElementPhases.HOVER
+                true
+            }
+            else -> {
+                currentPhase = GuiElementPhases.IDLE
+                false
+            }
+        }
     }
 
     override fun handleLeftClickPress(location: Vec2): Boolean {
-        val isHovered = isHover(location)
-        if (isHovered) {
-            isPressed = true
-            currentPhase = GuiElementPhases.ACTIVE
-        } else {
+        val isHovered = super.handleLeftClickPress(location)
+        if (!isHovered) {
             currentPhase = GuiElementPhases.IDLE
         }
         return isHovered
