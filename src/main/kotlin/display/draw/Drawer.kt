@@ -1,5 +1,6 @@
 package display.draw
 
+import dI
 import display.graphic.BasicShapes
 import display.graphic.Color
 import display.graphic.Renderer
@@ -22,13 +23,10 @@ import utility.toList
 import java.util.*
 import kotlin.math.sqrt
 
-class Drawer(val renderer: Renderer) {
+class Drawer {
 
-    val textures = TextureHolder()
-
-    fun init() {
-        textures.init()
-    }
+    val textures = dI.textures
+    val renderer = dI.renderer
 
     fun drawDebugForces(freeBody: FreeBody) {
         //        val x = freeBody.worldBody.position.x

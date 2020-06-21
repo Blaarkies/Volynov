@@ -28,7 +28,7 @@ class Vehicle(
     dy: Float,
     dh: Float,
     mass: Float,
-    radius: Float = .7F,
+    radius: Float = .6F,
     restitution: Float = .3f,
     friction: Float = .6f,
     texture: TextureEnum,

@@ -1,6 +1,6 @@
 package display.gui
 
-import display.draw.Drawer
+import dI
 import display.draw.TextureEnum
 import display.graphic.Color
 import display.graphic.SnipRegion
@@ -8,7 +8,6 @@ import display.text.TextJustify
 import org.jbox2d.common.Vec2
 
 class GuiButton(
-    override val drawer: Drawer,
     override val offset: Vec2 = Vec2(),
     override val scale: Vec2 = Vec2(200f, 50f),
     override var title: String = "",
@@ -35,16 +34,16 @@ class GuiButton(
     }
 
     override fun render(parentSnipRegion: SnipRegion?) {
-        drawer.textures.getTexture(TextureEnum.white_pixel).bind()
+        dI.textures.getTexture(TextureEnum.white_pixel).bind()
 
         when (currentPhase) {
             GuiElementPhases.HOVER ->
-                drawer.renderer.drawShape(activeBackground, offset, useCamera = false, snipRegion = parentSnipRegion)
+                dI.renderer.drawShape(activeBackground, offset, useCamera = false, snipRegion = parentSnipRegion)
         }
 
         when (currentPhase) {
             GuiElementPhases.ACTIVE ->
-                drawer.renderer.drawStrip(outline, offset,
+                dI.renderer.drawStrip(outline, offset,
                     scale = Vec2((scale.x - 2f) / scale.x, (scale.y - 2f) / scale.y),
                     useCamera = false, snipRegion = parentSnipRegion)
             else -> super<HasOutline>.render(parentSnipRegion)

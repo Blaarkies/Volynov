@@ -1,5 +1,6 @@
 package display.gui
 
+import dI
 import display.draw.Drawer
 import display.draw.TextureEnum
 import display.graphic.BasicShapes
@@ -12,7 +13,6 @@ import utility.Common.vectorUnit
 import utility.toList
 
 class GuiInput(
-    override val drawer: Drawer,
     override val offset: Vec2 = Vec2(),
     override val scale: Vec2 = Vec2(200f, 50f),
     val placeholder: String,
@@ -58,27 +58,27 @@ class GuiInput(
     }
 
     override fun render(parentSnipRegion: SnipRegion?) {
-        drawer.textures.getTexture(TextureEnum.white_pixel).bind()
+        dI.textures.getTexture(TextureEnum.white_pixel).bind()
 
         when (currentPhase) {
             GuiElementPhases.HOVER ->
-                drawer.renderer.drawShape(buttonBackground, offset, useCamera = false, snipRegion = parentSnipRegion)
+                dI.renderer.drawShape(buttonBackground, offset, useCamera = false, snipRegion = parentSnipRegion)
             GuiElementPhases.INPUT -> {
-                drawer.renderer.drawShape(buttonBackground, offset, useCamera = false, snipRegion = parentSnipRegion)
+                dI.renderer.drawShape(buttonBackground, offset, useCamera = false, snipRegion = parentSnipRegion)
 
                 if (System.currentTimeMillis().rem(blinkRate * 2) < blinkRate) {
-                    drawer.renderer.drawStrip(cursorLine, offset, useCamera = false, snipRegion = parentSnipRegion)
+                    dI.renderer.drawStrip(cursorLine, offset, useCamera = false, snipRegion = parentSnipRegion)
                 }
             }
         }
 
-        drawer.renderer.drawStrip(buttonOutline, offset, useCamera = false)
+        dI.renderer.drawStrip(buttonOutline, offset, useCamera = false)
 
         val paddedOffset = offset.clone().also { it.x -= paddedScale.x }
         when (inputText.length) {
-            0 -> drawer.renderer.drawText(placeholder, paddedOffset, vectorUnit.mul(textSize),
+            0 -> dI.renderer.drawText(placeholder, paddedOffset, vectorUnit.mul(textSize),
                 color.setAlpha(.4f), TextJustify.LEFT, false, parentSnipRegion)
-            else -> drawer.renderer.drawText(inputText, paddedOffset, vectorUnit.mul(textSize),
+            else -> dI.renderer.drawText(inputText, paddedOffset, vectorUnit.mul(textSize),
                 color, TextJustify.LEFT, false, parentSnipRegion)
         }
         super.render(parentSnipRegion)

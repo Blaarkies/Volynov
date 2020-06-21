@@ -29,7 +29,7 @@ object MapGenerator {
         val orbitalLevels = (1..gameState.gamePlayers.size).map { OrbitalLevel(it, it) }
         val moons = (1..ceil(gameState.gamePlayers.size * .7f)).map {
             val (x, y, h, dx, dy, dh) = getSafeOrbitLocationVelocity(orbitalLevels, planet)
-            Planet("luna $it", gameState.planets, gameState.world, x, y, h, dx, dy, dh, 110f, 1.25f,
+            Planet("luna $it", gameState.planets, gameState.world, x, y, h, dx, dy, dh, 150f, 1.6f,
                 texture = TextureEnum.full_moon)
         }
 

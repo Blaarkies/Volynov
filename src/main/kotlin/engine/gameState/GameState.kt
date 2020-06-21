@@ -1,5 +1,6 @@
 package engine.gameState
 
+import dI
 import display.Window
 import engine.freeBody.*
 import engine.motion.Motion
@@ -20,8 +21,6 @@ class GameState {
     val gamePlayers = mutableListOf<GamePlayer>()
     var playerOnTurn: GamePlayer? = null
 
-    lateinit var camera: CameraView
-
     var world = World(Vec2())
     var tickTime = 0f
     val vehicles = mutableListOf<Vehicle>()
@@ -41,10 +40,6 @@ class GameState {
     var gravityMap = HashMap<CellLocation, GravityCell>()
     var resolution = 0f
     val activeCallbacks = mutableListOf<() -> Unit>()
-
-    fun init(window: Window) {
-        camera = CameraView(window)
-    }
 
     private fun tickGravityChanges() {
         Gravity.addGravityForces(gravityBodies)
@@ -85,7 +80,7 @@ class GameState {
 
     fun reset() {
         gamePlayers.clear()
-        camera.reset()
+        dI.cameraView.reset()
         world = World(Vec2())
         tickTime = 0f
         vehicles.clear()
@@ -99,7 +94,6 @@ class GameState {
         it.world.setContactListener(GameContactListener(it))
         it.gamePlayers.addAll(gamePlayers.map { oldPlayer -> oldPlayer.clone() })
         it.playerOnTurn = it.gamePlayers.find { newPlayer -> newPlayer.name == playerOnTurn?.name }
-        it.camera = camera
         vehicles.forEach { oldVehicle ->
             val playerOwningVehicle = gamePlayers.find { oldPlayer -> oldPlayer.vehicle == oldVehicle }!!.name
                 .let { oldName -> it.gamePlayers.find { newPlayer -> newPlayer.name == oldName }!! }

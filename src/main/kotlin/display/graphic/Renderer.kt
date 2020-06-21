@@ -1,5 +1,6 @@
 package display.graphic
 
+import dI
 import display.text.Font
 import display.text.TextJustify
 import input.CameraView
@@ -33,10 +34,9 @@ class Renderer {
     private var isDrawing = false
     lateinit var font: Font
     private val vertexDimensionCount = 9
-    private lateinit var cameraView: CameraView
+    private val cameraView = dI.cameraView
 
-    fun init(gameStateCamera: CameraView) {
-        cameraView = gameStateCamera
+    fun init() {
         setupShaderProgram()
 
         glEnable(GL_BLEND)

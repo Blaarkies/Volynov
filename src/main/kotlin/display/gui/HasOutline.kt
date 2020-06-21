@@ -1,5 +1,6 @@
 package display.gui
 
+import dI
 import display.draw.Drawer
 import display.draw.TextureEnum
 import display.graphic.BasicShapes
@@ -21,8 +22,8 @@ interface HasOutline : GuiElement {
     }
 
     override fun render(parentSnipRegion: SnipRegion?) {
-        drawer.textures.getTexture(TextureEnum.white_pixel).bind()
-        drawer.renderer.drawStrip(outline, offset, useCamera = false, snipRegion = parentSnipRegion)
+        dI.textures.getTexture(TextureEnum.white_pixel).bind()
+        dI.renderer.drawStrip(outline, offset, useCamera = false, snipRegion = parentSnipRegion)
 
         super.render(parentSnipRegion)
     }

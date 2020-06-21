@@ -1,5 +1,6 @@
 package app
 
+import dI
 import display.Window
 import utility.CustomTimer
 
@@ -9,23 +10,23 @@ class AppRunner(
     height: Int,
     vSync: Boolean,
     private val gameLogic: IGameLogic,
-    private val customTimer: CustomTimer = CustomTimer(),
-    private val window: Window = Window(
-        windowTitle,
-        width,
-        height,
-        vSync
-    ),
-    private val debugMode: Boolean
+    private val customTimer: CustomTimer = CustomTimer()
 ) : Runnable {
 
     private val targetFps = 60
     private val targetUps = 60
     private val interval = 1f / targetUps
 
+    private val window = Window(windowTitle, width, height, vSync)
+
+    init {
+        dI.window = window
+        dI.init()
+    }
+
     override fun run() {
         try {
-            init(debugMode = debugMode)
+            init()
             gameLoop()
         } catch (exception: Exception) {
             exception.printStackTrace()
@@ -35,10 +36,10 @@ class AppRunner(
     }
 
     @Throws(Exception::class)
-    private fun init(debugMode: Boolean) {
-        window.init(debugMode = debugMode)
+    private fun init() {
+        window.init()
         customTimer.init()
-        gameLogic.init(window)
+        gameLogic.init()
     }
 
     private fun gameLoop() {
@@ -54,7 +55,7 @@ class AppRunner(
                 accumulator -= interval
             }
 
-            gameLogic.render(window)
+            gameLogic.render()
             window.update()
 
             if (!window.isVSync()) {

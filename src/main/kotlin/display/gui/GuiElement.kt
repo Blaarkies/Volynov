@@ -1,13 +1,11 @@
 package display.gui
 
-import display.draw.Drawer
 import display.graphic.Color
 import display.graphic.SnipRegion
 import org.jbox2d.common.Vec2
 
 interface GuiElement {
 
-    val drawer: Drawer
     val offset: Vec2
     val scale: Vec2
     val color: Color

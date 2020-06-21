@@ -1,5 +1,6 @@
 package display.gui
 
+import dI
 import display.draw.Drawer
 import display.draw.TextureEnum
 import display.graphic.BasicShapes
@@ -13,7 +14,6 @@ import utility.PidController
 import utility.toSign
 
 class GuiScroll(
-    override val drawer: Drawer,
     override val offset: Vec2 = Vec2(),
     override val scale: Vec2 = Vec2(100f, 100f),
     override val color: Color = Color.WHITE.setAlpha(.5f),
@@ -60,7 +60,7 @@ class GuiScroll(
 
         thumbScale = Vec2(6f, scale.y * .5f)
         thumbRelativeOffset = getOffsetForLayoutPosition(LayoutPosition.TOP_RIGHT, scale, thumbScale)
-        thumb = GuiIcon(drawer, scale = thumbScale, color = color)
+        thumb = GuiIcon(scale = thumbScale, color = color)
 
         scrollBarRegionScale = Vec2(thumbScale.x, scale.y * 2f)
         scrollBarRegionRelativeOffset = Vec2(scale.x - thumbScale.x, 0f)
@@ -74,8 +74,8 @@ class GuiScroll(
     }
 
     override fun render(parentSnipRegion: SnipRegion?) {
-        drawer.textures.getTexture(TextureEnum.white_pixel).bind()
-        drawer.renderer.drawStrip(outline, offset, useCamera = false, snipRegion = snipRegion)
+        dI.textures.getTexture(TextureEnum.white_pixel).bind()
+        dI.renderer.drawStrip(outline, offset, useCamera = false, snipRegion = snipRegion)
 
         kidElements.filter {
             it.offset.sub(it.scale).y < offset.add(scale).y

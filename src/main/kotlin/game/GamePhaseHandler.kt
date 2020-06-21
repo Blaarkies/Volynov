@@ -1,6 +1,6 @@
 package game
 
-import display.Window
+import dI
 import display.draw.Drawer
 import display.draw.TextureEnum
 import display.events.KeyboardEvent
@@ -13,6 +13,7 @@ import engine.gameState.GameState
 import engine.gameState.GameStateSimulator.getNewPrediction
 import engine.motion.Director
 import engine.shields.VehicleShield
+import input.CameraView
 import io.reactivex.subjects.PublishSubject
 import org.jbox2d.common.Vec2
 import utility.Common.getTimingFunctionEaseIn
@@ -22,14 +23,15 @@ import java.util.concurrent.TimeUnit
 import kotlin.concurrent.thread
 import kotlin.math.roundToInt
 
-class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
+class GamePhaseHandler {
 
     private val timeStep = 1f / 60f
     private val velocityIterations = 8
     private val positionIterations = 3
 
-    private val camera
-        get() = gameState.camera
+    private val gameState = dI.gameState
+    val drawer = dI.drawer
+    private val camera = dI.cameraView
 
     private var currentPhase = GamePhases.NONE
     private var isTransitioning = false
@@ -51,10 +53,10 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
     var playerAimChanged = PublishSubject.create<Boolean>()
     private val unsubscribe = PublishSubject.create<Boolean>()
 
-    fun init(window: Window) {
-        guiController = GuiController(drawer, window)
-        exitCallback = { window.exit() }
-        when (0) {
+    fun init() {
+        guiController = GuiController()
+        exitCallback = { dI.window.exit() }
+        when (2) {
             0 -> setupMainMenu()
             1 -> setupMainMenuSelectPlayers()
             2 -> {

@@ -13,12 +13,15 @@ fun main() = runBlocking {
         val isDebugMode = (configLine == "isDebugMode=1")
         val screenX = if (isDebugMode) 800 else 1920
         val screenY = if (isDebugMode) 800 else 1080
+        dI.isDebugMode = isDebugMode
 
         val gameLogic: IGameLogic = AppLogic()
-        val gameEngine = AppRunner("Volynov", screenX, screenY, true, gameLogic, debugMode = isDebugMode)
+        val gameEngine = AppRunner("Volynov", screenX, screenY, true, gameLogic)
         gameEngine.run()
     } catch (exception: Exception) {
         exception.printStackTrace()
         exitProcess(-1)
     }
 }
+
+val dI = DependencyInjectionContainer()

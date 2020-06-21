@@ -1,5 +1,6 @@
 package display.gui
 
+import dI
 import display.draw.Drawer
 import display.draw.TextureEnum
 import display.graphic.BasicShapes
@@ -11,7 +12,6 @@ import utility.Common
 import utility.Common.makeVec2
 
 class GuiPanel(
-    override val drawer: Drawer,
     override val offset: Vec2 = Vec2(),
     override val scale: Vec2 = Vec2(100f, 100f),
     var title: String = "",
@@ -53,8 +53,8 @@ class GuiPanel(
 
         if (draggable) {
             addKids(listOf(-1f, 1f).map {
-                GuiIcon(drawer, dragHandleRelativeOffset.add(Vec2(it * (dragHandleScale.x - 20), 0f)),
-                    makeVec2(6), texture = TextureEnum.icon_draggable)
+                GuiIcon(dragHandleRelativeOffset.add(Vec2(it * (dragHandleScale.x - 20), 0f)), makeVec2(6),
+                    texture = TextureEnum.icon_draggable)
             })
         }
 
@@ -64,16 +64,16 @@ class GuiPanel(
     }
 
     override fun render(parentSnipRegion: SnipRegion?) {
-        drawer.textures.getTexture(TextureEnum.white_pixel).bind()
+        dI.textures.getTexture(TextureEnum.white_pixel).bind()
 
-        drawer.renderer.drawShape(background, offset, 0f, scale, useCamera = false, snipRegion = parentSnipRegion)
+        dI.renderer.drawShape(background, offset, 0f, scale, useCamera = false, snipRegion = parentSnipRegion)
 
         if (draggable) {
-            drawer.renderer.drawStrip(draggableOutline, dragHandleOffset, useCamera = false,
+            dI.renderer.drawStrip(draggableOutline, dragHandleOffset, useCamera = false,
                 snipRegion = parentSnipRegion)
         }
 
-        drawer.renderer.drawText(
+        dI.renderer.drawText(
             title,
             offset.add(Vec2(0f, scale.y - 25f)),
             Common.vectorUnit.mul(.15f),
