@@ -1,19 +1,25 @@
 package display.gui
 
+import dI
 import display.draw.Drawer
 import display.gui.LayoutController.getOffsetForLayoutPosition
 import io.mockk.mockk
 import org.jbox2d.common.Vec2
-import org.junit.jupiter.api.*
+import org.junit.jupiter.api.DynamicTest
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestFactory
+import org.junit.jupiter.api.assertDoesNotThrow
 import utility.Common.makeVec2
 import utility.toSign
 
 internal class LayoutControllerTest {
 
-    val mockDrawer: Drawer = mockk()
+    init {
+        val drawer: Drawer = mockk(relaxed = true)
+        dI.drawer = drawer
+    }
     val baseOffset = { Vec2() }
     val baseScale = { makeVec2(1) }
-    val directions = listOf(true, false)
 
     private fun getDirectionName(direction: Boolean): String = if (direction) "horizontal" else "vertical"
 
@@ -25,25 +31,23 @@ internal class LayoutControllerTest {
         ) + listOf(
             SetElementsInStacksTest("list of 1, it does nothing to the guiElement",
                 null, 0f, false, 0f),
-            SetElementsInStacksTest("list of 1, it does nothing to the guiElement",
-                null, 0f, false, 0f),
             SetElementsInStacksTest("list of 2, it moves elements correctly",
                 null, 0f, false, 0f, 2f),
             SetElementsInStacksTest("list of 3, it moves elements correctly",
                 null, 0f, false, 0f, 2f, 4f),
-            SetElementsInStacksTest("list of 2 and gap, it moves elements correctly",
+            SetElementsInStacksTest("list of 2 and GAP, it moves elements correctly",
                 null, 10f, false, 0f, 12f),
-            SetElementsInStacksTest("list of 2 and centering, it moves elements correctly",
+            SetElementsInStacksTest("list of 2 and CENTERING, it moves elements correctly",
                 null, 0f, true, -1f, 1f),
-            SetElementsInStacksTest("list of 2 and gap and centering, it moves elements correctly",
+            SetElementsInStacksTest("list of 2 and GAP AND CENTERING, it moves elements correctly",
                 null, 10f, true, -6f, 6f),
-            SetElementsInStacksTest("list of 3 and distinct sizes, it moves elements correctly", listOf(
+            SetElementsInStacksTest("list of 3 and DISTINCT sizes, it moves elements correctly", listOf(
                 ElementConfig(scale = makeVec2(1)),
                 ElementConfig(scale = makeVec2(3)),
                 ElementConfig(scale = makeVec2(2))
             ), 0f, false, 0f, 4f, 9f)
         )
-            .flatMap { config -> directions.map { Pair(config, it) } }
+            .flatMap { config -> listOf(true, false).map { Pair(config, it) } }
             .map { (config, isHorizontal) ->
                 DynamicTest.dynamicTest("when ${getDirectionName(isHorizontal)} ${config.name}") {
                     checkListOfN(config.elementConfigs, isHorizontal, config.gap, config.centered,
@@ -61,7 +65,7 @@ internal class LayoutControllerTest {
             .zip(configList
                 ?: (0..expectedValues.size).map { ElementConfig() })
             .map { (expectedValue, config) ->
-                val element = GuiElement(mockDrawer, config.offset, config.scale)
+                val element = GuiButton(config.offset, config.scale)
                 Pair(element, expectedValue)
             }
 

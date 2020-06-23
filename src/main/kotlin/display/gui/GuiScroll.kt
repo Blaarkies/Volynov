@@ -94,7 +94,12 @@ class GuiScroll(
 
     override fun handleHover(location: Vec2): Boolean {
         lastMouseLocation = location
-        return super<HasKids>.handleHover(location)
+        return when {
+            this.isHover(location) -> {
+                super<HasKids>.handleHover(location)
+            }
+            else -> false
+        }
     }
 
     override fun scrollBarOnMove() {
@@ -153,6 +158,7 @@ class GuiScroll(
         scrollBarMax = 0f
         scrollBarMin = kidElements.minBy { it.offset.y }
             .let { kidElementOffsets[it]!!.y + 2 * (scale.y - it!!.scale.y) }
+            .coerceAtMost(0f)
     }
 
     private fun calculateSnipRegion() {

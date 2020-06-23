@@ -1,20 +1,23 @@
 package display.gui
 
-import display.draw.Drawer
-import io.mockk.*
+import dI
+import display.graphic.Renderer
+import io.mockk.mockk
+import io.mockk.verify
 import org.jbox2d.common.Vec2
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-
 import utility.Common
 import utility.Expect.Companion.expect
-import utility.toSign
 
 internal class GuiButtonTest {
 
-    private val mockDrawer: Drawer = mockk(relaxed = true)
+    init {
+        val renderer: Renderer = mockk(relaxed = true)
+        dI.renderer = renderer
+    }
 
     val baseOffset = { Vec2() }
     val baseScale = { Common.makeVec2(1) }
@@ -24,12 +27,12 @@ internal class GuiButtonTest {
 
     @Test
     fun `when constructed idle, button phase is correct`() {
-        val button = GuiButton(mockDrawer, baseOffset(), baseScale())
+        val button = GuiButton(baseOffset(), baseScale())
         verifyIdlePhase(button)
         verify(inverse = true) {
-            mockDrawer.renderer.drawShape(any())
-            mockDrawer.renderer.drawStrip(any())
-            mockDrawer.renderer.drawText(any(), any(), any(), any())
+            dI.renderer.drawShape(any())
+            dI.renderer.drawStrip(any())
+            dI.renderer.drawText(any(), any(), any(), any())
         }
     }
 
@@ -43,11 +46,11 @@ internal class GuiButtonTest {
         @BeforeEach
         fun setup() {
             wasClicked = false
-            button = GuiButton(mockDrawer, baseOffset(), baseScale(), onClick = { wasClicked = true })
+            button = GuiButton(baseOffset(), baseScale(), onClick = { wasClicked = true })
         }
 
         @Test
-        fun `when location is out of bounds, button is not pressed and not clicked`() {
+        fun `when location is out of bounds, nothing happens`() {
             button.handleLeftClickPress(outOfBounds)
 
             assert(!wasClicked)
@@ -73,7 +76,7 @@ internal class GuiButtonTest {
         @BeforeEach
         fun setup() {
             wasClicked = false
-            button = GuiButton(mockDrawer, baseOffset(), baseScale(), onClick = { wasClicked = true })
+            button = GuiButton(baseOffset(), baseScale(), onClick = { wasClicked = true })
         }
 
         @Test
@@ -85,7 +88,7 @@ internal class GuiButtonTest {
         }
 
         @Test
-        fun `when button is pressed and location is out of bounds, onClick does not fire and isPressed resets`() {
+        fun `when button is pressed but released out of bounds, onClick does not fire and isPressed resets`() {
             button.handleLeftClickPress(inBounds)
             button.handleLeftClickRelease(outOfBounds)
 
@@ -94,7 +97,7 @@ internal class GuiButtonTest {
         }
 
         @Test
-        fun `when button is pressed and location is in bounds, onClick fires and isPressed resets`() {
+        fun `when button is pressed and released in bounds, onClick fires and isPressed resets`() {
             button.handleLeftClickPress(inBounds)
             button.handleLeftClickRelease(inBounds)
 

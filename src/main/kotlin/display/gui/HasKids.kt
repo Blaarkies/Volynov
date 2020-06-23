@@ -30,9 +30,13 @@ interface HasKids : HasClick {
     }
 
     override fun handleLeftClickPress(location: Vec2): Boolean =
-        super.handleHover(location) and
+        when {
+            super.isHover(location) -> {
                 kidElements.filterIsInstance<HasClick>()
                     .any { it.handleLeftClickPress(location) }
+            }
+            else -> false
+        }
 
     override fun handleLeftClickRelease(location: Vec2): Boolean =
         super.handleLeftClickRelease(location) or
@@ -40,7 +44,8 @@ interface HasKids : HasClick {
                     .any { it.handleLeftClickRelease(location) }
 
     fun handleScroll(location: Vec2, movement: Vec2): Boolean =
-        kidElements.filterIsInstance<HasScroll>()
+        !super.handleHover(location)
+                || kidElements.filterIsInstance<HasScroll>()
             .any { it.handleScroll(location, movement) }
 
     fun handleLeftClickDrag(location: Vec2, movement: Vec2): Boolean =

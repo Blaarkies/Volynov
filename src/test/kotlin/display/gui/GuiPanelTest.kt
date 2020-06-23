@@ -1,21 +1,32 @@
 package display.gui
 
+import dI
 import display.draw.Drawer
-import io.mockk.*
+import display.draw.TextureHolder
+import display.graphic.Renderer
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.verify
 import org.jbox2d.common.Vec2
 import org.junit.jupiter.api.*
-
 import utility.Common
 
 internal class GuiPanelTest {
 
-    private val mockDrawer: Drawer = mockk(relaxed = true)
+    init {
+        val drawer: Drawer = mockk(relaxed = true)
+        dI.drawer = drawer
+        val renderer: Renderer = mockk(relaxed = true)
+        dI.renderer = renderer
+        val textures: TextureHolder = mockk(relaxed = true)
+        dI.textures = textures
+    }
 
     val baseOffset = { Vec2() }
     val baseScale = { Common.makeVec2(1) }
 
     val inBounds = Vec2(0f, 0f)
-    val outOfBounds = Vec2(-2f, 0f)
+    val outOfBounds = Vec2(-2000f, 0f)
     val movement = Vec2(0f, 1f)
 
     @Test
@@ -23,7 +34,7 @@ internal class GuiPanelTest {
         val panel = makePanel()
         panel.render(null)
 
-        verify(inverse = true) { mockDrawer.renderer.drawStrip(any(), any(), any(), any(), any(), any()) }
+        verify(inverse = true) { dI.renderer.drawStrip(any(), any(), any(), any(), any(), any()) }
     }
 
     @Test
@@ -31,7 +42,7 @@ internal class GuiPanelTest {
         val panel = makePanel(true)
         panel.render(null)
 
-        verify { mockDrawer.renderer.drawStrip(any(), any(), any(), any(), any(), any()) }
+        verify { dI.renderer.drawStrip(any(), any(), any(), any(), any(), any()) }
     }
 
     @Test
@@ -52,7 +63,7 @@ internal class GuiPanelTest {
                     DynamicTest.dynamicTest("when $name, it calls kid elements updateOffset ") {
                         val (panel, kid) = makePanelAndKid()
                         val kidOffsetOld = Vec2(0f, 0f)
-                        kid.offset = kidOffsetOld.clone()
+                        kid.updateOffset(kidOffsetOld.clone())
                         val panelMovement = Vec2(1f, 0f)
                         method(panel, panelMovement)
 
@@ -81,11 +92,11 @@ internal class GuiPanelTest {
     }
 
     @Test
-    fun `when handleHover out of bounds, it does not call kid elements handleHover`() {
+    fun `when handleHover out of bounds, it also calls kid elements handleHover`() {
         val (panel, kid) = makePanelAndKid()
         panel.handleHover(outOfBounds)
 
-        verify(inverse = true) { kid.handleHover(outOfBounds) }
+        verify { kid.handleHover(outOfBounds) }
     }
 
     @DisplayName("handleLeftClickPress(location)")
@@ -95,7 +106,7 @@ internal class GuiPanelTest {
         @Test
         fun `when location out of bounds, it does nothing`() {
             val (panel, kid) = makePanelAndKid()
-            assert(!panel.handleLeftClickPress(outOfBounds))
+            panel.handleLeftClickPress(outOfBounds)
 
             verify(inverse = true) { kid.handleLeftClickPress(outOfBounds) }
         }
@@ -144,7 +155,7 @@ internal class GuiPanelTest {
 
         @Test
         fun `when has kid elements, it calls kid elements handleLeftClickDrag`() {
-            val (panel, kid) = makePanelAndKid()
+            val (panel, kid) = makePanelAndScrollKid()
             panel.handleLeftClickDrag(outOfBounds, movement)
 
             verify { kid.handleLeftClickDrag(outOfBounds, movement) }
@@ -152,7 +163,7 @@ internal class GuiPanelTest {
 
         @Test
         fun `when kid element accepts handleLeftClickDrag, it does not call didParentDrag`() {
-            val (panel, kid) = makePanelAndKid(true)
+            val (panel, kid) = makePanelAndScrollKid(true)
             every { kid.handleLeftClickDrag(any(), any()) } returns true
 
             val panelOffsetOld = panel.offset.clone()
@@ -187,7 +198,7 @@ internal class GuiPanelTest {
 
         @Test
         fun `when location out of bounds, it does nothing`() {
-            val (panel, kid) = makePanelAndKid()
+            val (panel, kid) = makePanelAndScrollKid()
             panel.handleScroll(outOfBounds, movement)
 
             verify(inverse = true) { kid.handleScroll(outOfBounds, movement) }
@@ -195,7 +206,7 @@ internal class GuiPanelTest {
 
         @Test
         fun `when has kid elements, it calls kid elements handleScroll`() {
-            val (panel, kid) = makePanelAndKid()
+            val (panel, kid) = makePanelAndScrollKid()
             panel.handleScroll(inBounds, movement)
 
             verify { kid.handleScroll(inBounds, movement) }
@@ -229,10 +240,17 @@ internal class GuiPanelTest {
     }
 
     private fun makePanel(draggable: Boolean = false): GuiPanel =
-        GuiPanel(mockDrawer, baseOffset(), baseScale(), draggable = draggable)
+        GuiPanel(baseOffset(), baseScale(), draggable = draggable)
 
-    private fun makePanelAndKid(draggable: Boolean = false): Pair<GuiPanel, GuiElement> {
-        val kid: GuiElement = mockk(relaxed = true)
+    private fun makePanelAndKid(draggable: Boolean = false): Pair<GuiPanel, HasDrag> {
+        val kid: HasDrag = mockk(relaxed = true)
+        val panel = makePanel(draggable).also { it.addKid(kid) }
+
+        return Pair(panel, kid)
+    }
+
+    private fun makePanelAndScrollKid(draggable: Boolean = false): Pair<GuiPanel, HasScroll> {
+        val kid: HasScroll = mockk(relaxed = true)
         val panel = makePanel(draggable).also { it.addKid(kid) }
 
         return Pair(panel, kid)

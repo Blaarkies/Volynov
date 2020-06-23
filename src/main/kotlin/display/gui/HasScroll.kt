@@ -39,11 +39,13 @@ interface HasScroll : HasClick {
 
     fun updateScrollBarRange() = Unit
 
-    fun handleLeftClickDrag(location: Vec2, movement: Vec2): Boolean {
-        return if (isPressed && isHover(location)) {
-            addScrollBarPosition(-movement.y)
-            true
-        } else false
-    }
+    fun handleLeftClickDrag(location: Vec2, movement: Vec2): Boolean =
+        when {
+            isPressed && isHover(location) -> {
+                addScrollBarPosition(-movement.y)
+                true
+            }
+            else -> false
+        }
 
 }

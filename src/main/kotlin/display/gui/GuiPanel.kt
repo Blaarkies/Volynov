@@ -98,10 +98,9 @@ class GuiPanel(
         super.calculateDraggableRegion()
     }
 
-    override fun handleLeftClickPress(location: Vec2): Boolean {
-        return super<HasKids>.handleLeftClickPress(location) or
-                super<HasDrag>.handleLeftClickPress(location)
-    }
+    override fun handleLeftClickPress(location: Vec2): Boolean =
+        super<HasKids>.handleLeftClickPress(location)
+                || super<HasDrag>.handleLeftClickPress(location)
 
     override fun handleLeftClickDrag(location: Vec2, movement: Vec2): Boolean {
         val kidDragged = kidElements.filterIsInstance<HasScroll>()

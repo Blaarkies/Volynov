@@ -1,17 +1,26 @@
 package display.gui
 
+import dI
 import display.draw.Drawer
+import display.draw.TextureHolder
+import display.graphic.Renderer
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import org.jbox2d.common.Vec2
 import org.junit.jupiter.api.*
-
 import utility.Common
 
 internal class GuiScrollTest {
 
-    private val mockDrawer: Drawer = mockk(relaxed = true)
+    init {
+        val drawer: Drawer = mockk(relaxed = true)
+        dI.drawer = drawer
+        val renderer: Renderer = mockk(relaxed = true)
+        dI.renderer = renderer
+        val textures: TextureHolder = mockk(relaxed = true)
+        dI.textures = textures
+    }
 
     val baseOffset = { Vec2() }
     val baseScale = { Common.makeVec2(20f) }
@@ -25,7 +34,7 @@ internal class GuiScrollTest {
         val scroll = makeScroll()
         scroll.render(null)
 
-        verify { mockDrawer.renderer.drawStrip(any(), any(), any(), any(), any(), any()) }
+        verify { dI.renderer.drawStrip(any(), any(), any(), any(), any(), any()) }
     }
 
     @Test
@@ -46,7 +55,7 @@ internal class GuiScrollTest {
                     DynamicTest.dynamicTest("when $name, it calls kid elements updateOffset ") {
                         val (scroll, kid) = makeScrollAndKid()
                         val kidOffsetOld = Vec2(0f, 0f)
-                        kid.offset = kidOffsetOld.clone()
+                        kid.updateOffset(kidOffsetOld)
                         val scrollMovement = Vec2(1f, 0f)
                         method(scroll, scrollMovement)
 
@@ -85,13 +94,13 @@ internal class GuiScrollTest {
         }
 
         @Test
-        fun `when location in bounds, it calls kid elements handleLeftClickPress`() {
+        fun `when location is on kid, it calls kid elements handleLeftClickPress`() {
             val (scroll, kid) = makeScrollAndKid()
 
             every { kid.handleLeftClickPress(any()) } returns true
-            assert(scroll.handleLeftClickPress(inBounds))
+            assert(scroll.handleLeftClickPress(kid.offset))
 
-            verify { kid.handleLeftClickPress(inBounds) }
+            verify { kid.handleLeftClickPress(kid.offset) }
         }
 
         @Test
@@ -129,51 +138,23 @@ internal class GuiScrollTest {
     inner class HandleLeftClickDrag {
 
         @Test
-        fun `when has kid elements, it calls kid elements handleLeftClickDrag`() {
-            val (scroll, kid) = makeScrollAndKid()
-            scroll.handleLeftClickPress(inBounds)
-            scroll.handleLeftClickDrag(inBounds, movement)
-
-            verify { kid.handleLeftClickDrag(inBounds, movement) }
-        }
-
-        @Test
-        fun `when kid element accepts handleLeftClickDrag, it does not call didParentDrag`() {
+        fun `when scroll accepts handleLeftClickDrag, it resets the isPressed on kids`() {
             val (scroll, kid) = makeScrollAndKid()
             every { kid.handleLeftClickDrag(any(), any()) } returns true
 
-            val scrollOffsetOld = scroll.offset.clone()
-            assert(scroll.handleLeftClickDrag(outOfBounds, movement))
-            assert(scrollOffsetOld == scroll.offset)
+            scroll.handleLeftClickPress(kid.offset)
+            assert(scroll.handleLeftClickDrag(kid.offset, movement))
 
-            verify { kid.handleLeftClickDrag(outOfBounds, movement) }
+            verify { kid.handleLeftClickRelease(any()) }
         }
 
-        @Test
-        fun `when kid element rejects handleLeftClickDrag, it calls didParentDrag`() {
-            val (scroll, kid) = makeScrollAndKid()
-            every { kid.handleLeftClickDrag(any(), any()) } returns false
-
-            val scrollOffsetOld = scroll.offset.clone()
-            scroll.handleLeftClickPress(inBounds)
-            assert(scroll.handleLeftClickDrag(inBounds, movement))
-            assert(scrollOffsetOld != scroll.offset)
-        }
-
-        @Test
-        fun `when no kid elements, it returns false`() {
-            val scroll = makeScroll()
-
-            assert(!scroll.handleLeftClickDrag(inBounds, movement))
-        }
     }
 
-
     private fun makeScroll(): GuiScroll =
-        GuiScroll(mockDrawer, baseOffset(), baseScale())
+        GuiScroll(baseOffset(), baseScale())
 
-    private fun makeScrollAndKid(): Pair<GuiScroll, GuiElement> {
-        val kid: GuiElement = mockk(relaxed = true)
+    private fun makeScrollAndKid(): Pair<GuiScroll, HasDrag> {
+        val kid: HasDrag = mockk(relaxed = true)
         kid.updateScale(baseScale())
         val scroll = makeScroll().also { it.addKid(kid) }
 
