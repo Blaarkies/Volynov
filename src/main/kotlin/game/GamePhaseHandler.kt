@@ -1,7 +1,6 @@
 package game
 
 import dI
-import display.draw.Drawer
 import display.draw.TextureEnum
 import display.events.KeyboardEvent
 import display.events.MouseButtonEvent
@@ -9,15 +8,14 @@ import display.events.MouseScrollEvent
 import display.graphic.Color
 import display.gui.GuiController
 import display.text.TextJustify
-import engine.gameState.GameState
 import engine.gameState.GameStateSimulator.getNewPrediction
 import engine.motion.Director
 import engine.shields.VehicleShield
-import input.CameraView
 import io.reactivex.subjects.PublishSubject
 import org.jbox2d.common.Vec2
 import utility.Common.getTimingFunctionEaseIn
 import utility.Common.getTimingFunctionEaseOut
+import utility.Common.makeVec2
 import utility.Common.vectorUnit
 import java.util.concurrent.TimeUnit
 import kotlin.concurrent.thread
@@ -285,7 +283,12 @@ class GamePhaseHandler {
     }
 
     private fun drawPlayPhase() {
-        drawer.drawBackground(TextureEnum.stars_2k)
+        drawer.drawBackground(TextureEnum.stars_2k,
+            backgroundOffset = dI.cameraView.location.mul(.7f))
+        drawer.drawBackground(TextureEnum.stars_2k_transparent,
+            backgroundScale = makeVec2(1.17f),
+            backgroundOffset = dI.cameraView.location.mul(.5f))
+
         drawer.drawBorder(gameState.mapBorder!!)
 
         val allFreeBodies = gameState.gravityBodies

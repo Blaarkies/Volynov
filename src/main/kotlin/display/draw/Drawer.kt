@@ -3,7 +3,6 @@ package display.draw
 import dI
 import display.graphic.BasicShapes
 import display.graphic.Color
-import display.graphic.Renderer
 import display.graphic.SnipRegion
 import display.text.TextJustify
 import engine.freeBody.MapBorder
@@ -107,7 +106,11 @@ class Drawer {
         }
     }
 
-    fun drawBackground(textureEnum: TextureEnum, scale: Vec2 = vectorUnit, offset: Vec2 = Vec2()) {
+    fun drawBackground(textureEnum: TextureEnum,
+                       textureScale: Vec2 = vectorUnit,
+                       textureOffset: Vec2 = Vec2(),
+                       backgroundScale: Vec2 = vectorUnit,
+                       backgroundOffset: Vec2 = Vec2()) {
         val texture = textures.getTexture(textureEnum).bind()
 
         val left = -texture.width / 2f
@@ -115,17 +118,17 @@ class Drawer {
         val top = texture.height / 2f
         val bottom = -texture.height / 2f
 
-        val data = listOf(left, bottom, left, top, right, top, right, bottom).chunked(2)
-            .flatMap {
-                listOf(
-                    it[0], it[1], 0f,
-                    1f, 1f, 1f, 1f,
-                    (it[0] / 2f - 0.5f) * scale.x + offset.x,
-                    (it[1] / 2f - 0.5f) * scale.y + offset.y
-                )
-            }.toFloatArray()
+        val vertices = listOf(left, bottom, left, top, right, top, right, bottom).chunked(2)
+        val data = vertices.flatMap {
+            listOf(
+                it[0], it[1], 0f,
+                1f, 1f, 1f, 1f,
+                (it[0] / 2f - 0.5f) * textureScale.x + textureOffset.x,
+                (it[1] / 2f - 0.5f) * textureScale.y + textureOffset.y
+            )
+        }.toFloatArray()
 
-        renderer.drawShape(data, scale = vectorUnit.mul(45f))
+        renderer.drawShape(data, backgroundOffset, scale = backgroundScale.mul(30f))
     }
 
     fun drawIcon(textureEnum: TextureEnum,

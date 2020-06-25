@@ -8,6 +8,7 @@ enum class TextureEnum {
     white_pixel,
     white_dot,
     stars_2k,
+    stars_2k_transparent,
     icon_aim_direction,
     icon_aim_power,
     icon_draggable,
