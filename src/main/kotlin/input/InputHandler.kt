@@ -1,49 +1,63 @@
 package input
 
-import display.events.MouseButtonEvent
+import dI
 import display.Window
-import game.GamePhaseHandler
+import display.events.MouseButtonEvent
 import io.reactivex.subjects.PublishSubject
 import org.jbox2d.common.Vec2
 import org.lwjgl.glfw.GLFW
 
-class InputHandler(private val gamePhaseHandler: GamePhaseHandler) {
+class InputHandler {
+
+    private val window = dI.window
+    private val gamePhaseHandler = dI.gamePhaseHandler
 
     private val unsubscribe = PublishSubject.create<Boolean>()
 
-    fun init(window: Window) {
-        setupDragClick(window)
-        setupDoubleLeftClick(window)
-        setupMouseScroll(window)
-        setupKeyboard(window)
-        setupMouseMove(window)
-        setupMouseClicks(window)
-        setupTextInput(window)
+    init {
+        setupDragClick()
+        setupDoubleLeftClick()
+        setupMouseScroll()
+        setupKeyboard()
+        setupMouseMove()
+        setupMouseClicks()
+        setupTextInput()
     }
 
-    private fun setupTextInput(window: Window) {
+    private fun setupTextInput() {
         window.textInputEvent.takeUntil(unsubscribe).subscribe {
             gamePhaseHandler.inputText(it)
         }
     }
 
-    private fun setupMouseClicks(window: Window) {
+    private fun setupMouseClicks() {
         window.mouseButtonEvent.takeUntil(unsubscribe).subscribe {
-            if (it.action == GLFW.GLFW_PRESS) {
-                when (it.button) {
-                    GLFW.GLFW_MOUSE_BUTTON_LEFT -> gamePhaseHandler.leftClickMouse(it)
+            when (it.action) {
+                GLFW.GLFW_PRESS -> {
+                    when (it.button) {
+                        GLFW.GLFW_MOUSE_BUTTON_LEFT -> gamePhaseHandler.leftClickMousePress(it)
+                        GLFW.GLFW_MOUSE_BUTTON_RIGHT -> {
+                        }
+                    }
+                }
+                GLFW.GLFW_RELEASE -> {
+                    when (it.button) {
+                        GLFW.GLFW_MOUSE_BUTTON_LEFT -> gamePhaseHandler.leftClickMouseRelease(it)
+                        GLFW.GLFW_MOUSE_BUTTON_RIGHT -> {
+                        }
+                    }
                 }
             }
         }
     }
 
-    private fun setupMouseMove(window: Window) {
+    private fun setupMouseMove() {
         window.cursorPositionEvent.takeUntil(unsubscribe).subscribe {
             gamePhaseHandler.moveMouse(it)
         }
     }
 
-    private fun setupKeyboard(window: Window) {
+    private fun setupKeyboard() {
         window.keyboardEvent.takeUntil(unsubscribe).subscribe {
             when (it.action) {
                 GLFW.GLFW_PRESS -> {
@@ -60,12 +74,12 @@ class InputHandler(private val gamePhaseHandler: GamePhaseHandler) {
         }
     }
 
-    private fun setupMouseScroll(window: Window) {
+    private fun setupMouseScroll() {
         window.mouseScrollEvent.takeUntil(unsubscribe)
             .subscribe { gamePhaseHandler.scrollMouse(it) }
     }
 
-    private fun setupDoubleLeftClick(window: Window) {
+    private fun setupDoubleLeftClick() {
         var lastLeftClickTimeStamp = System.currentTimeMillis()
         window.mouseButtonEvent
             .filter { it.button == GLFW.GLFW_MOUSE_BUTTON_LEFT && it.action == GLFW.GLFW_PRESS }
@@ -79,7 +93,7 @@ class InputHandler(private val gamePhaseHandler: GamePhaseHandler) {
             .subscribe { (_, click) -> gamePhaseHandler.doubleLeftClick(window.getCursorPosition()) }
     }
 
-    private fun setupDragClick(window: Window) {
+    private fun setupDragClick() {
         val mouseButtonLeftRelease = PublishSubject.create<Boolean>()
         val mouseButtonRightRelease = PublishSubject.create<Boolean>()
         window.mouseButtonEvent.takeUntil(unsubscribe)

@@ -1,13 +1,11 @@
 package app
 
-import display.Window
-
 interface IGameLogic {
 
     @Throws(Exception::class)
-    fun init(window: Window)
+    fun init()
     fun update(interval: Float)
-    fun render(window: Window)
+    fun render()
     fun cleanup()
 
 }

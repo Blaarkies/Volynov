@@ -82,3 +82,4 @@ object Common {
 }
 
 fun Vec2.toList(): List<Float> = listOf(this.x, this.y)
+fun Boolean.toSign(): Float = if (this) 1f else -1f

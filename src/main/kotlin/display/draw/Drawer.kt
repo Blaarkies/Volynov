@@ -1,8 +1,8 @@
 package display.draw
 
+import dI
 import display.graphic.BasicShapes
 import display.graphic.Color
-import display.graphic.Renderer
 import display.graphic.SnipRegion
 import display.text.TextJustify
 import engine.freeBody.MapBorder
@@ -22,13 +22,10 @@ import utility.toList
 import java.util.*
 import kotlin.math.sqrt
 
-class Drawer(val renderer: Renderer) {
+class Drawer {
 
-    val textures = TextureHolder()
-
-    fun init() {
-        textures.init()
-    }
+    val textures = dI.textures
+    val renderer = dI.renderer
 
     fun drawDebugForces(freeBody: FreeBody) {
         //        val x = freeBody.worldBody.position.x
@@ -109,7 +106,11 @@ class Drawer(val renderer: Renderer) {
         }
     }
 
-    fun drawBackground(textureEnum: TextureEnum, scale: Vec2 = vectorUnit, offset: Vec2 = Vec2()) {
+    fun drawBackground(textureEnum: TextureEnum,
+                       textureScale: Vec2 = vectorUnit,
+                       textureOffset: Vec2 = Vec2(),
+                       backgroundScale: Vec2 = vectorUnit,
+                       backgroundOffset: Vec2 = Vec2()) {
         val texture = textures.getTexture(textureEnum).bind()
 
         val left = -texture.width / 2f
@@ -117,24 +118,23 @@ class Drawer(val renderer: Renderer) {
         val top = texture.height / 2f
         val bottom = -texture.height / 2f
 
-        val data = listOf(left, bottom, left, top, right, top, right, bottom).chunked(2)
-            .flatMap {
-                listOf(
-                    it[0], it[1], 0f,
-                    1f, 1f, 1f, 1f,
-                    (it[0] / 2f - 0.5f) * scale.x + offset.x,
-                    (it[1] / 2f - 0.5f) * scale.y + offset.y
-                )
-            }.toFloatArray()
+        val vertices = listOf(left, bottom, left, top, right, top, right, bottom).chunked(2)
+        val data = vertices.flatMap {
+            listOf(
+                it[0], it[1], 0f,
+                1f, 1f, 1f, 1f,
+                (it[0] / 2f - 0.5f) * textureScale.x + textureOffset.x,
+                (it[1] / 2f - 0.5f) * textureScale.y + textureOffset.y
+            )
+        }.toFloatArray()
 
-        renderer.drawShape(data, scale = vectorUnit.mul(45f))
+        renderer.drawShape(data, backgroundOffset, scale = backgroundScale.mul(30f))
     }
 
     fun drawIcon(textureEnum: TextureEnum,
                  scale: Vec2 = vectorUnit,
                  offset: Vec2 = Vec2(),
-                 color: Color
-    ) {
+                 color: Color) {
         val texture = textures.getTexture(textureEnum).bind()
 
         val left = -texture.width / 2f
@@ -147,8 +147,7 @@ class Drawer(val renderer: Renderer) {
                 listOf(
                     it[0], it[1], 0f,
                     color.red, color.green, color.blue, color.alpha,
-                    (it[0] / 2f - 0.5f),
-                    (it[1] / 2f - 0.5f)
+                    (it[0] / 2f - 0.5f), (it[1] / 2f - 0.5f)
                 )
             }.toFloatArray()
 
@@ -170,7 +169,7 @@ class Drawer(val renderer: Renderer) {
         val triangleStripPoints = BasicShapes.getLineTriangleStrip(linePoints, .2f)
         val arrowHeadPoints = BasicShapes.getArrowHeadPoints(linePoints, .5f)
         val data = getColoredData(triangleStripPoints + arrowHeadPoints,
-            Color.RED.setAlpha(.1f), Color.RED.setAlpha(.5f)
+            Color.RED.setAlpha(.05f), Color.RED.setAlpha(.5f)
         ).toFloatArray()
 
         textures.getTexture(TextureEnum.white_pixel).bind()
@@ -202,6 +201,25 @@ class Drawer(val renderer: Renderer) {
         renderer.drawStrip(data)
     }
 
+    fun drawMotionPredictors(freeBody: FreeBody) {
+        val worldBody = freeBody.worldBody
+        val velocityUnitVector = worldBody.linearVelocity.clone().also { it.normalize() }
+        val startPosition = worldBody.position.add(velocityUnitVector.mul(freeBody.radius + .1f))
+        val scaledVelocity = worldBody.linearVelocity.mul(.1f)
+        val points = listOf(
+            startPosition,
+            startPosition.add(scaledVelocity.mul(.5f)),
+            startPosition.add(scaledVelocity)
+        )
+
+        val data = getLineTextured(points.flatMap { it.toList() }, Color.GREEN.setAlpha(.5f),
+            startWidth = .15f,
+            scale = 1.75f)
+
+        textures.getTexture(TextureEnum.white_line_200).bind()
+        renderer.drawStrip(data)
+    }
+
     companion object {
 
         fun getColoredData(points: List<Float>,
@@ -230,8 +248,8 @@ class Drawer(val renderer: Renderer) {
                             endColor: Color = startColor,
                             startWidth: Float,
                             endWidth: Float,
-                            timingFunction: (Float) -> Float
-        ): List<Float> {
+                            timingFunction: (Float) -> Float,
+                            textureScale: Float = 1f): List<Float> {
             val pointsLastIndex = points.lastIndex.toFloat() / 2f
 
             var lastDistance = 0f
@@ -242,7 +260,7 @@ class Drawer(val renderer: Renderer) {
                     basePoints.chunked(2)
                         .map { (x, y) -> Vec2(x, y) }
                         .windowed(2)
-                        .map { (a, b) -> a.sub(b).length() }
+                        .map { (a, b) -> a.sub(b).length() * textureScale }
                         .let { listOf(0f) + it }
                         .flatMap { listOf(it, it) })
                 .flatMap { (strip, distance) ->
@@ -278,9 +296,9 @@ class Drawer(val renderer: Renderer) {
                     endWidth: Float = startWidth,
                     wrapAround: Boolean = false
         ): FloatArray {
-            if (points.size < 3) {
-                return floatArrayOf()
-            }
+            //            if (points.size < 3) {
+            //                return floatArrayOf()
+            //            }
             val triangleStripPoints = BasicShapes.getLineTriangleStrip(points, startWidth, endWidth, wrapAround)
             return getColoredData(triangleStripPoints, startColor, endColor).toFloatArray()
         }
@@ -291,13 +309,14 @@ class Drawer(val renderer: Renderer) {
                             startWidth: Float = 1f,
                             endWidth: Float = startWidth,
                             wrapAround: Boolean = false,
-                            timingFunction: (Float) -> Float): FloatArray {
+                            timingFunction: (Float) -> Float = { input -> input },
+                            scale: Float = 1f): FloatArray {
             if (points.size < 3) {
                 return floatArrayOf()
             }
             val triangleStripPoints = BasicShapes.getLineTriangleStrip(points, startWidth, endWidth, wrapAround)
             return getTexturedData(triangleStripPoints, points, startColor, endColor, startWidth, endWidth,
-                timingFunction = timingFunction)
+                timingFunction = timingFunction, textureScale = scale)
                 .toFloatArray()
         }
 

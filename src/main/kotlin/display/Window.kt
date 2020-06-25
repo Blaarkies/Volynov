@@ -1,5 +1,6 @@
 package display
 
+import dI
 import display.events.KeyboardEvent
 import display.events.MouseButtonEvent
 import display.events.MouseScrollEvent
@@ -27,7 +28,7 @@ class Window(private val title: String, var width: Int, var height: Int, private
     val mouseScrollEvent = PublishSubject.create<MouseScrollEvent>()
     val textInputEvent = PublishSubject.create<String>()
 
-    fun init(debugMode: Boolean) {
+    fun init() {
         // Setup an error callback. The default implementation
         // will print the error message in System.err.
         GLFW.glfwSetErrorCallback(GLFWErrorCallback.createPrint(System.err))
@@ -44,7 +45,7 @@ class Window(private val title: String, var width: Int, var height: Int, private
         GLFW.glfwWindowHint(GLFW.GLFW_OPENGL_FORWARD_COMPAT, GL11.GL_TRUE)
         GLFW.glfwWindowHint(GLFW.GLFW_SAMPLES, 4) // anti-aliasing
 
-        when (debugMode) {
+        when (dI.isDebugMode) {
             false -> windowHandle =
                 GLFW.glfwCreateWindow(width, height, title, GLFW.glfwGetPrimaryMonitor(), MemoryUtil.NULL)
             true -> {

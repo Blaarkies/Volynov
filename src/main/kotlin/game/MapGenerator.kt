@@ -2,7 +2,7 @@ package game
 
 import display.draw.TextureEnum
 import display.graphic.Color
-import engine.GameState
+import engine.gameState.GameState
 import engine.freeBody.MapBorder
 import engine.freeBody.Planet
 import engine.freeBody.Vehicle
@@ -23,13 +23,13 @@ import kotlin.math.sin
 object MapGenerator {
 
     fun populateNewGameMap(gameState: GameState) {
-        val planet = Planet("terra", gameState.planets, gameState.world, 0f, 0f, 0f, 0f, 0f, .1f * getRandomSign(),
-            1600f, 4.5f, texture = TextureEnum.marble_earth)
+        val planet = Planet("terra", gameState.planets, gameState.world, 0f, 0f, 0f, 0f, 0f, .05f * getRandomSign(),
+            3000f, 9f, texture = TextureEnum.marble_earth)
 
         val orbitalLevels = (1..gameState.gamePlayers.size).map { OrbitalLevel(it, it) }
         val moons = (1..ceil(gameState.gamePlayers.size * .7f)).map {
             val (x, y, h, dx, dy, dh) = getSafeOrbitLocationVelocity(orbitalLevels, planet)
-            Planet("luna $it", gameState.planets, gameState.world, x, y, h, dx, dy, dh, 110f, 1.25f,
+            Planet("luna $it", gameState.planets, gameState.world, x, y, h, dx, dy, dh, 150f, 1.6f,
                 texture = TextureEnum.full_moon)
         }
 
@@ -63,7 +63,7 @@ object MapGenerator {
     private fun getSafeOrbitLocationVelocity(orbitalLevels: List<OrbitalLevel>, parent: Planet): LocationVelocity {
         val level = orbitalLevels.first { it.hasSpace }.also { it.addBody() }
 
-        val distance = (1.25f + parent.radius).times(level.index).pow(1.6f).plus(5f)
+        val distance = (1.25f + parent.radius).times(level.index).pow(1.4f).plus(5f)
         val meanLongitude = level.nowDirection
         val location = makeVec2Circle(meanLongitude).mul(distance)
 

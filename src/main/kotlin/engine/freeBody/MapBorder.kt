@@ -62,4 +62,7 @@ class MapBorder(val mapCenterBody: FreeBody, world: World, val radius: Float) {
         movementController.getReaction(mapCenterBody.worldBody.position, worldBody.position)
             .also { worldBody.applyLinearImpulse(it.mul(worldBody.mass), worldBody.position) }
     }
+
+    fun clone(mapCenterBody: FreeBody, world: World): MapBorder = MapBorder(mapCenterBody, world, radius)
+
 }

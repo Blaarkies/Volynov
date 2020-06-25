@@ -1,4 +1,4 @@
-name: Package latest release
+name: Latest Build
 
 on:
   push:

@@ -26,6 +26,10 @@ class TextureConfig(
         return this
     }
 
+    fun clone(): TextureConfig = TextureConfig(texture, scale.clone(), offset.clone(),
+        chunkedVertices.toList(), color = color)
+        .also { it.updateGpuBufferData() }
+
 }
 
 

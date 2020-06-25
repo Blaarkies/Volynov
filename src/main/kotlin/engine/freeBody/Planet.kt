@@ -46,4 +46,15 @@ class Planet(
         planets.add(this)
     }
 
+    fun clone(planets: MutableList<Planet>, world: World): Planet {
+        val body = worldBody
+        return Planet(id, planets, world,
+            body.position.x, body.position.y, body.angle,
+            body.linearVelocity.x, body.linearVelocity.y, body.angularVelocity,
+            body.mass, radius,
+            body.fixtureList.restitution, body.fixtureList.friction,
+            textureConfig.texture)
+            .also { newPlanet -> newPlanet.textureConfig = textureConfig.clone() }
+    }
+
 }

@@ -1,5 +1,6 @@
 package display.gui
 
+import dI
 import display.draw.Drawer
 import display.draw.TextureEnum
 import display.graphic.BasicShapes
@@ -12,16 +13,21 @@ import utility.Common.vectorUnit
 import utility.toList
 
 class GuiInput(
-    drawer: Drawer,
-    offset: Vec2 = Vec2(),
-    scale: Vec2 = Vec2(200f, 50f),
-    placeholder: String,
-    textSize: Float = .15f,
-    color: Color = Color.WHITE.setAlpha(.7f),
-    private val onClick: () -> Unit = {},
-    updateCallback: (GuiElement) -> Unit = {},
+    override val offset: Vec2 = Vec2(),
+    override val scale: Vec2 = Vec2(200f, 50f),
+    val placeholder: String,
+    private val textSize: Float = .15f,
+    override val color: Color = Color.WHITE.setAlpha(.7f),
+    override val onClick: () -> Unit = {},
+    override val updateCallback: (GuiElement) -> Unit = {},
     val onChange: (String) -> Unit
-) : GuiElement(drawer, offset, scale, placeholder, textSize, color, updateCallback) {
+) : HasClick {
+
+    override var isPressed = false
+    override var topRight = Vec2()
+    override var bottomLeft = Vec2()
+    override var id = GuiElementIdentifierType.DEFAULT
+    override var currentPhase = GuiElementPhases.IDLE
 
     private val blinkRate = 400
     private var cursorLine: FloatArray
@@ -48,68 +54,98 @@ class GuiInput(
         buttonOutline = Drawer.getLine(linePoints, color, startWidth = 1f, wrapAround = true)
         buttonBackground = Drawer.getColoredData(linePoints, backgroundColor).toFloatArray()
 
-        calculateElementRegion(this)
+        calculateElementRegion()
     }
 
-    override fun render(snipRegion: SnipRegion?) {
-        drawer.textures.getTexture(TextureEnum.white_pixel).bind()
+    override fun render(parentSnipRegion: SnipRegion?) {
+        dI.textures.getTexture(TextureEnum.white_pixel).bind()
 
         when (currentPhase) {
-            GuiElementPhases.HOVERED -> drawer.renderer.drawShape(buttonBackground, offset, useCamera = false,
-                snipRegion = snipRegion)
+            GuiElementPhases.HOVER ->
+                dI.renderer.drawShape(buttonBackground, offset, useCamera = false, snipRegion = parentSnipRegion)
             GuiElementPhases.INPUT -> {
-                drawer.renderer.drawShape(buttonBackground, offset, useCamera = false, snipRegion = snipRegion)
+                dI.renderer.drawShape(buttonBackground, offset, useCamera = false, snipRegion = parentSnipRegion)
 
                 if (System.currentTimeMillis().rem(blinkRate * 2) < blinkRate) {
-                    drawer.renderer.drawStrip(cursorLine, offset, useCamera = false, snipRegion = snipRegion)
+                    dI.renderer.drawStrip(cursorLine, offset, useCamera = false, snipRegion = parentSnipRegion)
                 }
             }
         }
 
-        drawer.renderer.drawStrip(buttonOutline, offset, useCamera = false)
+        dI.renderer.drawStrip(buttonOutline, offset, useCamera = false)
 
         val paddedOffset = offset.clone().also { it.x -= paddedScale.x }
         when (inputText.length) {
-            0 -> drawer.renderer.drawText(title, paddedOffset, vectorUnit.mul(textSize),
-                color.setAlpha(.4f), TextJustify.LEFT, false, snipRegion)
-            else -> drawer.renderer.drawText(inputText, paddedOffset, vectorUnit.mul(textSize),
-                color, TextJustify.LEFT, false, snipRegion)
+            0 -> dI.renderer.drawText(placeholder, paddedOffset, vectorUnit.mul(textSize),
+                color.setAlpha(.4f), TextJustify.LEFT, false, parentSnipRegion)
+            else -> dI.renderer.drawText(inputText, paddedOffset, vectorUnit.mul(textSize),
+                color, TextJustify.LEFT, false, parentSnipRegion)
         }
-        super.render(snipRegion)
+        super.render(parentSnipRegion)
     }
 
-    override fun handleHover(location: Vec2) {
-        if (textInputIsBusy) return
-        super.handleHover(location)
-    }
-
-    override fun handleLeftClick(location: Vec2) {
-        when {
-            isHover(location) -> {
-                currentPhase = GuiElementPhases.INPUT
-                onClick()
+    override fun handleHover(location: Vec2): Boolean {
+        return when {
+            textInputIsBusy -> false
+            super.isHover(location) -> {
+                currentPhase = GuiElementPhases.HOVER
+                true
             }
-            else -> currentPhase = GuiElementPhases.IDLE
+            else -> {
+                currentPhase = GuiElementPhases.IDLE
+                false
+            }
         }
     }
 
-    fun handleAddTextInput(text: String) {
-        if (textInputIsBusy) {
-            inputText += text
-            onChange(inputText)
-        }
-    }
-
-    fun handleRemoveTextInput() {
-        if (textInputIsBusy) {
-            inputText = inputText.dropLast(1)
-            onChange(inputText)
-        }
-    }
-
-    fun stopTextInput() {
-        if (textInputIsBusy) {
+    override fun handleLeftClickPress(location: Vec2): Boolean {
+        val isHovered = super.handleLeftClickPress(location)
+        if (!isHovered) {
             currentPhase = GuiElementPhases.IDLE
+        }
+        return isHovered
+    }
+
+    override fun handleLeftClickRelease(location: Vec2): Boolean {
+        if (!isPressed) return false
+
+        if (isHover(location)) {
+            currentPhase = GuiElementPhases.INPUT
+            onClick()
+        }
+        isPressed = false
+        return true
+    }
+
+    fun handleAddTextInput(text: String): Boolean {
+        return when {
+            textInputIsBusy -> {
+                inputText += text
+                onChange(inputText)
+                true
+            }
+            else -> false
+        }
+    }
+
+    fun handleRemoveTextInput(): Boolean {
+        return when {
+            textInputIsBusy -> {
+                inputText = inputText.dropLast(1)
+                onChange(inputText)
+                true
+            }
+            else -> false
+        }
+    }
+
+    fun stopTextInput(): Boolean {
+        return when {
+            textInputIsBusy -> {
+                currentPhase = GuiElementPhases.IDLE
+                true
+            }
+            else -> false
         }
     }
 

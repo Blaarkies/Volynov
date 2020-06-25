@@ -2,14 +2,13 @@ package engine.motion
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import utility.Common
 import utility.Common.roundFloat
 import kotlin.math.PI
 
 internal class DirectorTest {
 
     @Test
-    fun distance() {
+    fun `getDistance when called, returns correct value`() {
         val rightPointed = Director.getDistance(0f, 0f, 1f, 1f)
         assertEquals(1.414f, roundFloat(rightPointed, 3))
 
@@ -18,7 +17,7 @@ internal class DirectorTest {
     }
 
     @Test
-    fun direction() {
+    fun `getDirection when called, returns correct value`() {
         // Test direction from client, to server
         val pointed0 = Director.getDirection(0f, 0f, -1f, 0f)
         assertRoundEquals(0, pointed0, "0")

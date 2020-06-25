@@ -1,5 +1,6 @@
 package input
 
+import dI
 import display.Window
 import engine.freeBody.FreeBody
 import org.jbox2d.common.Vec2
@@ -9,12 +10,12 @@ import utility.math.Matrix4f
 import kotlin.math.absoluteValue
 import kotlin.math.pow
 
-class CameraView(private val window: Window) {
+class CameraView {
 
     val windowWidth: Float
-        get() = window.width.toFloat()
+        get() = dI.window.width.toFloat()
     val windowHeight: Float
-        get() = window.height.toFloat()
+        get() = dI.window.height.toFloat()
 
     var location = Vec2()
     var z = .05f

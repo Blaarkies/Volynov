@@ -1,7 +1,6 @@
 package game
 
-import display.Window
-import display.draw.Drawer
+import dI
 import display.draw.TextureEnum
 import display.events.KeyboardEvent
 import display.events.MouseButtonEvent
@@ -9,28 +8,28 @@ import display.events.MouseScrollEvent
 import display.graphic.Color
 import display.gui.GuiController
 import display.text.TextJustify
-import engine.GameState
-import engine.freeBody.Vehicle
-import engine.freeBody.Warhead
+import engine.gameState.GameStateSimulator.getNewPrediction
 import engine.motion.Director
 import engine.shields.VehicleShield
 import io.reactivex.subjects.PublishSubject
 import org.jbox2d.common.Vec2
 import utility.Common.getTimingFunctionEaseIn
 import utility.Common.getTimingFunctionEaseOut
+import utility.Common.makeVec2
 import utility.Common.vectorUnit
 import java.util.concurrent.TimeUnit
 import kotlin.concurrent.thread
 import kotlin.math.roundToInt
 
-class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
+class GamePhaseHandler {
 
     private val timeStep = 1f / 60f
     private val velocityIterations = 8
     private val positionIterations = 3
 
-    private val camera
-        get() = gameState.camera
+    private val gameState = dI.gameState
+    val drawer = dI.drawer
+    private val camera = dI.cameraView
 
     private var currentPhase = GamePhases.NONE
     private var isTransitioning = false
@@ -43,7 +42,7 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
 
     private var lastPhaseTimestamp = currentTime
 
-    private val guiController = GuiController(drawer)
+    private lateinit var guiController: GuiController
     private val textInputIsBusy
         get() = guiController.textInputIsBusy()
     private lateinit var exitCallback: () -> Unit
@@ -52,9 +51,10 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
     var playerAimChanged = PublishSubject.create<Boolean>()
     private val unsubscribe = PublishSubject.create<Boolean>()
 
-    fun init(window: Window) {
-        exitCallback = { window.exit() }
-        when (0) {
+    fun init() {
+        guiController = GuiController()
+        exitCallback = { dI.window.exit() }
+        when (2) {
             0 -> setupMainMenu()
             1 -> setupMainMenuSelectPlayers()
             2 -> {
@@ -78,7 +78,7 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
                 val a = PublishSubject.create<TrajectoryPrediction>()
 
                 thread {
-                    a.onNext(GameState.getNewPrediction(15f, .75f, gameState, velocityIterations,
+                    a.onNext(getNewPrediction(15f, .75f, gameState, velocityIterations,
                         positionIterations, timeStep, latestPrediction))
                     a.onComplete()
                 }
@@ -132,16 +132,17 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
             GamePhases.MAIN_MENU -> guiController.render()
             GamePhases.MAIN_MENU_SELECT_PLAYERS -> guiController.render()
             GamePhases.PLAYERS_PICK_SHIELDS -> drawWorldAndGui()
-            GamePhases.PLAYERS_TURN -> drawWorldAndGui()
+            GamePhases.PLAYERS_TURN -> {
+                drawWorldAndGui()
+                gameState.gravityBodies.forEach { drawer.drawMotionPredictors(it) }
+            }
             GamePhases.PLAYERS_TURN_AIMING -> {
                 drawWorldAndGui()
-                drawer.drawPlayerAimingPointer(gameState.playerOnTurn!!)
-                drawer.drawWarheadTrajectory(latestPrediction)
+                drawPlayerAimingGui()
             }
             GamePhases.PLAYERS_TURN_POWERING -> {
                 drawWorldAndGui()
-                drawer.drawPlayerAimingPointer(gameState.playerOnTurn!!)
-                drawer.drawWarheadTrajectory(latestPrediction)
+                drawPlayerAimingGui()
             }
             GamePhases.END_ROUND -> drawWorldAndGui()
             else -> drawPlayPhase()
@@ -155,10 +156,17 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
         )
 
         drawer.renderer.drawText(
-            "GameTime ${gameState.tickTime.div(100f).roundToInt().div(10f)}s / PhaseTime ${elapsedTime.div(100f).roundToInt().div(10f)}s",
+            "GameTime ${gameState.tickTime.div(100f).roundToInt().div(10f)}s / PhaseTime ${elapsedTime.div(100f)
+                .roundToInt().div(10f)}s",
             Vec2(5f - camera.windowWidth * .5f, -30f + camera.windowHeight * .5f),
             vectorUnit.mul(0.1f), debugColor, TextJustify.LEFT, false
         )
+    }
+
+    private fun drawPlayerAimingGui() {
+        drawer.drawPlayerAimingPointer(gameState.playerOnTurn!!)
+        drawer.drawWarheadTrajectory(latestPrediction)
+        gameState.gravityBodies.forEach { drawer.drawMotionPredictors(it) }
     }
 
     private fun handlePlayerShotEndsEarly() {
@@ -275,7 +283,12 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
     }
 
     private fun drawPlayPhase() {
-        drawer.drawBackground(TextureEnum.stars_2k)
+        drawer.drawBackground(TextureEnum.stars_2k,
+            backgroundOffset = dI.cameraView.location.mul(.7f))
+        drawer.drawBackground(TextureEnum.stars_2k_transparent,
+            backgroundScale = makeVec2(1.17f),
+            backgroundOffset = dI.cameraView.location.mul(.5f))
+
         drawer.drawBorder(gameState.mapBorder!!)
 
         val allFreeBodies = gameState.gravityBodies
@@ -400,15 +413,6 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
         return Triple(playerOnTurn, transformedLocation, playerLocation)
     }
 
-    fun leftClickMouse(event: MouseButtonEvent) {
-        when {
-            mouseElementPhases.any { currentPhase == it } -> guiController.checkLeftClick(
-                camera.getScreenLocation(event.location))
-            currentPhase == GamePhases.PLAYERS_TURN_AIMING -> currentPhase = GamePhases.PLAYERS_TURN
-            currentPhase == GamePhases.PLAYERS_TURN_POWERING -> currentPhase = GamePhases.PLAYERS_TURN
-        }
-    }
-
     fun keyPressEscape(event: KeyboardEvent) {
         if (textInputIsBusy) {
             guiController.stopTextInput()
@@ -484,6 +488,24 @@ class GamePhaseHandler(private val gameState: GameState, val drawer: Drawer) {
 
         check(gameState.gamePlayers.size > 1) { "Cannot play a game with less than 2 players" }
         gameState.playerOnTurn = gameState.gamePlayers.random()
+    }
+
+    fun leftClickMousePress(event: MouseButtonEvent) {
+        when {
+            mouseElementPhases.any { currentPhase == it } -> guiController.checkLeftClickPress(
+                camera.getScreenLocation(event.location))
+            currentPhase == GamePhases.PLAYERS_TURN_AIMING -> currentPhase = GamePhases.PLAYERS_TURN
+            currentPhase == GamePhases.PLAYERS_TURN_POWERING -> currentPhase = GamePhases.PLAYERS_TURN
+        }
+    }
+
+    fun leftClickMouseRelease(event: MouseButtonEvent) {
+        when {
+            mouseElementPhases.any { currentPhase == it } -> guiController.checkLeftClickRelease(
+                camera.getScreenLocation(event.location))
+            currentPhase == GamePhases.PLAYERS_TURN_AIMING -> currentPhase = GamePhases.PLAYERS_TURN
+            currentPhase == GamePhases.PLAYERS_TURN_POWERING -> currentPhase = GamePhases.PLAYERS_TURN
+        }
     }
 
     companion object {

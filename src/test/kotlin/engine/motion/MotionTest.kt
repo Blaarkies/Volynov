@@ -1,14 +1,12 @@
 package engine.motion
 
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-
-import org.junit.jupiter.api.Assertions.*
-import java.util.*
 
 internal class MotionTest {
 
     @Test
-    fun create_new_trailers() {
+    fun `addNewTrailer when called with values, adds new trailers at correct locations`() {
         val subject = Motion()
         subject.addNewTrailer(10f, 10f)
         subject.addNewTrailer(20f, 10f)

@@ -1,5 +1,6 @@
 package display.gui
 
+import dI
 import display.draw.Drawer
 import display.draw.TextureEnum
 import display.graphic.BasicShapes
@@ -8,97 +9,103 @@ import display.graphic.SnipRegion
 import display.text.TextJustify
 import org.jbox2d.common.Vec2
 import utility.Common
+import utility.Common.makeVec2
 
 class GuiPanel(
-    drawer: Drawer,
-    offset: Vec2 = Vec2(),
-    scale: Vec2 = Vec2(100f, 100f),
-    title: String = "",
-    textSize: Float = .3f,
-    color: Color = Color.BLACK.setAlpha(.5f),
-    private val childElements: MutableList<GuiElement> = mutableListOf(),
-    private val draggable: Boolean = true,
-    updateCallback: (GuiElement) -> Unit = {}
-) : GuiElement(drawer, offset, scale, title, textSize, color, updateCallback) {
+    override val offset: Vec2 = Vec2(),
+    override val scale: Vec2 = Vec2(100f, 100f),
+    var title: String = "",
+    override val color: Color = Color.BLACK.setAlpha(.5f),
+    override val kidElements: MutableList<GuiElement> = mutableListOf(),
+    override val draggable: Boolean = true,
+    override val updateCallback: (GuiElement) -> Unit = {}
+) : HasKids, HasDrag {
 
-    private val childElementOffsets = HashMap<GuiElement, Vec2>()
+    override var id = GuiElementIdentifierType.DEFAULT
+    override var currentPhase = GuiElementPhases.IDLE
+    override var topRight = Vec2()
+    override var bottomLeft = Vec2()
+    override val onClick: () -> Unit = {}
+
+    private val draggableOutline: FloatArray
+    private val background: FloatArray
+
+    override val kidElementOffsets = HashMap<GuiElement, Vec2>()
+    override var isPressed = false
+
+    override val dragHandleScale: Vec2
+    override lateinit var dragHandleRelativeOffset: Vec2
+    override lateinit var dragHandleOffset: Vec2
+    override lateinit var dragHandleTopRight: Vec2
+    override lateinit var dragHandleBottomLeft: Vec2
 
     init {
-        childElementOffsets.putAll(childElements.map { Pair(it, it.offset.clone()) })
-        calculateElementRegion(this)
+        background = BasicShapes.square
+            .let { Drawer.getColoredData(it, color) }
+            .toFloatArray()
+
+        dragHandleScale = Vec2(90f, 25f)
+        dragHandleRelativeOffset = Vec2(0f, scale.y - dragHandleScale.y)
+        val linePoints = BasicShapes.square
+            .chunked(2)
+            .flatMap { (x, y) -> listOf(x * dragHandleScale.x, y * dragHandleScale.y) }
+        draggableOutline = Drawer.getLine(linePoints, Color.WHITE.setAlpha(.3f), startWidth = 1f, wrapAround = true)
+
+        if (draggable) {
+            addKids(listOf(-1f, 1f).map {
+                GuiIcon(dragHandleRelativeOffset.add(Vec2(it * (dragHandleScale.x - 20), 0f)), makeVec2(6),
+                    texture = TextureEnum.icon_draggable)
+            })
+        }
+
+        kidElementOffsets.putAll(kidElements.map { Pair(it, it.offset.clone()) })
+        calculateElementRegion()
+        calculateDraggableRegion()
     }
 
-    override fun render(snipRegion: SnipRegion?) {
-        drawer.textures.getTexture(TextureEnum.white_pixel).bind()
-        drawer.renderer.drawShape(BasicShapes.square
-            .let { Drawer.getColoredData(it, color) }
-            .toFloatArray(),
-            offset, 0f, scale, useCamera = false, snipRegion = snipRegion
-        )
+    override fun render(parentSnipRegion: SnipRegion?) {
+        dI.textures.getTexture(TextureEnum.white_pixel).bind()
 
-        drawer.renderer.drawText(
+        dI.renderer.drawShape(background, offset, 0f, scale, useCamera = false, snipRegion = parentSnipRegion)
+
+        if (draggable) {
+            dI.renderer.drawStrip(draggableOutline, dragHandleOffset, useCamera = false,
+                snipRegion = parentSnipRegion)
+        }
+
+        dI.renderer.drawText(
             title,
             offset.add(Vec2(0f, scale.y - 25f)),
             Common.vectorUnit.mul(.15f),
             Color.WHITE,
             TextJustify.CENTER,
             false,
-            snipRegion
+            parentSnipRegion
         )
 
-        childElements.forEach { it.render(snipRegion) }
+        kidElements.forEach { it.render(parentSnipRegion) }
 
-        super.render(snipRegion)
+        super<HasKids>.render(parentSnipRegion)
     }
 
-    override fun update() = childElements.forEach { it.update() }
-
-    override fun addOffset(newOffset: Vec2) {
-        addOffset(this, newOffset)
-        calculateNewOffsets()
+    override fun addOffset(movement: Vec2) {
+        super<HasKids>.addOffset(movement)
+        super.calculateDraggableRegion()
     }
 
-    override fun handleHover(location: Vec2) {
-        if (isHover(location)) {
-            super.handleHover(location)
-            childElements.forEach { it.handleHover(location) }
-        }
+    override fun updateOffset(newOffset: Vec2) {
+        super<HasKids>.updateOffset(newOffset)
+        super.calculateDraggableRegion()
     }
 
-    override fun handleLeftClick(location: Vec2) {
-        if (isHover(location)) {
-            super.handleLeftClick(location)
-            childElements.forEach { it.handleLeftClick(location) }
-        }
-    }
+    override fun handleLeftClickPress(location: Vec2): Boolean =
+        super<HasKids>.handleLeftClickPress(location)
+                || super<HasDrag>.handleLeftClickPress(location)
 
-    override fun handleLeftClickDrag(location: Vec2, movement: Vec2) {
-        if (draggable && isHover(location)) { // TODO: use custom isHover() to only allow a small region as drag handle
-            childElements.forEach { it.handleLeftClickDrag(location, movement) }
-            super.handleLeftClickDrag(location, movement)
-            addOffset(movement)
-        }
-    }
-
-    override fun handleScroll(location: Vec2, movement: Vec2) {
-        if (isHover(location)) {
-            super.handleScroll(location, movement)
-            childElements.forEach { it.handleScroll(location, movement) }
-        }
-    }
-
-    private fun calculateNewOffsets() = childElements.forEach { it.updateOffset(childElementOffsets[it]!!.add(offset)) }
-
-    fun addChildren(elements: List<GuiElement>) {
-        childElements.addAll(elements)
-        childElementOffsets.putAll(elements.map { Pair(it, it.offset.clone()) })
-        calculateNewOffsets()
-    }
-
-    fun addChild(element: GuiElement) {
-        childElements.add(element)
-        childElementOffsets[element] = element.offset.clone()
-        calculateNewOffsets()
+    override fun handleLeftClickDrag(location: Vec2, movement: Vec2): Boolean {
+        val kidDragged = kidElements.filterIsInstance<HasScroll>()
+            .any { it.handleLeftClickDrag(location, movement) }
+        return kidDragged || super<HasDrag>.handleLeftClickDrag(location, movement)
     }
 
 }

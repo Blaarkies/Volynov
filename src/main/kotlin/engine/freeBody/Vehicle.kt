@@ -4,7 +4,7 @@ import display.draw.TextureConfig
 import display.draw.TextureEnum
 import display.graphic.BasicShapes
 import display.graphic.Color
-import engine.GameState
+import engine.gameState.GameState
 import engine.shields.VehicleShield
 import game.GamePlayer
 import org.jbox2d.collision.shapes.PolygonShape
@@ -28,7 +28,7 @@ class Vehicle(
     dy: Float,
     dh: Float,
     mass: Float,
-    radius: Float = .7F,
+    radius: Float = .6F,
     restitution: Float = .3f,
     friction: Float = .6f,
     texture: TextureEnum,
@@ -142,6 +142,16 @@ class Vehicle(
             ).also { callback(it) }
         }
 
+    }
+
+    fun clone(vehicles: MutableList<Vehicle>, world: World, player: GamePlayer): Vehicle {
+        val body = worldBody
+        return Vehicle(vehicles, world, player,
+            body.position.x, body.position.y, body.angle,
+            body.linearVelocity.x, body.linearVelocity.y, body.angularVelocity,
+            body.mass, radius,
+            body.fixtureList.restitution, body.fixtureList.friction,
+            textureConfig.texture, textureConfig.color)
     }
 
 }
