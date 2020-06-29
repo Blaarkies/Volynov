@@ -1,12 +1,16 @@
 package engine.freeBody
 
+import dI
 import display.draw.TextureConfig
 import display.draw.TextureEnum
 import display.graphic.BasicShapes
 import display.graphic.Color
 import engine.gameState.GameState
+import engine.gameState.GameState.Companion.getContactBodies
+import engine.motion.Director
 import engine.shields.VehicleShield
 import game.GamePlayer
+import game.PlayerAim
 import org.jbox2d.collision.shapes.PolygonShape
 import org.jbox2d.common.Vec2
 import org.jbox2d.dynamics.BodyType
@@ -14,6 +18,7 @@ import org.jbox2d.dynamics.FixtureDef
 import org.jbox2d.dynamics.World
 import utility.Common
 import utility.Common.makeVec2
+import utility.Common.makeVec2Circle
 import kotlin.math.PI
 import kotlin.math.pow
 
@@ -73,37 +78,15 @@ class Vehicle(
     }
 
     var shield: VehicleShield? = null
-    var hitPoints: Float = 100f
+    var hitPoints = 100f
+    var fuel = 0f
 
-    var lastGravityForce: Float = 0f
-    val isOutOfGravityField: Boolean
-        get() {
-            val nowGravityForce = worldBody.m_force.length()
-            return false //nowGravityForce < 0.1f
-        }
     val isStable: Boolean
-        get() = worldBody.contactList != null && GameState.getContactBodies(worldBody.contactList)
+        get() = worldBody.contactList != null && getContactBodies(worldBody.contactList)
             .filter { it.userData !is MapBorder }
             .any { other -> other.mass > 10f }
 
-    fun updateLastGravityForce() {
-        lastGravityForce = worldBody.m_force.length()
-    }
-
     fun update() {
-        if (isOutOfGravityField && worldBody.linearVelocity.clone().let {
-                it.normalize()
-                it
-            }.add(worldBody.position.clone().let {
-                it.normalize()
-                it
-            }).length() > .7f) {
-            worldBody.linearDamping = .8f
-        } else {
-            worldBody.linearDamping = 0f
-        }
-
-        updateLastGravityForce()
     }
 
     fun fireWarhead(gameState: GameState,
@@ -117,7 +100,7 @@ class Vehicle(
 
         val warheadRadius = .2f
         val minimumSafeDistance = 1.5f * radius
-        val angleVector = Common.makeVec2Circle(angle)
+        val angleVector = makeVec2Circle(angle)
 
         val warheadLocation = angleVector.mul(minimumSafeDistance).add(originLocation)
         val warheadVelocity = angleVector.mul(power).add(originVelocity)
@@ -152,6 +135,29 @@ class Vehicle(
             body.mass, radius,
             body.fixtureList.restitution, body.fixtureList.friction,
             textureConfig.texture, textureConfig.color)
+    }
+
+    fun startJump(playerAim: PlayerAim) {
+        fuel = 100f
+
+        val footPrintLocation = worldBody.position.add(makeVec2Circle(playerAim.angle + PI.toFloat()).mul(radius))
+        Particle("jump_launch_$id", dI.gameState.particles, dI.gameState.world, worldBody, footPrintLocation,
+            .5f, 150f, TextureEnum.white_pixel, Color.WHITE, dI.gameState.tickTime)
+
+        knock(playerAim.power * worldBody.mass, playerAim.angle)
+    }
+
+    fun thrustVehicle(location: Vec2) {
+        if (fuel > 0f) {
+            val directionToMouse = Director.getDirection(
+                location.x, location.y, worldBody.position.x, worldBody.position.y)
+
+            val thrusterLocation = worldBody.position.add(makeVec2Circle(directionToMouse + PI.toFloat()).mul(radius))
+            Particle("jump_thrust_$id", dI.gameState.particles, dI.gameState.world, worldBody, thrusterLocation,
+                .5f, 150f, TextureEnum.white_pixel, Color.WHITE, dI.gameState.tickTime)
+
+            knock(worldBody.mass * 5f, directionToMouse)
+        }
     }
 
 }

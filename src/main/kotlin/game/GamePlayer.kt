@@ -2,6 +2,7 @@ package game
 
 import engine.freeBody.Vehicle
 import engine.freeBody.Warhead
+import org.jbox2d.common.Vec2
 import utility.Common.getTimingFunctionEaseIn
 
 class GamePlayer(
@@ -53,5 +54,13 @@ class GamePlayer(
     }
 
     fun clone(): GamePlayer = GamePlayer(name, type, null, playerAim.clone(), 0f, 0f)
+
+    fun startJump() {
+        vehicle?.startJump(playerAim)
+    }
+
+    fun thrustVehicle(location: Vec2) {
+        vehicle?.thrustVehicle(location)
+    }
 
 }

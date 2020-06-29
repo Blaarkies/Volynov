@@ -224,6 +224,7 @@ class GuiController {
         player: GamePlayer,
         onClickAim: (player: GamePlayer) -> Unit,
         onClickPower: (player: GamePlayer) -> Unit,
+        onClickMove: (player: GamePlayer) -> Unit,
         onClickFire: (player: GamePlayer) -> Unit
     ) {
         clear()
@@ -244,11 +245,12 @@ class GuiController {
             }
 
         val actionButtonScale = Vec2(50f, 25f)
-        val actionButtonsOffset = Vec2(-200f, -75f)
+        val actionButtonsOffset = Vec2(-200f, actionButtonScale.y * -1)
         val actionButtons = listOf(
             GuiButton(actionButtonsOffset.clone(), actionButtonScale, title = "Aim", onClick = { onClickAim(player) }),
             GuiButton(actionButtonsOffset.clone(), actionButtonScale, title = "Power",
                 onClick = { onClickPower(player) }),
+            GuiButton(actionButtonsOffset.clone(), actionButtonScale, title = "Move", onClick = { onClickMove(player) }),
             GuiButton(actionButtonsOffset.clone(), actionButtonScale, title = "Fire", onClick = { onClickFire(player) }))
             .also { setElementsInRows(it, centered = false) }
 

@@ -117,6 +117,8 @@ class GamePhaseHandler {
             cp == GamePhases.PLAYERS_TURN -> guiController.update()
             cp == GamePhases.PLAYERS_TURN_FIRED && isTransitioning -> tickGameUnpausing(quickStartTime)
             cp == GamePhases.PLAYERS_TURN_FIRED -> handlePlayerShot()
+            cp == GamePhases.PLAYERS_TURN_JUMPED && isTransitioning -> tickGameUnpausing(quickStartTime)
+            cp == GamePhases.PLAYERS_TURN_JUMPED -> handlePlayerShot()
             cp == GamePhases.PLAYERS_TURN_FIRED_ENDS_EARLY -> handlePlayerShotEndsEarly()
             cp == GamePhases.PLAYERS_TURN_AIMING -> guiController.update()
             cp == GamePhases.PLAYERS_TURN_POWERING -> guiController.update()
@@ -243,6 +245,7 @@ class GamePhaseHandler {
             player = gameState.playerOnTurn!!,
             onClickAim = { startNewPhase(GamePhases.PLAYERS_TURN_AIMING) },
             onClickPower = { startNewPhase(GamePhases.PLAYERS_TURN_POWERING) },
+            onClickMove = { player -> playerMoves(player) },
             onClickFire = { player -> playerFires(player) }
         )
         addPlayerLabels()
@@ -250,6 +253,14 @@ class GamePhaseHandler {
 
     private fun addPlayerLabels() {
         guiController.addPlayerLabels(gameState.gamePlayers.filter { it.vehicle!!.hitPoints > 0 }, camera)
+    }
+
+    private fun playerMoves(player: GamePlayer) {
+        guiController.clear()
+
+        player.startJump()
+
+        startNewPhase(GamePhases.PLAYERS_TURN_JUMPED)
     }
 
     private fun playerFires(player: GamePlayer) {
@@ -402,6 +413,10 @@ class GamePhaseHandler {
 
                 playerAimChanged.onNext(true)
             }
+            currentPhase == GamePhases.PLAYERS_TURN_JUMPED -> {
+                val (playerOnTurn, transformedLocation) = getPlayerAndMouseLocations(location)
+                playerOnTurn.thrustVehicle(transformedLocation)
+            }
         }
     }
 
@@ -496,6 +511,10 @@ class GamePhaseHandler {
                 camera.getScreenLocation(event.location))
             currentPhase == GamePhases.PLAYERS_TURN_AIMING -> currentPhase = GamePhases.PLAYERS_TURN
             currentPhase == GamePhases.PLAYERS_TURN_POWERING -> currentPhase = GamePhases.PLAYERS_TURN
+            currentPhase == GamePhases.PLAYERS_TURN_JUMPED -> {
+                val (playerOnTurn, transformedLocation) = getPlayerAndMouseLocations(event.location)
+                playerOnTurn.thrustVehicle(transformedLocation)
+            }
         }
     }
 
@@ -503,8 +522,6 @@ class GamePhaseHandler {
         when {
             mouseElementPhases.any { currentPhase == it } -> guiController.checkLeftClickRelease(
                 camera.getScreenLocation(event.location))
-            currentPhase == GamePhases.PLAYERS_TURN_AIMING -> currentPhase = GamePhases.PLAYERS_TURN
-            currentPhase == GamePhases.PLAYERS_TURN_POWERING -> currentPhase = GamePhases.PLAYERS_TURN
         }
     }
 
