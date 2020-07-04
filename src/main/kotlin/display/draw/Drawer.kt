@@ -109,7 +109,7 @@ class Drawer {
     fun drawBackground(textureEnum: TextureEnum,
                        textureScale: Vec2 = vectorUnit,
                        textureOffset: Vec2 = Vec2(),
-                       backgroundScale: Vec2 = vectorUnit,
+                       backgroundScale: Vec2 = vectorUnit.add(Vec2(.2f, -.2f)),
                        backgroundOffset: Vec2 = Vec2()) {
         val texture = textures.getTexture(textureEnum).bind()
 

@@ -82,6 +82,10 @@ class Warhead(
         checkToDamageVehicles(world, tickTime, vehicles, particle)
         knockFreeBodies(gravityBodies, particle)
 
+        dispose(world, warheads)
+    }
+
+    private fun dispose(world: World, warheads: MutableList<Warhead>) {
         world.destroyBody(worldBody)
         warheads.remove(this)
     }
@@ -118,9 +122,7 @@ class Warhead(
 
                 if (vehicle.hitPoints <= 0) {
                     firedBy.scoreKill(vehicle)
-
-                    world.destroyBody(vehicle.worldBody)
-                    vehicles.remove(vehicle)
+                    vehicle.dispose(world, vehicles)
                 }
             }
     }

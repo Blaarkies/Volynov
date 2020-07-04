@@ -1,8 +1,9 @@
 package game
 
+import display.events.MouseButtonEvent
 import engine.freeBody.Vehicle
 import engine.freeBody.Warhead
-import org.jbox2d.common.Vec2
+import io.reactivex.Observable
 import utility.Common.getTimingFunctionEaseIn
 
 class GamePlayer(
@@ -59,8 +60,8 @@ class GamePlayer(
         vehicle?.startJump(playerAim)
     }
 
-    fun thrustVehicle(location: Vec2) {
-        vehicle?.thrustVehicle(location)
+    fun thrustVehicle(event: Observable<MouseButtonEvent>) {
+        vehicle?.thrustVehicle(event)
     }
 
 }

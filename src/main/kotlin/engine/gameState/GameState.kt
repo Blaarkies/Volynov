@@ -67,7 +67,7 @@ class GameState {
     }
 
     private fun tickVehicles() {
-        vehicles.forEach { it.update() }
+        vehicles.forEach { it.update(tickTime) }
     }
 
     private fun tickParticles() {

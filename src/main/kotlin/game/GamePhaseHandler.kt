@@ -11,6 +11,7 @@ import display.text.TextJustify
 import engine.gameState.GameStateSimulator.getNewPrediction
 import engine.motion.Director
 import engine.shields.VehicleShield
+import io.reactivex.Observable
 import io.reactivex.subjects.PublishSubject
 import org.jbox2d.common.Vec2
 import utility.Common.getTimingFunctionEaseIn
@@ -145,6 +146,23 @@ class GamePhaseHandler {
             GamePhases.PLAYERS_TURN_POWERING -> {
                 drawWorldAndGui()
                 drawPlayerAimingGui()
+            }
+            GamePhases.PLAYERS_TURN_JUMPED -> {
+                drawPlayPhase()
+
+                val fuelRemaining = dI.gameState.playerOnTurn!!.vehicle!!.fuel.roundToInt()
+                drawer.renderer.drawText(
+                    "$fuelRemaining fuel remaining",
+                    Vec2(100f, 0f),
+                    vectorUnit.mul(0.1f),
+                    Color.WHITE,
+                    useCamera = false)
+                //                drawer.renderer.drawText(
+                //                    "x",
+                //                    dI.gameState.playerOnTurn!!.vehicle!!.thrustTarget,
+                //                    vectorUnit.mul(0.01f),
+                //                    Color.WHITE,
+                //                    useCamera = true)
             }
             GamePhases.END_ROUND -> drawWorldAndGui()
             else -> drawPlayPhase()
@@ -414,8 +432,6 @@ class GamePhaseHandler {
                 playerAimChanged.onNext(true)
             }
             currentPhase == GamePhases.PLAYERS_TURN_JUMPED -> {
-                val (playerOnTurn, transformedLocation) = getPlayerAndMouseLocations(location)
-                playerOnTurn.thrustVehicle(transformedLocation)
             }
         }
     }
@@ -512,8 +528,8 @@ class GamePhaseHandler {
             currentPhase == GamePhases.PLAYERS_TURN_AIMING -> currentPhase = GamePhases.PLAYERS_TURN
             currentPhase == GamePhases.PLAYERS_TURN_POWERING -> currentPhase = GamePhases.PLAYERS_TURN
             currentPhase == GamePhases.PLAYERS_TURN_JUMPED -> {
-                val (playerOnTurn, transformedLocation) = getPlayerAndMouseLocations(event.location)
-                playerOnTurn.thrustVehicle(transformedLocation)
+                //                val (playerOnTurn, transformedLocation) = getPlayerAndMouseLocations(event.location)
+                //                playerOnTurn.thrustVehicle(transformedLocation)
             }
         }
     }
@@ -522,6 +538,23 @@ class GamePhaseHandler {
         when {
             mouseElementPhases.any { currentPhase == it } -> guiController.checkLeftClickRelease(
                 camera.getScreenLocation(event.location))
+        }
+    }
+
+    fun eventLeftClick(event: Observable<MouseButtonEvent>) {
+        when {
+            mouseElementPhases.any { currentPhase == it } -> guiController.sendLeftClick(
+                event.doOnNext { it.location.set(camera.getScreenLocation(it.location)) }
+//                camera.getScreenLocation(.location)
+                )
+            //            currentPhase == GamePhases.PLAYERS_TURN_AIMING -> currentPhase = GamePhases.PLAYERS_TURN
+            //            currentPhase == GamePhases.PLAYERS_TURN_POWERING -> currentPhase = GamePhases.PLAYERS_TURN
+            currentPhase == GamePhases.PLAYERS_TURN_JUMPED -> {
+                checkNotNull(gameState.playerOnTurn) { "No player is on turn" }
+                val playerOnTurn = gameState.playerOnTurn!!
+
+                playerOnTurn.thrustVehicle(event)
+            }
         }
     }
 

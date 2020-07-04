@@ -3,7 +3,9 @@ package input
 import dI
 import display.Window
 import display.events.MouseButtonEvent
+import io.reactivex.Observable.just
 import io.reactivex.subjects.PublishSubject
+import javafx.beans.Observable
 import org.jbox2d.common.Vec2
 import org.lwjgl.glfw.GLFW
 
@@ -49,11 +51,24 @@ class InputHandler {
                 }
             }
         }
+
+        window.mouseButtonEvent
+            .filter { it.action == GLFW.GLFW_PRESS && it.button == GLFW.GLFW_MOUSE_BUTTON_LEFT }
+            .takeUntil(unsubscribe)
+            .subscribe { leftClickPress ->
+                val leftClickRelease = window.mouseButtonEvent
+                    .filter { it.action == GLFW.GLFW_RELEASE && it.button == GLFW.GLFW_MOUSE_BUTTON_LEFT }
+                val event = just(leftClickPress)
+                    .mergeWith(window.cursorPositionEvent)
+                    .mergeWith(leftClickRelease)
+                    .takeUntil() { it.action == GLFW.GLFW_RELEASE }
+                gamePhaseHandler.eventLeftClick(event)
+            }
     }
 
     private fun setupMouseMove() {
         window.cursorPositionEvent.takeUntil(unsubscribe).subscribe {
-            gamePhaseHandler.moveMouse(it)
+            gamePhaseHandler.moveMouse(it.location)
         }
     }
 
@@ -62,7 +77,7 @@ class InputHandler {
             when (it.action) {
                 GLFW.GLFW_PRESS -> {
                     when (it.key) {
-                        //                        GLFW.GLFW_KEY_SPACE -> gamePhaseHandler.pauseGame(it)
+                        // GLFW.GLFW_KEY_SPACE -> gamePhaseHandler.pauseGame(it)
                         GLFW.GLFW_KEY_LEFT -> gamePhaseHandler.keyPressArrowLeft(it)
                         GLFW.GLFW_KEY_RIGHT -> gamePhaseHandler.keyPressArrowRight(it)
                         GLFW.GLFW_KEY_ESCAPE -> gamePhaseHandler.keyPressEscape(it)
@@ -110,7 +125,7 @@ class InputHandler {
                 GLFW.GLFW_PRESS -> {
                     window.cursorPositionEvent.takeUntil(mouseButtonLeftRelease)
                         .subscribe {
-                            handleMouseMovement(click.location, it) { movement ->
+                            handleMouseMovement(click.location, it.location) { movement ->
                                 gamePhaseHandler.dragMouseLeftClick(click.location, movement)
                             }
                         }
@@ -124,7 +139,7 @@ class InputHandler {
                 GLFW.GLFW_PRESS -> {
                     window.cursorPositionEvent.takeUntil(mouseButtonRightRelease)
                         .subscribe {
-                            handleMouseMovement(click.location, it) { movement ->
+                            handleMouseMovement(click.location, it.location) { movement ->
                                 gamePhaseHandler.dragMouseRightClick(movement)
                             }
                         }

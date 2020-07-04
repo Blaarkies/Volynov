@@ -1,10 +1,13 @@
 ![Latest Build](https://github.com/Blaarkies/Volynov/workflows/Latest%20Build/badge.svg?branch=master)
 
 # Volynov
-<h3>A space artillery game designed for players that want to destroy each other and the planets around them. 
-Fire missiles, bombs, high tech warheads, and sabotage the enemy, dodge their attempts to do 
-the same. All spaceships, planets and warheads are influenced by realistic physics to produce n-body orbits 
-and collisions.</h3>
+<h3>A space artillery game designed for players who want to destroy each other and the planets around them. 
+Fire missiles, bombs, high tech warheads, sabotage the enemy, and dodge their attempts to do 
+the same.</h3> 
+<i>All spaceships, planets and warheads are influenced by realistic physics to produce n-body orbits 
+and collisions.</i>
+
+### [Download Demo](https://github.com/Blaarkies/Volynov/releases/download/latest-build/volynov.zip)
 
 <h6>2020 06 25, CSS is underappreciated</h6>
 <ul>
