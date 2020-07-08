@@ -20,6 +20,7 @@ import org.jbox2d.dynamics.BodyType
 import org.jbox2d.dynamics.FixtureDef
 import org.jbox2d.dynamics.World
 import utility.Common
+import utility.Common.Pi
 import utility.Common.getTimingFunctionEaseIn
 import utility.Common.makeVec2
 import utility.Common.makeVec2Circle
@@ -65,7 +66,7 @@ class Vehicle(
                 shapeBox.set(vertices, vertices.size)
                 FixtureDef().also {
                     it.shape = shapeBox
-                    it.density = mass / (PI.toFloat() * radius.pow(2f) * (fullShape.size * .5f))
+                    it.density = mass / (Pi * radius.pow(2f) * (fullShape.size * .5f))
                     it.friction = friction
                     it.restitution = restitution
                 }
@@ -108,21 +109,23 @@ class Vehicle(
                 thrustTarget = dI.cameraView.getWorldLocation(dI.window.getCursorPosition())
                 val directionToMouse = Director.getDirection(
                     thrustTarget.x, thrustTarget.y, worldBody.position.x, worldBody.position.y)
+                val exhaustDirection = makeVec2Circle(directionToMouse + Pi)
 
-                val thrusterLocation = worldBody.position
-                    .add(makeVec2Circle(directionToMouse + PI.toFloat()).mul(radius))
+                val thrusterLocation = worldBody.position.add(exhaustDirection.mul(radius))
 
                 val amplitude = (tickTime - lastThrustStartedAt)
                     .div(thrustRampUpTime)
                     .coerceIn(0f, 1f)
                     .let { getTimingFunctionEaseIn(it) }
+                val engineEfficiency = .2f
 
+                val exhaustVelocity = exhaustDirection.mul(amplitude * engineEfficiency * 20f)
                 Particle("jump_thrust_$id", dI.gameState.particles, dI.gameState.world, worldBody, thrusterLocation,
-                    amplitude * .5f, 150f, TextureEnum.white_pixel, Color.WHITE, dI.gameState.tickTime)
+                    exhaustVelocity, amplitude, 600f,
+                    TextureEnum.rcs_puff, Color.WHITE, dI.gameState.tickTime)
 
                 knock(worldBody.mass * amplitude * 5f, directionToMouse)
 
-                val engineEfficiency = .2f
                 fuel = (fuel - amplitude.div(engineEfficiency)).coerceAtLeast(0f)
             }
         }
@@ -148,13 +151,13 @@ class Vehicle(
         val warheadMass = 1f
 
         gameState.activeCallbacks.add {
-            knock(warheadMass * warheadVelocity.length(), angle + PI.toFloat())
+            knock(warheadMass * warheadVelocity.length(), angle + Pi)
 
-            Particle("1", gameState.particles, gameState.world, worldBody, warheadLocation, .3f, 250f,
-                createdAt = gameState.tickTime)
+            Particle("1", gameState.particles, gameState.world, worldBody, warheadLocation,
+                radius = .3f, duration = 250f, createdAt = gameState.tickTime)
 
             Warhead("1", gameState.warheads,
-                gameState.world, player, warheadLocation.x, warheadLocation.y, angle + 1.5f * PI.toFloat(),
+                gameState.world, player, warheadLocation.x, warheadLocation.y, angle + 1.5f * Pi,
                 warheadVelocity.x, warheadVelocity.y, 0f,
                 warheadMass, warheadRadius, .1f, .1f,
                 onCollision = { self, impacted ->
@@ -181,9 +184,9 @@ class Vehicle(
         fuel = 100f
         val knockStrength = playerAim.power * .8f
 
-        val footPrintLocation = worldBody.position.add(makeVec2Circle(playerAim.angle + PI.toFloat()).mul(radius))
+        val footPrintLocation = worldBody.position.add(makeVec2Circle(playerAim.angle + Pi).mul(radius))
         Particle("jump_launch_$id", dI.gameState.particles, dI.gameState.world, worldBody, footPrintLocation,
-            knockStrength * .01f, 150f, TextureEnum.white_pixel, Color.WHITE, dI.gameState.tickTime)
+            Vec2(), knockStrength * .01f, 150f, TextureEnum.white_pixel, Color.WHITE, dI.gameState.tickTime)
 
         knock(knockStrength * worldBody.mass, playerAim.angle)
     }

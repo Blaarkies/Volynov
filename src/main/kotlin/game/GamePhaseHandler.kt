@@ -2,11 +2,10 @@ package game
 
 import dI
 import display.draw.TextureEnum
-import display.events.KeyboardEvent
-import display.events.MouseButtonEvent
-import display.events.MouseScrollEvent
+import display.events.*
 import display.graphic.Color
 import display.gui.GuiController
+import display.gui.GuiElementPhases
 import display.text.TextJustify
 import engine.gameState.GameStateSimulator.getNewPrediction
 import engine.motion.Director
@@ -14,6 +13,7 @@ import engine.shields.VehicleShield
 import io.reactivex.Observable
 import io.reactivex.subjects.PublishSubject
 import org.jbox2d.common.Vec2
+import org.lwjgl.glfw.GLFW
 import utility.Common.getTimingFunctionEaseIn
 import utility.Common.getTimingFunctionEaseOut
 import utility.Common.makeVec2
@@ -31,6 +31,7 @@ class GamePhaseHandler {
     private val gameState = dI.gameState
     val drawer = dI.drawer
     private val camera = dI.cameraView
+    private val guiController = dI.guiController
 
     private var currentPhase = GamePhases.NONE
     private var isTransitioning = false
@@ -43,18 +44,11 @@ class GamePhaseHandler {
 
     private var lastPhaseTimestamp = currentTime
 
-    private lateinit var guiController: GuiController
-    private val textInputIsBusy
-        get() = guiController.textInputIsBusy()
-    private lateinit var exitCallback: () -> Unit
-
     var latestPrediction = TrajectoryPrediction(currentTime)
     var playerAimChanged = PublishSubject.create<Boolean>()
     private val unsubscribe = PublishSubject.create<Boolean>()
 
     fun init() {
-        guiController = GuiController()
-        exitCallback = { dI.window.exit() }
         when (2) {
             0 -> setupMainMenu()
             1 -> setupMainMenuSelectPlayers()
@@ -157,12 +151,8 @@ class GamePhaseHandler {
                     vectorUnit.mul(0.1f),
                     Color.WHITE,
                     useCamera = false)
-                //                drawer.renderer.drawText(
-                //                    "x",
-                //                    dI.gameState.playerOnTurn!!.vehicle!!.thrustTarget,
-                //                    vectorUnit.mul(0.01f),
-                //                    Color.WHITE,
-                //                    useCamera = true)
+                //                drawer.renderer.drawText("x", dI.gameState.playerOnTurn!!.vehicle!!.thrustTarget, vectorUnit.mul(0.01f),
+                //                    Color.WHITE, useCamera = true)
             }
             GamePhases.END_ROUND -> drawWorldAndGui()
             else -> drawPlayPhase()
@@ -359,14 +349,6 @@ class GamePhaseHandler {
         }
     }
 
-    fun dragMouseRightClick(movement: Vec2) {
-        camera.moveLocation(movement.mulLocal(-camera.z))
-    }
-
-    fun dragMouseLeftClick(location: Vec2, movement: Vec2) {
-        guiController.checkLeftClickDrag(camera.getScreenLocation(location), movement)
-    }
-
     fun scrollMouse(event: MouseScrollEvent) {
         val screenLocation = camera.getScreenLocation(event.location)
         if (guiController.locationIsGui(screenLocation)) {
@@ -389,11 +371,12 @@ class GamePhaseHandler {
     fun doubleLeftClick(location: Vec2) {
         val transformedLocation = camera.getWorldLocation(location)
 
-        val clickedBody = gameState.gravityBodies.find {
-            it.worldBody.position
-                .add(transformedLocation.mul(-1f))
-                .length() <= it.radius
-        }
+        val clickedBody = gameState.gravityBodies
+            .find { it.worldBody.position.add(transformedLocation.mul(-1f)).length() <= it.radius }
+            ?: gameState.gravityBodies
+                .map { Pair(it, it.worldBody.position.add(transformedLocation.mul(-1f)).length()) }
+                .filter { (body, distance) -> distance <= body.radius + 5f }
+                .minBy { (_, distance) -> distance }?.first
             ?: return
 
         camera.trackFreeBody(clickedBody)
@@ -431,8 +414,6 @@ class GamePhaseHandler {
 
                 playerAimChanged.onNext(true)
             }
-            currentPhase == GamePhases.PLAYERS_TURN_JUMPED -> {
-            }
         }
     }
 
@@ -445,32 +426,16 @@ class GamePhaseHandler {
     }
 
     fun keyPressEscape(event: KeyboardEvent) {
-        if (textInputIsBusy) {
-            guiController.stopTextInput()
-            return
-        }
         when (currentPhase) {
-            GamePhases.MAIN_MENU -> exitCallback()
+            GamePhases.MAIN_MENU -> dI.window.exit()
             else -> setupMainMenu()
         }
     }
 
     fun keyPressBackspace(event: KeyboardEvent) {
-        if (textInputIsBusy) {
-            guiController.checkRemoveTextInput()
-        }
     }
 
     fun keyPressEnter(event: KeyboardEvent) {
-        if (textInputIsBusy) {
-            guiController.stopTextInput()
-        }
-    }
-
-    fun inputText(text: String) {
-        if (textInputIsBusy) {
-            guiController.checkAddTextInput(text)
-        }
     }
 
     private fun setupMainMenu() {
@@ -479,7 +444,7 @@ class GamePhaseHandler {
         guiController.createMainMenu(
             onClickNewGame = { setupMainMenuSelectPlayers() },
             onClickSettings = {},
-            onClickQuit = exitCallback
+            onClickQuit = { dI.window.exit() }
         )
     }
 
@@ -521,39 +486,30 @@ class GamePhaseHandler {
         gameState.playerOnTurn = gameState.gamePlayers.random()
     }
 
-    fun leftClickMousePress(event: MouseButtonEvent) {
-        when {
-            mouseElementPhases.any { currentPhase == it } -> guiController.checkLeftClickPress(
-                camera.getScreenLocation(event.location))
-            currentPhase == GamePhases.PLAYERS_TURN_AIMING -> currentPhase = GamePhases.PLAYERS_TURN
-            currentPhase == GamePhases.PLAYERS_TURN_POWERING -> currentPhase = GamePhases.PLAYERS_TURN
-            currentPhase == GamePhases.PLAYERS_TURN_JUMPED -> {
-                //                val (playerOnTurn, transformedLocation) = getPlayerAndMouseLocations(event.location)
-                //                playerOnTurn.thrustVehicle(transformedLocation)
-            }
-        }
-    }
-
-    fun leftClickMouseRelease(event: MouseButtonEvent) {
-        when {
-            mouseElementPhases.any { currentPhase == it } -> guiController.checkLeftClickRelease(
-                camera.getScreenLocation(event.location))
-        }
-    }
-
-    fun eventLeftClick(event: Observable<MouseButtonEvent>) {
+    fun eventLeftClick(startEvent: MouseButtonEvent, event: Observable<MouseButtonEvent>) {
         when {
             mouseElementPhases.any { currentPhase == it } -> guiController.sendLeftClick(
-                event.doOnNext { it.location.set(camera.getScreenLocation(it.location)) }
-//                camera.getScreenLocation(.location)
-                )
-            //            currentPhase == GamePhases.PLAYERS_TURN_AIMING -> currentPhase = GamePhases.PLAYERS_TURN
-            //            currentPhase == GamePhases.PLAYERS_TURN_POWERING -> currentPhase = GamePhases.PLAYERS_TURN
+                startEvent.toScreen(), event.doOnNext { it.toScreen() }.share())
+            currentPhase == GamePhases.PLAYERS_TURN_AIMING -> currentPhase = GamePhases.PLAYERS_TURN
+            currentPhase == GamePhases.PLAYERS_TURN_POWERING -> currentPhase = GamePhases.PLAYERS_TURN
             currentPhase == GamePhases.PLAYERS_TURN_JUMPED -> {
                 checkNotNull(gameState.playerOnTurn) { "No player is on turn" }
                 val playerOnTurn = gameState.playerOnTurn!!
 
                 playerOnTurn.thrustVehicle(event)
+            }
+        }
+    }
+
+    fun eventRightClick(startEvent: MouseButtonEvent, event: Observable<MouseButtonEvent>) {
+        val screenLocation = camera.getScreenLocation(startEvent.location)
+        if (guiController.locationIsGui(screenLocation)) {
+
+        } else {
+            val distanceCalculator = DistanceCalculator()
+            event.subscribe {
+                val movement = distanceCalculator.getLastDistance(it.toScreen().location)
+                camera.moveLocation(movement.mulLocal(-camera.z))
             }
         }
     }

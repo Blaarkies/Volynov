@@ -25,6 +25,4 @@ interface GuiElement {
 
     fun updateScale(newScale: Vec2): Vec2 = scale.set(newScale)
 
-    companion object {
-    }
 }

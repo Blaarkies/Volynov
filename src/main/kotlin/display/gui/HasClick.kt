@@ -1,34 +1,26 @@
 package display.gui
 
-import org.jbox2d.common.Vec2
+import display.events.MouseButtonEvent
+import io.reactivex.Observable
+import org.lwjgl.glfw.GLFW
 
 interface HasClick : HasHover {
 
-    var isPressed: Boolean
     val onClick: () -> Unit
 
-    override fun handleHover(location: Vec2): Boolean {
-        if (isPressed) return false
-        return super.handleHover(location)
-    }
-
-    fun handleLeftClickPress(location: Vec2): Boolean {
-        val isHovered = isHover(location)
+    fun handleLeftClick(startEvent: MouseButtonEvent, event: Observable<MouseButtonEvent>): Boolean {
+        val isHovered = isHover(startEvent.location)
         if (isHovered) {
-            isPressed = true
             currentPhase = GuiElementPhases.ACTIVE
+
+            event.filter { it.action == GLFW.GLFW_RELEASE }
+                .doFinally { currentPhase = GuiElementPhases.IDLE }
+                .subscribe {
+                    if (isHover(it.location)) {
+                        onClick()
+                    }
+                }
         }
         return isHovered
-    }
-
-    fun handleLeftClickRelease(location: Vec2): Boolean {
-        if (!isPressed) return false
-
-        if (isHover(location)) {
-            onClick()
-        }
-        isPressed = false
-        currentPhase = GuiElementPhases.IDLE
-        return true
     }
 }

@@ -3,11 +3,15 @@ package display.gui
 import dI
 import display.draw.Drawer
 import display.draw.TextureEnum
+import display.events.DistanceCalculator
+import display.events.MouseButtonEvent
 import display.graphic.BasicShapes
 import display.graphic.Color
 import display.graphic.SnipRegion
 import display.text.TextJustify
+import io.reactivex.Observable
 import org.jbox2d.common.Vec2
+import org.lwjgl.glfw.GLFW
 import utility.Common
 import utility.Common.makeVec2
 
@@ -31,7 +35,6 @@ class GuiPanel(
     private val background: FloatArray
 
     override val kidElementOffsets = HashMap<GuiElement, Vec2>()
-    override var isPressed = false
 
     override val dragHandleScale: Vec2
     override lateinit var dragHandleRelativeOffset: Vec2
@@ -98,14 +101,27 @@ class GuiPanel(
         super.calculateDraggableRegion()
     }
 
-    override fun handleLeftClickPress(location: Vec2): Boolean =
-        super<HasKids>.handleLeftClickPress(location)
-                || super<HasDrag>.handleLeftClickPress(location)
+    override fun handleLeftClick(startEvent: MouseButtonEvent, event: Observable<MouseButtonEvent>): Boolean {
+        val isHovered = isHover(startEvent.location)
+        if (isHovered) {
+            val kidTakesEvent = kidElements.filterIsInstance<HasClick>()
+                .any { it.handleLeftClick(startEvent, event) }
 
-    override fun handleLeftClickDrag(location: Vec2, movement: Vec2): Boolean {
-        val kidDragged = kidElements.filterIsInstance<HasScroll>()
-            .any { it.handleLeftClickDrag(location, movement) }
-        return kidDragged || super<HasDrag>.handleLeftClickDrag(location, movement)
+            if (!kidTakesEvent
+                && isDragRegion(startEvent.location)
+                && draggable) {
+                currentPhase = GuiElementPhases.ACTIVE
+
+                val distanceCalculator = DistanceCalculator()
+                event.doOnComplete { currentPhase = GuiElementPhases.IDLE }
+                    .subscribe {
+                        val movement = distanceCalculator.getLastDistance(it.location)
+                        addOffset(movement)
+                    }
+                return true
+            }
+        }
+        return isHovered
     }
 
 }

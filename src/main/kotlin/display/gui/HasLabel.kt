@@ -4,6 +4,7 @@ import dI
 import display.graphic.SnipRegion
 import display.text.TextJustify
 import utility.Common
+import utility.Common.vectorUnit
 
 interface HasLabel : GuiElement {
 
@@ -15,7 +16,7 @@ interface HasLabel : GuiElement {
         super.render(parentSnipRegion)
 
         dI.renderer.drawText(title,
-            offset, Common.vectorUnit.mul(textSize),
+            offset, vectorUnit.mul(textSize),
             color, justify,
             false, parentSnipRegion)
     }

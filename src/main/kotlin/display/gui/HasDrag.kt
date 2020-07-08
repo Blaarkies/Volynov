@@ -21,27 +21,7 @@ interface HasDrag : HasClick {
         calculateDraggableRegion()
     }
 
-    override fun handleLeftClickPress(location: Vec2): Boolean =
-        super.handleHover(location) or didParentPress(location)
-
-    fun didParentPress(location: Vec2): Boolean {
-        return if (isDragRegion(location)) {
-            isPressed = true
-            true
-        } else false
-    }
-
-    fun handleLeftClickDrag(location: Vec2, movement: Vec2): Boolean =
-        didParentDrag(location, movement)
-
-    fun didParentDrag(location: Vec2, movement: Vec2): Boolean {
-        return if (draggable && isPressed && isDragRegion(location)) {
-            addOffset(movement)
-            true
-        } else false
-    }
-
-    private fun isDragRegion(location: Vec2): Boolean =
+    fun isDragRegion(location: Vec2): Boolean =
         isInRegion(location, dragHandleBottomLeft, dragHandleTopRight)
 
     fun calculateDraggableRegion() {

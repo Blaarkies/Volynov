@@ -3,12 +3,17 @@ package display.gui
 import dI
 import display.draw.Drawer
 import display.draw.TextureEnum
+import display.events.DistanceCalculator
+import display.events.MouseButtonEvent
 import display.graphic.BasicShapes
 import display.graphic.Color
 import display.graphic.SnipRegion
 import display.gui.LayoutController.getOffsetForLayoutPosition
 import display.gui.LayoutController.setElementsInRows
+import io.reactivex.Observable
+import io.reactivex.subjects.PublishSubject
 import org.jbox2d.common.Vec2
+import org.lwjgl.glfw.GLFW
 import utility.Common.makeVec2
 import utility.PidController
 import utility.toSign
@@ -30,8 +35,6 @@ class GuiScroll(
     private var outline: FloatArray
     private lateinit var snipRegion: SnipRegion
     override val kidElementOffsets = HashMap<GuiElement, Vec2>()
-    override var isPressed = false
-    private var isThumbed = false
 
     override var scrollBarPosition = 0f
     override var scrollBarPositionTarget = scrollBarPosition
@@ -92,13 +95,10 @@ class GuiScroll(
         super<HasKids>.handleHover(lastMouseLocation)
     }
 
-    override fun handleHover(location: Vec2): Boolean {
+    override fun handleHover(location: Vec2) {
         lastMouseLocation = location
-        return when {
-            this.isHover(location) -> {
-                super<HasKids>.handleHover(location)
-            }
-            else -> false
+        if (isHover(location)) {
+            super<HasKids>.handleHover(location)
         }
     }
 
@@ -108,42 +108,48 @@ class GuiScroll(
         super.scrollBarOnMove()
     }
 
-    override fun handleLeftClickPress(location: Vec2): Boolean {
+    override fun handleLeftClick(startEvent: MouseButtonEvent, event: Observable<MouseButtonEvent>): Boolean {
         return when {
-            isThumbRegion(location) -> {
-                isThumbed = true
+            isThumbRegion(startEvent.location) -> {
+                currentPhase = GuiElementPhases.ACTIVE
+
+                val distanceCalculator = DistanceCalculator()
+                event.doOnNext {
+                    val movement = distanceCalculator.getLastDistance(it.location)
+                    addScrollBarPosition(-(movement.y / scale.y) * scrollBarMin)
+                    calculateNewOffsets()
+                }
+                    .doOnComplete { currentPhase = GuiElementPhases.IDLE }
+                    .subscribe()
                 true
             }
-            isScrollbarRegion(location) -> {
-                val isAbove = location.y > thumb.offset.y
+            isScrollbarRegion(startEvent.location) -> {
+                val isAbove = startEvent.location.y > thumb.offset.y
                 addScrollBarPosition(isAbove.toSign() * scale.y * 1.8f * 3f)
                 true
             }
-            super<HasKids>.isHover(location) -> {
-                isPressed = true
-                super<HasKids>.handleLeftClickPress(location)
-            }
-            else -> false
-        }
-    }
+            isHover(startEvent.location) -> {
+                currentPhase = GuiElementPhases.DRAG
 
-    override fun handleLeftClickRelease(location: Vec2): Boolean {
-        isThumbed = false
-        return super<HasKids>.handleLeftClickRelease(location)
-    }
+                val unsubscribeKid = PublishSubject.create<Boolean>()
 
-    override fun handleLeftClickDrag(location: Vec2, movement: Vec2): Boolean {
-        return when {
-            isThumbed -> {
-                addScrollBarPosition(-(movement.y / scale.y) * scrollBarMin)
+                val movementEvent = event.filter { it.action != GLFW.GLFW_PRESS && it.action != GLFW.GLFW_RELEASE }
+                    .skip(1)
+
+                val distanceCalculator = DistanceCalculator()
+                movementEvent.doOnComplete { currentPhase = GuiElementPhases.IDLE }
+                    .subscribe {
+                        val movement = distanceCalculator.getLastDistance(it.location)
+                        addScrollBarPosition(-movement.y)
+                        calculateNewOffsets()
+                    }
+                movementEvent.firstElement().subscribe { unsubscribeKid.onNext(true) }
+
                 calculateNewOffsets()
-                true
-            }
-            super<HasScroll>.handleLeftClickDrag(location, movement) -> {
-                // TODO: slow drag should not cause button click on release. Reset inner button "isPressed" status
-                kidElements.filterIsInstance<HasClick>()
-                    .forEach { it.handleLeftClickRelease(it.offset.sub(it.scale).sub(makeVec2(1f))) }
-                calculateNewOffsets()
+                kidElements.filterIsInstance<HasClick>().any {
+                    it.handleLeftClick(startEvent, event.takeUntil(unsubscribeKid))
+                }
+
                 true
             }
             else -> false

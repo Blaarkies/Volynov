@@ -12,6 +12,8 @@ import engine.physics.LocationVelocity
 import org.jbox2d.common.MathUtils.ceil
 import org.jbox2d.common.Vec2
 import org.jbox2d.dynamics.World
+import utility.Common.Pi
+import utility.Common.Pi2
 import utility.Common.getRandomMixed
 import utility.Common.getRandomSign
 import utility.Common.makeVec2Circle
@@ -48,7 +50,7 @@ object MapGenerator {
                 val velocity = moon.worldBody.linearVelocity
 
                 Vehicle(gameState.vehicles, gameState.world, player,
-                    location.x, location.y, placement.nowDirection + PI.toFloat(),
+                    location.x, location.y, placement.nowDirection + Pi,
                     velocity.x, velocity.y, getRandomMixed(),
                     3f, texture = TextureEnum.metal, color = color)
             }
@@ -67,7 +69,7 @@ object MapGenerator {
         val meanLongitude = level.nowDirection
         val location = makeVec2Circle(meanLongitude).mul(distance)
 
-        val direction = meanLongitude + PI.toFloat() / 2f
+        val direction = meanLongitude + Pi / 2f
         val velocity = Gravity.getVelocityToOrbitParent(location, direction, parent)
 
         return LocationVelocity(location.x, location.y, getRandomMixed(),
@@ -81,7 +83,7 @@ object MapGenerator {
         return (1..count)
             .withIndex()
             .map { (i, _) ->
-                val meanLongitude = (2 * PI * .07 * i).toFloat()
+                val meanLongitude = (Pi2 * .07 * i).toFloat()
                 val beltRadius = 60f
                 val dispersion = .8f
                 floatArrayOf(
@@ -93,7 +95,7 @@ object MapGenerator {
             .map {
                 val (x, y, index) = it
                 val parentLocation = parent.worldBody.position
-                val direction = Director.getDirection(x, y, parentLocation.x, parentLocation.y) + PI.toFloat() / 2f
+                val direction = Director.getDirection(x, y, parentLocation.x, parentLocation.y) + Pi / 2f
                 val velocity = Gravity.getVelocityToOrbitParent(Vec2(x, y), direction, parent)
                 Planet("asteroid ${index.toInt()}", planets, world, x, y, 0f,
                     velocity.x, velocity.y, getRandomMixed(),

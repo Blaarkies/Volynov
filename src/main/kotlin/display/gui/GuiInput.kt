@@ -3,11 +3,15 @@ package display.gui
 import dI
 import display.draw.Drawer
 import display.draw.TextureEnum
+import display.events.MouseButtonEvent
 import display.graphic.BasicShapes
 import display.graphic.Color
 import display.graphic.SnipRegion
 import display.text.TextJustify
+import io.reactivex.Observable
+import io.reactivex.Observable.merge
 import org.jbox2d.common.Vec2
+import org.lwjgl.glfw.GLFW
 import utility.Common.makeVec2
 import utility.Common.vectorUnit
 import utility.toList
@@ -23,7 +27,6 @@ class GuiInput(
     val onChange: (String) -> Unit
 ) : HasClick {
 
-    override var isPressed = false
     override var topRight = Vec2()
     override var bottomLeft = Vec2()
     override var id = GuiElementIdentifierType.DEFAULT
@@ -37,8 +40,6 @@ class GuiInput(
 
     private var inputText = ""
     private val paddedScale = Vec2(scale.x - 8f, 20f)
-    val textInputIsBusy
-        get() = currentPhase == GuiElementPhases.INPUT
 
     init {
         val verticalCursorLinePoint = BasicShapes.verticalLine.chunked(2)
@@ -63,7 +64,7 @@ class GuiInput(
         when (currentPhase) {
             GuiElementPhases.HOVER ->
                 dI.renderer.drawShape(buttonBackground, offset, useCamera = false, snipRegion = parentSnipRegion)
-            GuiElementPhases.INPUT -> {
+            GuiElementPhases.ACTIVE -> {
                 dI.renderer.drawShape(buttonBackground, offset, useCamera = false, snipRegion = parentSnipRegion)
 
                 if (System.currentTimeMillis().rem(blinkRate * 2) < blinkRate) {
@@ -84,75 +85,48 @@ class GuiInput(
         super.render(parentSnipRegion)
     }
 
-    override fun handleHover(location: Vec2): Boolean {
-        return when {
-            textInputIsBusy -> false
-            super.isHover(location) -> {
-                currentPhase = GuiElementPhases.HOVER
-                true
-            }
-            else -> {
-                currentPhase = GuiElementPhases.IDLE
-                false
-            }
-        }
-    }
-
-    override fun handleLeftClickPress(location: Vec2): Boolean {
-        val isHovered = super.handleLeftClickPress(location)
-        if (!isHovered) {
-            currentPhase = GuiElementPhases.IDLE
+    override fun handleLeftClick(startEvent: MouseButtonEvent, event: Observable<MouseButtonEvent>): Boolean {
+        val isHovered = isHover(startEvent.location)
+        if (isHovered) {
+            setActive()
         }
         return isHovered
-    }
-
-    override fun handleLeftClickRelease(location: Vec2): Boolean {
-        if (!isPressed) return false
-
-        if (isHover(location)) {
-            currentPhase = GuiElementPhases.INPUT
-            onClick()
-        }
-        isPressed = false
-        return true
-    }
-
-    fun handleAddTextInput(text: String): Boolean {
-        return when {
-            textInputIsBusy -> {
-                inputText += text
-                onChange(inputText)
-                true
-            }
-            else -> false
-        }
-    }
-
-    fun handleRemoveTextInput(): Boolean {
-        return when {
-            textInputIsBusy -> {
-                inputText = inputText.dropLast(1)
-                onChange(inputText)
-                true
-            }
-            else -> false
-        }
-    }
-
-    fun stopTextInput(): Boolean {
-        return when {
-            textInputIsBusy -> {
-                currentPhase = GuiElementPhases.IDLE
-                true
-            }
-            else -> false
-        }
     }
 
     fun setTextValue(text: String): GuiInput {
         inputText = text
         onChange(inputText)
         return this
+    }
+
+    fun setActive() {
+        currentPhase = GuiElementPhases.ACTIVE
+
+        val mouseLeftClickEvent = dI.inputHandler.mouseButtonEvent.doOnNext { it.toScreen() }
+            .filter {
+                it.button == GLFW.GLFW_MOUSE_BUTTON_LEFT
+                        && it.action == GLFW.GLFW_PRESS
+                        && !isHover(it.location)
+            }
+
+        val keyPressEvent = dI.inputHandler.keyboardEvent.filter { it.action == GLFW.GLFW_PRESS }
+
+        val enterKeyEvent = keyPressEvent.filter { it.key == GLFW.GLFW_KEY_ENTER }
+        val escapeKeyEvent = keyPressEvent.filter { it.key == GLFW.GLFW_KEY_ESCAPE }
+        val tabKeyEvent = keyPressEvent.filter { it.key == GLFW.GLFW_KEY_TAB }
+            .doAfterNext { dI.guiController.cycleActiveElement(this, it.shiftHeld) }
+        val backspaceKeyEvent = keyPressEvent.filter { it.key == GLFW.GLFW_KEY_BACKSPACE }
+            .doOnNext { inputText = inputText.dropLast(1) }
+
+        val endInputEvent = merge(mouseLeftClickEvent, enterKeyEvent, tabKeyEvent, escapeKeyEvent)
+            .take(1)
+            .doOnNext { currentPhase = GuiElementPhases.IDLE }
+
+        val textInputEvent = dI.inputHandler.textInputEvent.doOnNext { text -> inputText += text }
+
+        merge(textInputEvent, backspaceKeyEvent)
+            .takeUntil(endInputEvent)
+            .subscribe { onChange(inputText) }
     }
 
 }

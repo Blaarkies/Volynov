@@ -5,8 +5,8 @@ import engine.motion.Motion
 import org.jbox2d.collision.shapes.Shape
 import org.jbox2d.common.Vec2
 import org.jbox2d.dynamics.*
+import utility.Common.Pi
 import utility.Common.makeVec2Circle
-import kotlin.math.PI
 import kotlin.math.pow
 
 open class FreeBody(val id: String, var radius: Float) {
@@ -36,7 +36,7 @@ open class FreeBody(val id: String, var radius: Float) {
         ): Body {
             val fixtureDef = FixtureDef().also {
                 it.shape = shapeBox
-                it.density = mass / (PI.toFloat() * radius.pow(2f))
+                it.density = mass / (Pi * radius.pow(2f))
                 it.friction = friction
                 it.restitution = restitution
             }

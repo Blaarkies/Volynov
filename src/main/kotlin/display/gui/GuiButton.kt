@@ -22,7 +22,6 @@ class GuiButton(
     override var backgroundColor = color.setAlpha(.1f)
 
     override val justify = TextJustify.CENTER
-    override var isPressed = false
     override lateinit var topRight: Vec2
     override lateinit var bottomLeft: Vec2
     override var id = GuiElementIdentifierType.DEFAULT
@@ -36,41 +35,21 @@ class GuiButton(
     override fun render(parentSnipRegion: SnipRegion?) {
         dI.textures.getTexture(TextureEnum.white_pixel).bind()
 
-        when (currentPhase) {
-            GuiElementPhases.HOVER ->
-                dI.renderer.drawShape(activeBackground, offset, useCamera = false, snipRegion = parentSnipRegion)
+        if (currentPhase == GuiElementPhases.HOVER || currentPhase == GuiElementPhases.ACTIVE) {
+            dI.renderer.drawShape(activeBackground, offset, useCamera = false, snipRegion = parentSnipRegion)
         }
 
         when (currentPhase) {
-            GuiElementPhases.ACTIVE ->
+            GuiElementPhases.ACTIVE -> {
                 dI.renderer.drawStrip(outline, offset,
                     scale = Vec2((scale.x - 2f) / scale.x, (scale.y - 2f) / scale.y),
                     useCamera = false, snipRegion = parentSnipRegion)
+            }
             else -> super<HasOutline>.render(parentSnipRegion)
         }
 
         super<HasClick>.render(parentSnipRegion)
         super<HasLabel>.render(parentSnipRegion)
-    }
-
-    override fun handleLeftClickPress(location: Vec2): Boolean {
-        val isHovered = isHover(location)
-        if (isHovered) {
-            isPressed = true
-            currentPhase = GuiElementPhases.ACTIVE
-        }
-        return isHovered
-    }
-
-    override fun handleLeftClickRelease(location: Vec2): Boolean {
-        if (!isPressed) return false
-
-        if (isHover(location)) {
-            onClick()
-        }
-        isPressed = false
-        currentPhase = GuiElementPhases.IDLE
-        return true
     }
 
     override fun updateScale(newScale: Vec2): Vec2 =

@@ -95,8 +95,8 @@ class Window(private val title: String, var width: Int, var height: Int, private
             mouseButtonEvent.onNext(MouseButtonEvent(button, action, mods, getCursorPosition()))
         }?.let { callbacks.add(it) }
 
-        GLFW.glfwSetCursorPosCallback(windowHandle) { _, xPos, yPos ->
-            cursorPositionEvent.onNext(MouseButtonEvent(-1, -1, -1, makeVec2(xPos, yPos)))
+        GLFW.glfwSetCursorPosCallback(windowHandle) { _, _, _ ->
+            cursorPositionEvent.onNext(MouseButtonEvent(-1, -1, -1, getCursorPosition()))
         }?.let { callbacks.add(it) }
 
         GLFW.glfwSetScrollCallback(windowHandle) { _, xOffset, yOffset ->

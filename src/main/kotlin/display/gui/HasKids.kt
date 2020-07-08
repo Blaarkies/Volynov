@@ -22,35 +22,18 @@ interface HasKids : HasClick {
         calculateNewOffsets()
     }
 
-    override fun handleHover(location: Vec2): Boolean {
+    override fun handleHover(location: Vec2) {
         super.handleHover(location)
         kidElements.filterIsInstance<HasHover>()
             .forEach { it.handleHover(location) }
-        return false
     }
 
-    override fun handleLeftClickPress(location: Vec2): Boolean =
-        when {
-            super.isHover(location) -> {
-                kidElements.filterIsInstance<HasClick>()
-                    .any { it.handleLeftClickPress(location) }
-            }
-            else -> false
-        }
-
-    override fun handleLeftClickRelease(location: Vec2): Boolean =
-        super.handleLeftClickRelease(location) or
-                kidElements.filterIsInstance<HasClick>()
-                    .any { it.handleLeftClickRelease(location) }
-
-    fun handleScroll(location: Vec2, movement: Vec2): Boolean =
-        !super.handleHover(location)
-                || kidElements.filterIsInstance<HasScroll>()
-            .any { it.handleScroll(location, movement) }
-
-    fun handleLeftClickDrag(location: Vec2, movement: Vec2): Boolean =
-        kidElements.filterIsInstance<HasScroll>()
-            .any { it.handleLeftClickDrag(location, movement) }
+    fun handleScroll(location: Vec2, movement: Vec2): Boolean {
+        return if (isHover(location)) {
+            kidElements.filterIsInstance<HasScroll>()
+                .any { it.handleScroll(location, movement) }
+        } else false
+    }
 
     fun addKids(kids: List<GuiElement>): HasKids {
         kidElements.addAll(kids)
@@ -64,4 +47,12 @@ interface HasKids : HasClick {
     fun calculateNewOffsets() {
         kidElements.forEach { it.updateOffset(kidElementOffsets[it]!!.add(offset)) }
     }
+
+    fun getFlatListKidElements(): List<GuiElement> {
+        return listOf(this)
+            .union(kidElements.filter { it !is HasKids })
+            .union(kidElements.filterIsInstance<HasKids>().flatMap { it.getFlatListKidElements() })
+            .toList()
+    }
+
 }

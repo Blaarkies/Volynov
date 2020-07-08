@@ -2,6 +2,7 @@ package display.gui
 
 import dI
 import display.draw.TextureEnum
+import display.events.MouseButtonEvent
 import display.graphic.Color
 import display.gui.LayoutController.getOffsetForLayoutPosition
 import display.gui.LayoutController.setElementsInColumns
@@ -9,6 +10,7 @@ import display.gui.LayoutController.setElementsInRows
 import display.text.TextJustify
 import game.GamePlayer
 import input.CameraView
+import io.reactivex.Observable
 import org.jbox2d.common.Vec2
 import utility.Common.makeVec2
 import utility.Common.roundFloat
@@ -30,19 +32,11 @@ class GuiController {
 
     fun clear() = elements.clear()
 
+    fun sendLeftClick(startEvent: MouseButtonEvent, event: Observable<MouseButtonEvent>) = elements.toList()
+        .filterIsInstance<HasClick>().any { it.handleLeftClick(startEvent, event) }
+
     fun checkHover(location: Vec2) = elements.filterIsInstance<HasHover>()
         .forEach { it.handleHover(location) }
-
-    fun checkLeftClickPress(location: Vec2) = elements.toList().filterIsInstance<HasClick>()
-        .any { it.handleLeftClickPress(location) }
-
-    fun checkLeftClickRelease(location: Vec2) = elements.toList().filterIsInstance<HasClick>()
-        .any { it.handleLeftClickRelease(location) }
-
-    fun checkLeftClickDrag(location: Vec2, movement: Vec2): Boolean {
-        return elements.filterIsInstance<HasDrag>()
-            .any { it.handleLeftClickDrag(location, movement) }
-    }
 
     fun checkScroll(movement: Vec2, location: Vec2): Boolean {
         return elements.filterIsInstance<HasScroll>()
@@ -50,14 +44,6 @@ class GuiController {
                 elements.filterIsInstance<HasKids>()
                     .any { it.handleScroll(location, movement) }
     }
-
-    fun checkAddTextInput(text: String) = elements.filterIsInstance<GuiInput>().any { it.handleAddTextInput(text) }
-
-    fun checkRemoveTextInput() = elements.filterIsInstance<GuiInput>().any { it.handleRemoveTextInput() }
-
-    fun stopTextInput() = elements.filterIsInstance<GuiInput>().any { it.stopTextInput() }
-
-    fun textInputIsBusy(): Boolean = elements.filterIsInstance<GuiInput>().toList().any { it.textInputIsBusy }
 
     fun locationIsGui(location: Vec2): Boolean = elements.filterIsInstance<HasHover>()
         .any { it.isHover(location) }
@@ -134,7 +120,9 @@ class GuiController {
         val addRemoveButtons = listOf(addPlayerButton, removePlayerButton)
             .also { setElementsInRows(it) }
 
-        val addRemoveContainer = GuiPanel(scale = playerButtonSize, color = Color.TRANSPARENT, draggable = false).also { it.addKids(addRemoveButtons) }
+        val addRemoveContainer = GuiPanel(scale = playerButtonSize, color = Color.TRANSPARENT, draggable = false).also {
+            it.addKids(addRemoveButtons)
+        }
 
         val playerButtons = (listOf(addRemoveContainer) +
                 players.withIndex()
@@ -250,8 +238,10 @@ class GuiController {
             GuiButton(actionButtonsOffset.clone(), actionButtonScale, title = "Aim", onClick = { onClickAim(player) }),
             GuiButton(actionButtonsOffset.clone(), actionButtonScale, title = "Power",
                 onClick = { onClickPower(player) }),
-            GuiButton(actionButtonsOffset.clone(), actionButtonScale, title = "Move", onClick = { onClickMove(player) }),
-            GuiButton(actionButtonsOffset.clone(), actionButtonScale, title = "Fire", onClick = { onClickFire(player) }))
+            GuiButton(actionButtonsOffset.clone(), actionButtonScale, title = "Jump",
+                onClick = { onClickMove(player) }),
+            GuiButton(actionButtonsOffset.clone(), actionButtonScale, title = "Fire",
+                onClick = { onClickFire(player) }))
             .also { setElementsInRows(it, centered = false) }
 
         val iconAim = GuiIcon(scale = makeVec2(7), texture = TextureEnum.icon_aim_direction)
@@ -347,5 +337,19 @@ class GuiController {
     }
 
     private fun displayNumber(value: Float, decimals: Int): String = roundFloat(value, decimals).toString()
+
+    fun cycleActiveElement(activeElement: GuiElement, reverse: Boolean = false) {
+        val flatListElements = elements.filter { it !is HasKids }
+            .union(elements.filterIsInstance<HasKids>().flatMap { it.getFlatListKidElements() })
+            .toList()
+            .let { if (reverse) it.asReversed() else it }
+
+        val activeElementIndex = flatListElements.indexOf(activeElement)
+        val nextElement = flatListElements.subList(activeElementIndex + 1, flatListElements.size)
+            .find { it is GuiInput }
+            ?: flatListElements.find { it is GuiInput }
+
+        (nextElement as GuiInput).setActive()
+    }
 
 }
