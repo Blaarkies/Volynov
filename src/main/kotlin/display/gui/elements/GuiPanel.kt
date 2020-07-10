@@ -8,6 +8,7 @@ import display.events.MouseButtonEvent
 import display.graphic.BasicShapes
 import display.graphic.Color
 import display.graphic.SnipRegion
+import display.gui.GuiElementPhases.*
 import display.text.TextJustify
 import io.reactivex.Observable
 import org.jbox2d.common.Vec2
@@ -26,7 +27,7 @@ class GuiPanel(
 ) : HasKids, HasDrag {
 
     override var id = GuiElementIdentifierType.DEFAULT
-    override var currentPhase = GuiElementPhases.IDLE
+    override var currentPhase = IDLE
     override var topRight = Vec2()
     override var bottomLeft = Vec2()
     override val onClick: () -> Unit = {}
@@ -110,10 +111,10 @@ class GuiPanel(
             if (!kidTakesEvent
                 && isDragRegion(startEvent.location)
                 && draggable) {
-                currentPhase = GuiElementPhases.ACTIVE
+                currentPhase = ACTIVE
 
                 val distanceCalculator = DistanceCalculator()
-                event.doOnComplete { currentPhase = GuiElementPhases.IDLE }
+                event.doOnComplete { currentPhase = IDLE }
                     .subscribe {
                         val movement = distanceCalculator.getLastDistance(it.location)
                         addOffset(movement)

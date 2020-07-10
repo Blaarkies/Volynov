@@ -7,6 +7,7 @@ import display.events.MouseButtonEvent
 import display.graphic.BasicShapes
 import display.graphic.Color
 import display.graphic.SnipRegion
+import display.gui.GuiElementPhases.*
 import display.text.TextJustify
 import io.reactivex.Observable
 import io.reactivex.Observable.merge
@@ -30,7 +31,7 @@ class GuiInput(
     override var topRight = Vec2()
     override var bottomLeft = Vec2()
     override var id = GuiElementIdentifierType.DEFAULT
-    override var currentPhase = GuiElementPhases.IDLE
+    override var currentPhase = IDLE
 
     private val blinkRate = 400
     private var cursorLine: FloatArray
@@ -62,9 +63,8 @@ class GuiInput(
         dI.textures.getTexture(TextureEnum.white_pixel).bind()
 
         when (currentPhase) {
-            GuiElementPhases.HOVER ->
-                dI.renderer.drawShape(buttonBackground, offset, useCamera = false, snipRegion = parentSnipRegion)
-            GuiElementPhases.ACTIVE -> {
+            HOVER -> dI.renderer.drawShape(buttonBackground, offset, useCamera = false, snipRegion = parentSnipRegion)
+            ACTIVE -> {
                 dI.renderer.drawShape(buttonBackground, offset, useCamera = false, snipRegion = parentSnipRegion)
 
                 if (System.currentTimeMillis().rem(blinkRate * 2) < blinkRate) {
@@ -100,27 +100,23 @@ class GuiInput(
     }
 
     fun setActive() {
-        currentPhase = GuiElementPhases.ACTIVE
+        currentPhase = ACTIVE
 
         val mouseLeftClickEvent = dI.inputHandler.mouseButtonEvent.doOnNext { it.toScreen() }
-            .filter {
-                it.button == GLFW.GLFW_MOUSE_BUTTON_LEFT
-                        && it.action == GLFW.GLFW_PRESS
-                        && !isHover(it.location)
-            }
+            .filter { it.isLeft && it.isPress && !isHover(it.location) }
 
-        val keyPressEvent = dI.inputHandler.keyboardEvent.filter { it.action == GLFW.GLFW_PRESS }
+        val keyPressEvent = dI.inputHandler.keyboardEvent.filter { it.isPress }
 
-        val enterKeyEvent = keyPressEvent.filter { it.key == GLFW.GLFW_KEY_ENTER }
-        val escapeKeyEvent = keyPressEvent.filter { it.key == GLFW.GLFW_KEY_ESCAPE }
-        val tabKeyEvent = keyPressEvent.filter { it.key == GLFW.GLFW_KEY_TAB }
+        val enterKeyEvent = keyPressEvent.filter { it.isEnter }
+        val escapeKeyEvent = keyPressEvent.filter { it.isEscape }
+        val tabKeyEvent = keyPressEvent.filter { it.isTab }
             .doAfterNext { dI.guiController.cycleActiveElement(this, it.shiftHeld) }
-        val backspaceKeyEvent = keyPressEvent.filter { it.key == GLFW.GLFW_KEY_BACKSPACE }
+        val backspaceKeyEvent = keyPressEvent.filter { it.isBackspace }
             .doOnNext { inputText = inputText.dropLast(1) }
 
         val endInputEvent = merge(mouseLeftClickEvent, enterKeyEvent, tabKeyEvent, escapeKeyEvent)
             .take(1)
-            .doOnNext { currentPhase = GuiElementPhases.IDLE }
+            .doOnNext { currentPhase = IDLE }
 
         val textInputEvent = dI.inputHandler.textInputEvent.doOnNext { text -> inputText += text }
 

@@ -8,6 +8,7 @@ import display.events.MouseButtonEvent
 import display.graphic.BasicShapes
 import display.graphic.Color
 import display.graphic.SnipRegion
+import display.gui.GuiElementPhases.*
 import display.gui.LayoutController.getOffsetForLayoutPosition
 import display.gui.LayoutController.setElementsInRows
 import io.reactivex.Observable
@@ -26,7 +27,7 @@ class GuiScroll(
 ) : HasKids, HasScroll {
 
     override var id = GuiElementIdentifierType.DEFAULT
-    override var currentPhase = GuiElementPhases.IDLE
+    override var currentPhase = IDLE
     override val updateCallback: (GuiElement) -> Unit = {}
     override var topRight = Vec2()
     override var bottomLeft = Vec2()
@@ -111,7 +112,7 @@ class GuiScroll(
     override fun handleLeftClick(startEvent: MouseButtonEvent, event: Observable<MouseButtonEvent>): Boolean {
         return when {
             isThumbRegion(startEvent.location) -> {
-                currentPhase = GuiElementPhases.ACTIVE
+                currentPhase = ACTIVE
 
                 val distanceCalculator = DistanceCalculator()
                 event.doOnNext {
@@ -119,7 +120,7 @@ class GuiScroll(
                     addScrollBarPosition(-(movement.y / scale.y) * scrollBarMin)
                     calculateNewOffsets()
                 }
-                    .doOnComplete { currentPhase = GuiElementPhases.IDLE }
+                    .doOnComplete { currentPhase = IDLE }
                     .subscribe()
                 true
             }
@@ -129,21 +130,21 @@ class GuiScroll(
                 true
             }
             isHover(startEvent.location) -> {
-                currentPhase = GuiElementPhases.DRAG
+                currentPhase = DRAG
 
                 val unsubscribeKid = PublishSubject.create<Boolean>()
 
-                val movementEvent = event.filter { it.action != GLFW.GLFW_PRESS && it.action != GLFW.GLFW_RELEASE }
+                val movementEvent = event.filter { it.isPress && it.isRelease }
                     .skip(1)
 
                 val distanceCalculator = DistanceCalculator()
-                movementEvent.doOnComplete { currentPhase = GuiElementPhases.IDLE }
+                movementEvent.doOnComplete { currentPhase = IDLE }
                     .subscribe {
                         val movement = distanceCalculator.getLastDistance(it.location)
                         addScrollBarPosition(-movement.y)
                         calculateNewOffsets()
                     }
-                movementEvent.firstElement().subscribe { unsubscribeKid.onNext(true) }
+                movementEvent.take(1).subscribe { unsubscribeKid.onNext(true) }
 
                 calculateNewOffsets()
                 kidElements.filterIsInstance<HasClick>().any {

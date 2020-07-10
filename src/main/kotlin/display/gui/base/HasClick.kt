@@ -1,8 +1,8 @@
 package display.gui
 
 import display.events.MouseButtonEvent
+import display.gui.GuiElementPhases.*
 import io.reactivex.Observable
-import org.lwjgl.glfw.GLFW
 
 interface HasClick : HasHover {
 
@@ -11,15 +11,12 @@ interface HasClick : HasHover {
     fun handleLeftClick(startEvent: MouseButtonEvent, event: Observable<MouseButtonEvent>): Boolean {
         val isHovered = isHover(startEvent.location)
         if (isHovered) {
-            currentPhase = GuiElementPhases.ACTIVE
+            currentPhase = ACTIVE
 
-            event.filter { it.action == GLFW.GLFW_RELEASE }
-                .doFinally { currentPhase = GuiElementPhases.IDLE }
-                .subscribe {
-                    if (isHover(it.location)) {
-                        onClick()
-                    }
-                }
+            event.takeLast(1)
+                .doOnComplete { currentPhase = IDLE }
+                .filter { isHover(it.location) }
+                .subscribe { onClick() }
         }
         return isHovered
     }
