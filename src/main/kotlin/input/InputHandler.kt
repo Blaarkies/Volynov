@@ -31,26 +31,25 @@ class InputHandler {
     }
 
     private fun setupMouseClicks() {
-        window.mouseButtonEvent
-            .filter { it.action == GLFW.GLFW_PRESS && it.button == GLFW.GLFW_MOUSE_BUTTON_LEFT }
+        val mouseDownEvent = window.mouseButtonEvent.filter { it.isPress }
+        val mouseUpEvent = window.mouseButtonEvent.filter { it.isRelease }
+
+        mouseDownEvent.filter { it.isLeft }
             .takeUntil(unsubscribe)
             .subscribe { clickPress ->
-                val clickRelease = window.mouseButtonEvent
-                    .filter { it.action == GLFW.GLFW_RELEASE && it.button == GLFW.GLFW_MOUSE_BUTTON_LEFT }
+                val clickRelease = mouseUpEvent.filter { it.isLeft }
 
                 val event = merge(just(clickPress.clone()), window.cursorPositionEvent, clickRelease)
-                    .takeUntil { it.action == GLFW.GLFW_RELEASE }
+                    .takeUntil { it.isRelease }
                 gamePhaseHandler.eventLeftClick(clickPress.clone(), event)
             }
 
-        window.mouseButtonEvent
-            .filter { it.action == GLFW.GLFW_PRESS && it.button == GLFW.GLFW_MOUSE_BUTTON_RIGHT }
+        mouseDownEvent.filter { it.isRight }
             .takeUntil(unsubscribe)
             .subscribe { clickPress ->
-                val clickRelease = window.mouseButtonEvent
-                    .filter { it.action == GLFW.GLFW_RELEASE && it.button == GLFW.GLFW_MOUSE_BUTTON_RIGHT }
+                val clickRelease = mouseUpEvent.filter { it.isRight }
                 val event = merge(just(clickPress.clone()), window.cursorPositionEvent, clickRelease)
-                    .takeUntil { it.action == GLFW.GLFW_RELEASE }
+                    .takeUntil { it.isRelease }
                 gamePhaseHandler.eventRightClick(clickPress.clone(), event)
             }
     }

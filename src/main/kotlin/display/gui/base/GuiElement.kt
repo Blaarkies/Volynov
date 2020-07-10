@@ -1,4 +1,4 @@
-package display.gui
+package display.gui.base
 
 import display.graphic.Color
 import display.graphic.SnipRegion

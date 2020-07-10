@@ -1,6 +1,6 @@
-package display.gui
+package display.gui.base
 
-import display.gui.GuiElementPhases.*
+import display.gui.base.GuiElementPhases.*
 import org.jbox2d.common.Vec2
 
 interface HasHover : GuiElement {

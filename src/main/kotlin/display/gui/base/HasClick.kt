@@ -1,7 +1,7 @@
-package display.gui
+package display.gui.base
 
 import display.events.MouseButtonEvent
-import display.gui.GuiElementPhases.*
+import display.gui.base.GuiElementPhases.*
 import io.reactivex.Observable
 
 interface HasClick : HasHover {
@@ -15,7 +15,7 @@ interface HasClick : HasHover {
 
             event.takeLast(1)
                 .doOnComplete { currentPhase = IDLE }
-                .filter { isHover(it.location) }
+                .filter { it.isRelease && isHover(it.location) }
                 .subscribe { onClick() }
         }
         return isHovered

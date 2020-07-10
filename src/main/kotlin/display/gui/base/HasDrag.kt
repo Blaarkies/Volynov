@@ -1,5 +1,6 @@
-package display.gui
+package display.gui.base
 
+import display.gui.base.HasClick
 import org.jbox2d.common.Vec2
 
 interface HasDrag : HasClick {

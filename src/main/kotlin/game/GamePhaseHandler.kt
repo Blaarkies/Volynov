@@ -4,16 +4,14 @@ import dI
 import display.draw.TextureEnum
 import display.events.*
 import display.graphic.Color
-import display.gui.GuiController
-import display.gui.GuiElementPhases
 import display.text.TextJustify
 import engine.gameState.GameStateSimulator.getNewPrediction
 import engine.motion.Director
 import engine.shields.VehicleShield
+import game.GamePhases.*
 import io.reactivex.Observable
 import io.reactivex.subjects.PublishSubject
 import org.jbox2d.common.Vec2
-import org.lwjgl.glfw.GLFW
 import utility.Common.getTimingFunctionEaseIn
 import utility.Common.getTimingFunctionEaseOut
 import utility.Common.makeVec2
@@ -33,7 +31,7 @@ class GamePhaseHandler {
     private val camera = dI.cameraView
     private val guiController = dI.guiController
 
-    private var currentPhase = GamePhases.NONE
+    private var currentPhase = NONE
     private var isTransitioning = false
 
     private val currentTime
@@ -53,7 +51,7 @@ class GamePhaseHandler {
             0 -> setupMainMenu()
             1 -> setupMainMenuSelectPlayers()
             2 -> {
-                currentPhase = GamePhases.PLAYERS_PICK_SHIELDS
+                currentPhase = PLAYERS_PICK_SHIELDS
                 isTransitioning = false
                 gameState.reset()
                 gameState.gamePlayers.addAll((1..3).map { GamePlayer("Player $it", cash = 1000f) })
@@ -98,27 +96,27 @@ class GamePhaseHandler {
 
         val cp = currentPhase
         when {
-            cp == GamePhases.PAUSE && isTransitioning -> tickGamePausing()
-            cp == GamePhases.PAUSE -> return
-            cp == GamePhases.PLAY && isTransitioning -> tickGameUnpausing()
-            cp == GamePhases.MAIN_MENU -> return
-            cp == GamePhases.MAIN_MENU_SELECT_PLAYERS -> return
-            cp == GamePhases.NEW_GAME_INTRO && isTransitioning -> tickGameUnpausing()
-            cp == GamePhases.NEW_GAME_INTRO -> handleIntro()
-            cp == GamePhases.PLAYERS_PICK_SHIELDS && isTransitioning -> {
+            cp == PAUSE && isTransitioning -> tickGamePausing()
+            cp == PAUSE -> return
+            cp == PLAY && isTransitioning -> tickGameUnpausing()
+            cp == MAIN_MENU -> return
+            cp == MAIN_MENU_SELECT_PLAYERS -> return
+            cp == NEW_GAME_INTRO && isTransitioning -> tickGameUnpausing()
+            cp == NEW_GAME_INTRO -> handleIntro()
+            cp == PLAYERS_PICK_SHIELDS && isTransitioning -> {
                 if (elapsedTime > pauseTime) isTransitioning = false
             }
-            cp == GamePhases.PLAYERS_PICK_SHIELDS -> guiController.update()
-            cp == GamePhases.PLAYERS_TURN -> guiController.update()
-            cp == GamePhases.PLAYERS_TURN_FIRED && isTransitioning -> tickGameUnpausing(quickStartTime)
-            cp == GamePhases.PLAYERS_TURN_FIRED -> handlePlayerShot()
-            cp == GamePhases.PLAYERS_TURN_JUMPED && isTransitioning -> tickGameUnpausing(quickStartTime)
-            cp == GamePhases.PLAYERS_TURN_JUMPED -> handlePlayerShot()
-            cp == GamePhases.PLAYERS_TURN_FIRED_ENDS_EARLY -> handlePlayerShotEndsEarly()
-            cp == GamePhases.PLAYERS_TURN_AIMING -> guiController.update()
-            cp == GamePhases.PLAYERS_TURN_POWERING -> guiController.update()
-            cp == GamePhases.END_ROUND && isTransitioning -> tickGamePausing(outroDuration, endSpeed = .1f)
-            cp == GamePhases.END_ROUND -> gameState.tickClock(timeStep * .1f, velocityIterations, positionIterations)
+            cp == PLAYERS_PICK_SHIELDS -> guiController.update()
+            cp == PLAYERS_TURN -> guiController.update()
+            cp == PLAYERS_TURN_FIRED && isTransitioning -> tickGameUnpausing(quickTimeStart)
+            cp == PLAYERS_TURN_FIRED -> handlePlayerShot()
+            cp == PLAYERS_TURN_JUMPED && isTransitioning -> tickGameUnpausing(jumpTimeStart)
+            cp == PLAYERS_TURN_JUMPED -> handlePlayerShot()
+            cp == PLAYERS_TURN_FIRED_ENDS_EARLY -> handlePlayerShotEndsEarly()
+            cp == PLAYERS_TURN_AIMING -> guiController.update()
+            cp == PLAYERS_TURN_POWERING -> guiController.update()
+            cp == END_ROUND && isTransitioning -> tickGamePausing(outroDuration, endSpeed = .1f)
+            cp == END_ROUND -> gameState.tickClock(timeStep * .1f, velocityIterations, positionIterations)
 
             else -> gameState.tickClock(timeStep, velocityIterations, positionIterations)
         }
@@ -126,22 +124,22 @@ class GamePhaseHandler {
 
     fun render() {
         when (currentPhase) {
-            GamePhases.MAIN_MENU -> guiController.render()
-            GamePhases.MAIN_MENU_SELECT_PLAYERS -> guiController.render()
-            GamePhases.PLAYERS_PICK_SHIELDS -> drawWorldAndGui()
-            GamePhases.PLAYERS_TURN -> {
+            MAIN_MENU -> guiController.render()
+            MAIN_MENU_SELECT_PLAYERS -> guiController.render()
+            PLAYERS_PICK_SHIELDS -> drawWorldAndGui()
+            PLAYERS_TURN -> {
                 drawWorldAndGui()
                 gameState.gravityBodies.forEach { drawer.drawMotionPredictors(it) }
             }
-            GamePhases.PLAYERS_TURN_AIMING -> {
+            PLAYERS_TURN_AIMING -> {
                 drawWorldAndGui()
                 drawPlayerAimingGui()
             }
-            GamePhases.PLAYERS_TURN_POWERING -> {
+            PLAYERS_TURN_POWERING -> {
                 drawWorldAndGui()
                 drawPlayerAimingGui()
             }
-            GamePhases.PLAYERS_TURN_JUMPED -> {
+            PLAYERS_TURN_JUMPED -> {
                 drawPlayPhase()
 
                 val fuelRemaining = dI.gameState.playerOnTurn!!.vehicle!!.fuel.roundToInt()
@@ -154,7 +152,7 @@ class GamePhaseHandler {
                 //                drawer.renderer.drawText("x", dI.gameState.playerOnTurn!!.vehicle!!.thrustTarget, vectorUnit.mul(0.01f),
                 //                    Color.WHITE, useCamera = true)
             }
-            GamePhases.END_ROUND -> drawWorldAndGui()
+            END_ROUND -> drawWorldAndGui()
             else -> drawPlayPhase()
         }
 
@@ -192,7 +190,7 @@ class GamePhaseHandler {
                 && gameState.particles.none()
                 && gameState.vehicles.all { it.isStable })
         when {
-            roundEndsEarly -> if (!checkStateEndOfRound()) startNewPhase(GamePhases.PLAYERS_TURN_FIRED_ENDS_EARLY)
+            roundEndsEarly -> if (!checkStateEndOfRound()) startNewPhase(PLAYERS_TURN_FIRED_ENDS_EARLY)
             elapsedTime > maxTurnDuration -> setupNextPlayersFireTurn()
             elapsedTime > (maxTurnDuration - pauseTime) -> tickGamePausing(
                 pauseTime, calculatedElapsedTime = (elapsedTime - maxTurnDuration + pauseTime)
@@ -204,8 +202,8 @@ class GamePhaseHandler {
     private fun handleIntro() {
         when {
             elapsedTime > introDuration -> playerSelectsShield()
-            elapsedTime > (introDuration - introStartSlowdown) -> tickGamePausing(
-                introStartSlowdown, calculatedElapsedTime = (elapsedTime - introDuration + introStartSlowdown)
+            elapsedTime > (introDuration - introTimeEnd) -> tickGamePausing(
+                introTimeEnd, calculatedElapsedTime = (elapsedTime - introDuration + introTimeEnd)
             )
             else -> gameState.tickClock(timeStep, velocityIterations, positionIterations)
         }
@@ -222,7 +220,7 @@ class GamePhaseHandler {
         setNextPlayerOnTurn()
         setupPlayersPickShields()
 
-        currentPhase = GamePhases.PLAYERS_PICK_SHIELDS
+        currentPhase = PLAYERS_PICK_SHIELDS
         //        startTransition()
         addPlayerLabels()
     }
@@ -234,13 +232,13 @@ class GamePhaseHandler {
         setNextPlayerOnTurn()
         setupPlayerCommandPanel()
 
-        startNewPhase(GamePhases.PLAYERS_TURN)
+        startNewPhase(PLAYERS_TURN)
     }
 
     private fun checkStateEndOfRound(): Boolean {
         val vehiclesDestroyed = gameState.gamePlayers.count { it.vehicle!!.hitPoints > 0 } < 2
         if (vehiclesDestroyed) {
-            startNewPhase(GamePhases.END_ROUND)
+            startNewPhase(END_ROUND)
             guiController.createRoundLeaderboard(gameState.gamePlayers,
                 onClickNextRound = { setupMainMenuSelectPlayers() })
             return true
@@ -251,8 +249,8 @@ class GamePhaseHandler {
     private fun setupPlayerCommandPanel() {
         guiController.createPlayerCommandPanel(
             player = gameState.playerOnTurn!!,
-            onClickAim = { startNewPhase(GamePhases.PLAYERS_TURN_AIMING) },
-            onClickPower = { startNewPhase(GamePhases.PLAYERS_TURN_POWERING) },
+            onClickAim = { startNewPhase(PLAYERS_TURN_AIMING) },
+            onClickPower = { startNewPhase(PLAYERS_TURN_POWERING) },
             onClickMove = { player -> playerMoves(player) },
             onClickFire = { player -> playerFires(player) }
         )
@@ -268,7 +266,7 @@ class GamePhaseHandler {
 
         player.startJump()
 
-        startNewPhase(GamePhases.PLAYERS_TURN_JUMPED)
+        startNewPhase(PLAYERS_TURN_JUMPED)
     }
 
     private fun playerFires(player: GamePlayer) {
@@ -277,7 +275,7 @@ class GamePhaseHandler {
 
         player.vehicle?.fireWarhead(gameState, player, "boom small") { warhead -> camera.trackFreeBody(warhead) }
 
-        startNewPhase(GamePhases.PLAYERS_TURN_FIRED)
+        startNewPhase(PLAYERS_TURN_FIRED)
     }
 
     private fun setNextPlayerOnTurn() {
@@ -361,9 +359,9 @@ class GamePhaseHandler {
 
     fun pauseGame(event: KeyboardEvent) {
         currentPhase = when (currentPhase) {
-            GamePhases.PAUSE -> GamePhases.PLAY
-            GamePhases.PLAY -> GamePhases.PAUSE
-            else -> GamePhases.PAUSE
+            PAUSE -> PLAY
+            PLAY -> PAUSE
+            else -> PAUSE
         }
         startTransition()
     }
@@ -394,7 +392,7 @@ class GamePhaseHandler {
         when {
             mouseElementPhases.any { currentPhase == it } -> guiController.checkHover(
                 camera.getScreenLocation(location))
-            currentPhase == GamePhases.PLAYERS_TURN_AIMING -> {
+            currentPhase == PLAYERS_TURN_AIMING -> {
                 val (playerOnTurn, transformedLocation, playerLocation) = getPlayerAndMouseLocations(location)
                 val aimDirection = Director.getDirection(
                     transformedLocation.x, transformedLocation.y, playerLocation.x, playerLocation.y
@@ -404,7 +402,7 @@ class GamePhaseHandler {
 
                 playerAimChanged.onNext(true)
             }
-            currentPhase == GamePhases.PLAYERS_TURN_POWERING -> {
+            currentPhase == PLAYERS_TURN_POWERING -> {
                 val (playerOnTurn, transformedLocation, playerLocation) = getPlayerAndMouseLocations(location)
                 val distance = Director.getDistance(
                     transformedLocation.x, transformedLocation.y, playerLocation.x, playerLocation.y
@@ -427,7 +425,7 @@ class GamePhaseHandler {
 
     fun keyPressEscape(event: KeyboardEvent) {
         when (currentPhase) {
-            GamePhases.MAIN_MENU -> dI.window.exit()
+            MAIN_MENU -> dI.window.exit()
             else -> setupMainMenu()
         }
     }
@@ -439,7 +437,7 @@ class GamePhaseHandler {
     }
 
     private fun setupMainMenu() {
-        currentPhase = GamePhases.MAIN_MENU
+        currentPhase = MAIN_MENU
         gameState.reset()
         guiController.createMainMenu(
             onClickNewGame = { setupMainMenuSelectPlayers() },
@@ -449,7 +447,7 @@ class GamePhaseHandler {
     }
 
     private fun setupMainMenuSelectPlayers() {
-        currentPhase = GamePhases.MAIN_MENU_SELECT_PLAYERS
+        currentPhase = MAIN_MENU_SELECT_PLAYERS
         gameState.reset()
         repeat(2) { gameState.gamePlayers.add(GamePlayer((gameState.gamePlayers.size + 1).toString())) }
         guiController.createMainMenuSelectPlayers(
@@ -478,7 +476,7 @@ class GamePhaseHandler {
             .filter { (_, player) -> player.name.length <= 1 }
             .forEach { (index, player) -> player.name = "Player ${index + 1}" }
         guiController.clear()
-        startNewPhase(GamePhases.NEW_GAME_INTRO)
+        startNewPhase(NEW_GAME_INTRO)
 
         MapGenerator.populateNewGameMap(gameState)
 
@@ -490,9 +488,9 @@ class GamePhaseHandler {
         when {
             mouseElementPhases.any { currentPhase == it } -> guiController.sendLeftClick(
                 startEvent.toScreen(), event.doOnNext { it.toScreen() }.share())
-            currentPhase == GamePhases.PLAYERS_TURN_AIMING -> currentPhase = GamePhases.PLAYERS_TURN
-            currentPhase == GamePhases.PLAYERS_TURN_POWERING -> currentPhase = GamePhases.PLAYERS_TURN
-            currentPhase == GamePhases.PLAYERS_TURN_JUMPED -> {
+            currentPhase == PLAYERS_TURN_AIMING -> currentPhase = PLAYERS_TURN
+            currentPhase == PLAYERS_TURN_POWERING -> currentPhase = PLAYERS_TURN
+            currentPhase == PLAYERS_TURN_JUMPED -> {
                 checkNotNull(gameState.playerOnTurn) { "No player is on turn" }
                 val playerOnTurn = gameState.playerOnTurn!!
 
@@ -518,17 +516,18 @@ class GamePhaseHandler {
 
         private const val pauseTime = 1000f
         private const val introDuration = 3500f
-        private const val introStartSlowdown = 2000f
+        private const val introTimeEnd = 2000f
         private const val maxTurnDuration = 20000f
-        private const val quickStartTime = 300f
+        private const val quickTimeStart = 300f
+        private const val jumpTimeStart = 600f
         private const val outroDuration = 5000f
 
         private val mouseElementPhases = listOf(
-            GamePhases.MAIN_MENU,
-            GamePhases.MAIN_MENU_SELECT_PLAYERS,
-            GamePhases.PLAYERS_PICK_SHIELDS,
-            GamePhases.PLAYERS_TURN,
-            GamePhases.END_ROUND
+            MAIN_MENU,
+            MAIN_MENU_SELECT_PLAYERS,
+            PLAYERS_PICK_SHIELDS,
+            PLAYERS_TURN,
+            END_ROUND
         )
 
     }

@@ -1,7 +1,11 @@
-package display.gui
+package display.gui.elements
 
 import dI
 import display.graphic.Color
+import display.gui.base.GuiElement
+import display.gui.base.GuiElementIdentifierType
+import display.gui.base.GuiElementPhases
+import display.gui.base.HasLabel
 import display.text.TextJustify
 import org.jbox2d.common.Vec2
 

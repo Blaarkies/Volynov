@@ -1,4 +1,4 @@
-package display.gui
+package display.gui.elements
 
 import dI
 import display.draw.Drawer
@@ -8,13 +8,14 @@ import display.events.MouseButtonEvent
 import display.graphic.BasicShapes
 import display.graphic.Color
 import display.graphic.SnipRegion
-import display.gui.GuiElementPhases.*
+import display.gui.*
+import display.gui.base.GuiElementPhases.*
 import display.gui.LayoutController.getOffsetForLayoutPosition
 import display.gui.LayoutController.setElementsInRows
+import display.gui.base.*
 import io.reactivex.Observable
 import io.reactivex.subjects.PublishSubject
 import org.jbox2d.common.Vec2
-import org.lwjgl.glfw.GLFW
 import utility.Common.makeVec2
 import utility.PidController
 import utility.toSign
@@ -40,8 +41,8 @@ class GuiScroll(
     override var scrollBarPosition = 0f
     override var scrollBarPositionTarget = scrollBarPosition
     override val scrollController = PidController(-.06f, -.0001f, -.08f)
-    override var scrollBarMax: Float = 0f
-    override var scrollBarMin: Float = 0f
+    override var scrollBarMax = 0f
+    override var scrollBarMin = 0f
 
     private var scrollBarRegionScale: Vec2
     private var scrollBarRegionRelativeOffset: Vec2
@@ -78,16 +79,18 @@ class GuiScroll(
     }
 
     override fun render(parentSnipRegion: SnipRegion?) {
+        val unionSnipRegion = parentSnipRegion // + snipRegion
+
         dI.textures.getTexture(TextureEnum.white_pixel).bind()
-        dI.renderer.drawStrip(outline, offset, useCamera = false, snipRegion = snipRegion)
+        dI.renderer.drawStrip(outline, offset, useCamera = false, snipRegion = unionSnipRegion)
 
         kidElements.filter {
             it.offset.sub(it.scale).y < offset.add(scale).y
                     && it.offset.add(it.scale).y > offset.sub(scale).y
-        }.forEach { it.render(snipRegion) }
+        }.forEach { it.render(unionSnipRegion) }
 
-        thumb.render(snipRegion)
-        super<HasKids>.render(snipRegion)
+        thumb.render(unionSnipRegion)
+//        super<HasKids>.render(snipRegion)
     }
 
     override fun update() {
@@ -132,9 +135,7 @@ class GuiScroll(
             isHover(startEvent.location) -> {
                 currentPhase = DRAG
 
-                val unsubscribeKid = PublishSubject.create<Boolean>()
-
-                val movementEvent = event.filter { it.isPress && it.isRelease }
+                val movementEvent = event.filter { !it.isPress && !it.isRelease }
                     .skip(1)
 
                 val distanceCalculator = DistanceCalculator()
@@ -144,6 +145,8 @@ class GuiScroll(
                         addScrollBarPosition(-movement.y)
                         calculateNewOffsets()
                     }
+
+                val unsubscribeKid = PublishSubject.create<Boolean>()
                 movementEvent.take(1).subscribe { unsubscribeKid.onNext(true) }
 
                 calculateNewOffsets()
@@ -218,7 +221,5 @@ class GuiScroll(
         updateScrollBarRange()
         return this
     }
-
-    override fun addKid(kid: GuiElement): GuiScroll = addKids(listOf(kid))
 
 }

@@ -1,4 +1,4 @@
-package display.gui
+package display.gui.elements
 
 import dI
 import display.draw.Drawer
@@ -7,12 +7,14 @@ import display.events.MouseButtonEvent
 import display.graphic.BasicShapes
 import display.graphic.Color
 import display.graphic.SnipRegion
-import display.gui.GuiElementPhases.*
+import display.gui.base.GuiElement
+import display.gui.base.GuiElementIdentifierType
+import display.gui.base.GuiElementPhases.*
+import display.gui.base.HasClick
 import display.text.TextJustify
 import io.reactivex.Observable
 import io.reactivex.Observable.merge
 import org.jbox2d.common.Vec2
-import org.lwjgl.glfw.GLFW
 import utility.Common.makeVec2
 import utility.Common.vectorUnit
 import utility.toList

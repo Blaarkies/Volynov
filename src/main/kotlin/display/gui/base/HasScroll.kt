@@ -1,4 +1,4 @@
-package display.gui
+package display.gui.base
 
 import org.jbox2d.common.Vec2
 import utility.PidController

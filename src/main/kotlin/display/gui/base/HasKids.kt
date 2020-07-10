@@ -1,11 +1,17 @@
-package display.gui
+package display.gui.base
 
+import display.graphic.SnipRegion
 import org.jbox2d.common.Vec2
 
 interface HasKids : HasClick {
 
     val kidElements: MutableList<GuiElement>
     val kidElementOffsets: HashMap<GuiElement, Vec2>
+
+    override fun render(parentSnipRegion: SnipRegion?) {
+        super.render(parentSnipRegion)
+        kidElements.forEach { it.render(parentSnipRegion) }
+    }
 
     override fun update() {
         kidElements.forEach { it.update() }
@@ -30,8 +36,8 @@ interface HasKids : HasClick {
 
     fun handleScroll(location: Vec2, movement: Vec2): Boolean {
         return if (isHover(location)) {
-            kidElements.filterIsInstance<HasScroll>()
-                .any { it.handleScroll(location, movement) }
+            kidElements.filterIsInstance<HasKids>().any { it.handleScroll(location, movement) }
+                    || kidElements.filterIsInstance<HasScroll>().any { it.handleScroll(location, movement) }
         } else false
     }
 

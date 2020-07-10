@@ -4,6 +4,8 @@ import dI
 import display.draw.Drawer
 import display.draw.TextureHolder
 import display.graphic.Renderer
+import display.gui.base.HasDrag
+import display.gui.elements.GuiScroll
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify

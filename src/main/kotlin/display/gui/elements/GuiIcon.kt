@@ -1,9 +1,12 @@
-package display.gui
+package display.gui.elements
 
 import dI
 import display.draw.TextureEnum
 import display.graphic.Color
 import display.graphic.SnipRegion
+import display.gui.base.GuiElement
+import display.gui.base.GuiElementIdentifierType
+import display.gui.base.GuiElementPhases
 import org.jbox2d.common.Vec2
 import utility.Common.vectorUnit
 
@@ -22,7 +25,7 @@ class GuiIcon(
     override fun render(parentSnipRegion: SnipRegion?) {
         super.render(parentSnipRegion)
 
-        dI.drawer.drawIcon(texture, scale, offset, color)
+        dI.drawer.drawIcon(texture, scale, offset, color, parentSnipRegion)
     }
 
 }

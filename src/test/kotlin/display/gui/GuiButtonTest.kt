@@ -2,6 +2,9 @@ package display.gui
 
 import dI
 import display.graphic.Renderer
+import display.gui.base.GuiElement
+import display.gui.base.GuiElementPhases
+import display.gui.elements.GuiButton
 import io.mockk.mockk
 import io.mockk.verify
 import org.jbox2d.common.Vec2
@@ -46,7 +49,8 @@ internal class GuiButtonTest {
         @BeforeEach
         fun setup() {
             wasClicked = false
-            button = GuiButton(baseOffset(), baseScale(), onClick = { wasClicked = true })
+            button = GuiButton(baseOffset(), baseScale(),
+                onClick = { wasClicked = true })
         }
 
         @Test
@@ -76,7 +80,8 @@ internal class GuiButtonTest {
         @BeforeEach
         fun setup() {
             wasClicked = false
-            button = GuiButton(baseOffset(), baseScale(), onClick = { wasClicked = true })
+            button = GuiButton(baseOffset(), baseScale(),
+                onClick = { wasClicked = true })
         }
 
         @Test

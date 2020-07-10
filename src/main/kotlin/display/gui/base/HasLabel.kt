@@ -1,9 +1,9 @@
-package display.gui
+package display.gui.base
 
 import dI
 import display.graphic.SnipRegion
+import display.gui.base.GuiElement
 import display.text.TextJustify
-import utility.Common
 import utility.Common.vectorUnit
 
 interface HasLabel : GuiElement {

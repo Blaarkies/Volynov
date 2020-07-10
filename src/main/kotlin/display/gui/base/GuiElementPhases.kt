@@ -1,4 +1,4 @@
-package display.gui
+package display.gui.base
 
 enum class GuiElementPhases {
     IDLE,

@@ -1,4 +1,4 @@
-package display.gui
+package display.gui.elements
 
 import dI
 import display.draw.Drawer
@@ -8,11 +8,11 @@ import display.events.MouseButtonEvent
 import display.graphic.BasicShapes
 import display.graphic.Color
 import display.graphic.SnipRegion
-import display.gui.GuiElementPhases.*
+import display.gui.base.GuiElementPhases.*
+import display.gui.base.*
 import display.text.TextJustify
 import io.reactivex.Observable
 import org.jbox2d.common.Vec2
-import org.lwjgl.glfw.GLFW
 import utility.Common
 import utility.Common.makeVec2
 
@@ -57,7 +57,8 @@ class GuiPanel(
 
         if (draggable) {
             addKids(listOf(-1f, 1f).map {
-                GuiIcon(dragHandleRelativeOffset.add(Vec2(it * (dragHandleScale.x - 20), 0f)), makeVec2(6),
+                GuiIcon(
+                    dragHandleRelativeOffset.add(Vec2(it * (dragHandleScale.x - 20), 0f)), makeVec2(6),
                     texture = TextureEnum.icon_draggable)
             })
         }
@@ -87,12 +88,11 @@ class GuiPanel(
             parentSnipRegion
         )
 
-        kidElements.forEach { it.render(parentSnipRegion) }
-
         super<HasKids>.render(parentSnipRegion)
     }
 
     override fun addOffset(movement: Vec2) {
+        if (movement.length() == 0f) return
         super<HasKids>.addOffset(movement)
         super.calculateDraggableRegion()
     }

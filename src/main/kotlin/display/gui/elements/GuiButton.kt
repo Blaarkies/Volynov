@@ -1,10 +1,11 @@
-package display.gui
+package display.gui.elements
 
 import dI
 import display.draw.TextureEnum
 import display.graphic.Color
 import display.graphic.SnipRegion
-import display.gui.GuiElementPhases.*
+import display.gui.base.GuiElementPhases.*
+import display.gui.base.*
 import display.text.TextJustify
 import org.jbox2d.common.Vec2
 

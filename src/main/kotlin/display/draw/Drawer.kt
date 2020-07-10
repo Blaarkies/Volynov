@@ -134,7 +134,8 @@ class Drawer {
     fun drawIcon(textureEnum: TextureEnum,
                  scale: Vec2 = vectorUnit,
                  offset: Vec2 = Vec2(),
-                 color: Color) {
+                 color: Color,
+                 snipRegion: SnipRegion?) {
         val texture = textures.getTexture(textureEnum).bind()
 
         val left = -texture.width / 2f
@@ -151,8 +152,10 @@ class Drawer {
                 )
             }.toFloatArray()
 
+        val iconSnipRegion = SnipRegion(offset.sub(scale), scale.mul(2f))
+        val unionSnipRegion = snipRegion // TODO: here
         renderer.drawShape(data, offset, 0f, scale, useCamera = false,
-            snipRegion = SnipRegion(offset.sub(scale), scale.mul(2f)))
+            snipRegion = unionSnipRegion)
     }
 
     fun drawPlayerAimingPointer(player: GamePlayer) {

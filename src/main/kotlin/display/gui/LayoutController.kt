@@ -1,5 +1,6 @@
 package display.gui
 
+import display.gui.base.GuiElement
 import org.jbox2d.common.Vec2
 import utility.toSign
 
