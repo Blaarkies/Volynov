@@ -9,6 +9,7 @@ import engine.freeBody.MapBorder
 import engine.freeBody.FreeBody
 import engine.freeBody.Particle
 import engine.freeBody.Vehicle
+import engine.gameState.MapBackground
 import engine.physics.CellLocation
 import engine.physics.GravityCell
 import game.GamePlayer
@@ -59,8 +60,7 @@ class Drawer {
             mapBorder.textureConfig.gpuBufferData,
             mapBorder.worldBody.position,
             mapBorder.worldBody.angle,
-            vectorUnit
-        )
+            vectorUnit)
     }
 
     fun drawTrail(freeBody: FreeBody) {
@@ -106,11 +106,11 @@ class Drawer {
         }
     }
 
-    fun drawBackground(textureEnum: TextureEnum,
-                       textureScale: Vec2 = vectorUnit,
-                       textureOffset: Vec2 = Vec2(),
-                       backgroundScale: Vec2 = vectorUnit.add(Vec2(.2f, -.2f)),
-                       backgroundOffset: Vec2 = Vec2()) {
+    fun drawBackgroundStars(textureEnum: TextureEnum,
+                            textureScale: Vec2 = vectorUnit,
+                            textureOffset: Vec2 = Vec2(),
+                            backgroundScale: Vec2 = vectorUnit.add(Vec2(.2f, -.2f)),
+                            backgroundOffset: Vec2 = Vec2()) {
         val texture = textures.getTexture(textureEnum).bind()
 
         val left = -texture.width / 2f
@@ -129,33 +129,6 @@ class Drawer {
         }.toFloatArray()
 
         renderer.drawShape(data, backgroundOffset, scale = backgroundScale.mul(30f))
-    }
-
-    fun drawIcon(textureEnum: TextureEnum,
-                 scale: Vec2 = vectorUnit,
-                 offset: Vec2 = Vec2(),
-                 color: Color,
-                 snipRegion: SnipRegion?) {
-        val texture = textures.getTexture(textureEnum).bind()
-
-        val left = -texture.width / 2f
-        val right = texture.width / 2f
-        val top = texture.height / 2f
-        val bottom = -texture.height / 2f
-
-        val data = listOf(left, bottom, left, top, right, top, right, bottom).chunked(2)
-            .flatMap {
-                listOf(
-                    it[0], it[1], 0f,
-                    color.red, color.green, color.blue, color.alpha,
-                    (it[0] / 2f - 0.5f), (it[1] / 2f - 0.5f)
-                )
-            }.toFloatArray()
-
-        val iconSnipRegion = SnipRegion(offset.sub(scale), scale.mul(2f))
-        val unionSnipRegion = snipRegion // TODO: here
-        renderer.drawShape(data, offset, 0f, scale, useCamera = false,
-            snipRegion = unionSnipRegion)
     }
 
     fun drawPlayerAimingPointer(player: GamePlayer) {

@@ -14,8 +14,7 @@ class TextureConfig(
 ) {
 
     fun updateGpuBufferData(): TextureConfig {
-        gpuBufferData = chunkedVertices.flatMap {
-            val (x, y) = it
+        gpuBufferData = chunkedVertices.flatMap { (x, y) ->
             listOf(
                 x, y, 0f,
                 color.red, color.green, color.blue, color.alpha,

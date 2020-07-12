@@ -175,17 +175,15 @@ class Renderer {
     ) {
         //        val uniTex = program!!.getUniformLocation("texImage")
         //        program!!.setUniform(uniTex, 0)
-
-        val gameCamera = cameraView.getRenderCamera()
-        val guiCamera = Matrix4f()
-        glDisable(GL_SCISSOR_TEST)
-
         val model = Matrix4f.translate(offset.x, offset.y, z)
             .multiply(Matrix4f.rotate(h * Common.radianToDegree, 0f, 0f, 1f))
             .multiply(Matrix4f.scale(scale.x, scale.y, 1f))
         val uniModel = program.getUniformLocation("model")
         program.setUniform(uniModel, model)
 
+        val gameCamera = cameraView.getRenderCamera()
+        val guiCamera = Matrix4f()
+        glDisable(GL_SCISSOR_TEST)
         val view = when (useCamera) {
             true -> gameCamera
             false -> {

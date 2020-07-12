@@ -300,12 +300,7 @@ class GamePhaseHandler {
     }
 
     private fun drawPlayPhase() {
-        drawer.drawBackground(TextureEnum.stars_2k,
-            backgroundOffset = dI.cameraView.location.mul(.7f))
-        drawer.drawBackground(TextureEnum.stars_2k_transparent,
-            backgroundScale = makeVec2(1.17f),
-            backgroundOffset = dI.cameraView.location.mul(.5f))
-
+        gameState.background.render()
         drawer.drawBorder(gameState.mapBorder!!)
 
         val allFreeBodies = gameState.gravityBodies

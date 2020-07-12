@@ -289,30 +289,23 @@ class GuiController {
                 onClick = { onClickFire(player) }))
             .also { setElementsInRows(it, centered = false) }
 
-        val iconAim = GuiIcon(scale = makeVec2(7),
-            texture = TextureEnum.icon_aim_direction)
-            .also {
-                it.updateOffset(
-                    getOffsetForLayoutPosition(TOP_LEFT, commandPanel.scale, it.scale))
-            }
-        val aimingInfo = listOf(
-            iconAim,
-            GuiIcon(scale = makeVec2(7), texture = TextureEnum.icon_aim_power))
-            .also { icons ->
-                setElementsInRows(icons, centered = false)
-                icons.forEach { it.offset.x = iconAim.offset.x }
-            }
+        val iconScale = makeVec2(20)
+        val textSize = .15f
+        val iconPadding = makeVec2(5)
+        val iconAim = GuiIcon(scale = iconScale, texture = TextureEnum.icon_aim_direction, padding = iconPadding)
+            .also { it.updateOffset(getOffsetForLayoutPosition(TOP_LEFT, commandPanel.scale, it.scale)) }
+        val iconPower = GuiIcon(iconAim.offset.clone(), iconScale,
+            texture = TextureEnum.icon_aim_power, padding = iconPadding)
+
+        val aimingInfo = listOf(iconAim, iconPower)
+            .also { icons -> setElementsInRows(icons, centered = false) }
             .zip(listOf(
-                GuiLabel(Vec2(), TextJustify.LEFT,
-                    getPlayerAimAngleDisplay(player), .15f,
-                    updateCallback = { (it as HasLabel).title = getPlayerAimAngleDisplay(player) }).also {
-                    it.scale.set(makeVec2(20f))
-                },
-                GuiLabel(Vec2(), TextJustify.LEFT,
-                    getPlayerAimPowerDisplay(player), .15f,
-                    updateCallback = { (it as HasLabel).title = getPlayerAimPowerDisplay(player) }).also {
-                    it.scale.set(makeVec2(20f))
-                }
+                GuiLabel(Vec2(), TextJustify.LEFT, getPlayerAimAngleDisplay(player), textSize,
+                    updateCallback = { (it as HasLabel).title = getPlayerAimAngleDisplay(player) })
+                    .also { it.scale.set(makeVec2(2f)) },
+                GuiLabel(Vec2(), TextJustify.LEFT, getPlayerAimPowerDisplay(player), .15f,
+                    updateCallback = { (it as HasLabel).title = getPlayerAimPowerDisplay(player) })
+                    .also { it.scale.set(makeVec2(2f)) }
             ))
             .also {
                 it.forEach { (icon, label) ->
@@ -344,9 +337,8 @@ class GuiController {
             }
 
         commandPanel.addKids(
-            actionButtons + aimingInfo + playerStats +
-                    GuiLabel(Vec2(-30f, 30f), TextJustify.LEFT, "Weapons not yet implemented", .12f) +
-                    tabs)
+            actionButtons + aimingInfo + playerStats + tabs +
+                    GuiLabel(Vec2(-30f, 30f), TextJustify.LEFT, "Weapons not yet implemented", .12f))
         elements.add(commandPanel)
 
         elements.add(GuiLabel(Vec2(-130f, -500f),

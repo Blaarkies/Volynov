@@ -17,6 +17,8 @@ import org.jbox2d.dynamics.contacts.ContactEdge
 
 class GameState {
 
+    var background: MapBackground = MapBackground()
+
     var mapBorder: MapBorder? = null
     val gamePlayers = mutableListOf<GamePlayer>()
     var playerOnTurn: GamePlayer? = null

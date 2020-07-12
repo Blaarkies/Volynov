@@ -1,7 +1,9 @@
 package display.gui.elements
 
 import dI
+import display.draw.TextureConfig
 import display.draw.TextureEnum
+import display.graphic.BasicShapes
 import display.graphic.Color
 import display.graphic.SnipRegion
 import display.gui.base.GuiElement
@@ -12,20 +14,32 @@ import utility.Common.vectorUnit
 
 class GuiIcon(
     override val offset: Vec2 = Vec2(),
-    scale: Vec2 = vectorUnit,
+    override val scale: Vec2 = vectorUnit,
     override val color: Color = Color.WHITE.setAlpha(.7f),
-    val texture: TextureEnum = TextureEnum.white_pixel
+    texture: TextureEnum = TextureEnum.white_pixel,
+    val padding: Vec2 = Vec2()
 ) : GuiElement {
 
-    override val scale: Vec2 = scale.mul(2f)
     override var id = GuiElementIdentifierType.DEFAULT
     override var currentPhase = GuiElementPhases.IDLE
     override val updateCallback = { _: GuiElement -> Unit }
 
+    private val outputScale = scale.sub(padding)
+    private val textureConfig: TextureConfig = TextureConfig(texture,
+        chunkedVertices = BasicShapes.square.chunked(2), color = color)
+        .updateGpuBufferData()
+
     override fun render(parentSnipRegion: SnipRegion?) {
         super.render(parentSnipRegion)
 
-        dI.drawer.drawIcon(texture, scale, offset, color, parentSnipRegion)
+        dI.textures.getTexture(textureConfig.texture).bind()
+        dI.renderer.drawShape(
+            textureConfig.gpuBufferData,
+            offset,
+            0f,
+            outputScale,
+            false,
+            parentSnipRegion)
     }
 
 }

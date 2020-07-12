@@ -52,7 +52,8 @@ object Common {
 
     const val Pi2 = 2f * Pi
 
-    val vectorUnit = Vec2(1f, 1f)
+    val vectorUnit
+        get() = Vec2(1f, 1f)
 
     fun makeVec2(list: List<Float>): Vec2 = Vec2(list[0], list[1])
 

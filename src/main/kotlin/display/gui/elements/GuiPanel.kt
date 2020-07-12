@@ -13,8 +13,8 @@ import display.gui.base.*
 import display.text.TextJustify
 import io.reactivex.Observable
 import org.jbox2d.common.Vec2
-import utility.Common
 import utility.Common.makeVec2
+import utility.Common.vectorUnit
 
 class GuiPanel(
     override val offset: Vec2 = Vec2(),
@@ -57,9 +57,9 @@ class GuiPanel(
 
         if (draggable) {
             addKids(listOf(-1f, 1f).map {
-                GuiIcon(
-                    dragHandleRelativeOffset.add(Vec2(it * (dragHandleScale.x - 20), 0f)), makeVec2(6),
-                    texture = TextureEnum.icon_draggable)
+                GuiIcon(dragHandleRelativeOffset.add(Vec2(it * (dragHandleScale.x - 20), 0f)),
+                    makeVec2(20), Color.WHITE.setAlpha(.5f),
+                    texture = TextureEnum.icon_draggable, padding = makeVec2(10))
             })
         }
 
@@ -70,7 +70,6 @@ class GuiPanel(
 
     override fun render(parentSnipRegion: SnipRegion?) {
         dI.textures.getTexture(TextureEnum.white_pixel).bind()
-
         dI.renderer.drawShape(background, offset, 0f, scale, useCamera = false, snipRegion = parentSnipRegion)
 
         if (draggable) {
@@ -81,8 +80,8 @@ class GuiPanel(
         dI.renderer.drawText(
             title,
             offset.add(Vec2(0f, scale.y - 25f)),
-            Common.vectorUnit.mul(.15f),
-            Color.WHITE,
+            vectorUnit.mul(.15f),
+            Color.WHITE.setAlpha(.7f),
             TextJustify.CENTER,
             false,
             parentSnipRegion

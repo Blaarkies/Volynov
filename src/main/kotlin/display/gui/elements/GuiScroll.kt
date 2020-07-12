@@ -65,7 +65,7 @@ class GuiScroll(
 
         thumbScale = Vec2(6f, scale.y * .5f)
         thumbRelativeOffset = getOffsetForLayoutPosition(LayoutPosition.TOP_RIGHT, scale, thumbScale)
-        thumb = GuiIcon(scale = thumbScale, color = color)
+        thumb = GuiIcon(scale = thumbScale, color = color, texture = TextureEnum.white_pixel)
 
         scrollBarRegionScale = Vec2(thumbScale.x, scale.y * 2f)
         scrollBarRegionRelativeOffset = Vec2(scale.x - thumbScale.x, 0f)
@@ -90,7 +90,6 @@ class GuiScroll(
         }.forEach { it.render(unionSnipRegion) }
 
         thumb.render(unionSnipRegion)
-//        super<HasKids>.render(snipRegion)
     }
 
     override fun update() {
