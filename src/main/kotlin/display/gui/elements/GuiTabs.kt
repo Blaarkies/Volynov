@@ -5,8 +5,10 @@ import display.events.MouseButtonEvent
 import display.graphic.Color
 import display.graphic.SnipRegion
 import display.gui.LayoutController
-import display.gui.base.GuiElementPhases.*
+import display.gui.LayoutPosition
 import display.gui.base.*
+import display.gui.base.GuiElementPhases.DRAG
+import display.gui.base.GuiElementPhases.IDLE
 import io.reactivex.Observable
 import io.reactivex.subjects.PublishSubject
 import org.jbox2d.common.Vec2
@@ -37,25 +39,45 @@ class GuiTabs(
     private var pagesOffsetMin = 0f
     private var pagesOffsetMax = 0f
 
+    private val localElements = mutableListOf<GuiElement>()
+    private val localElementOffsets = HashMap<GuiElement, Vec2>()
+    private val tabsScale = Vec2(scale.x, 20f)
+
     private var lastMouseLocation = offset.sub(scale).sub(Common.makeVec2(1))
 
     init {
         kidElementOffsets.putAll(kidElements.map { Pair(it, it.offset.clone()) })
         calculateElementRegion()
         calculateSnipRegion()
+
+        addTabButtons()
+    }
+
+    private fun addTabButtons() {
+        val tabCount = kidElements.size
+        val tabSize = scale.x / tabCount
+        localElements.clear()
+        localElements.addAll(kidElements
+            .zip(listOf("Weapons", "Shields", "Fuels"))
+            .withIndex().map { (index, page) ->
+                val (element, title) = page
+                val tabOffset = Vec2(-scale.x + tabSize, scale.y)
+                    .addLocal(index * scale.x * 2 / tabCount, -20f)
+                GuiButton(tabOffset, Vec2(tabSize, 20f), title, .1f,
+                    onClick = { pagesOffsetTarget = -kidElementOffsets[element]!!.x })
+            })
+        localElementOffsets.putAll(localElements.map { Pair(it, it.offset.clone()) })
     }
 
     override fun render(parentSnipRegion: SnipRegion?) {
-        kidElements.filter {
-            it.offset.sub(it.scale).y < offset.add(scale).y
-                    && it.offset.add(it.scale).y > offset.sub(scale).y
-        }.forEach { it.render(snipRegion) }
+        val unionSnipRegion = snipRegion.intersect(parentSnipRegion)
+        super.render(unionSnipRegion)
 
-//        super.render(snipRegion)
+        localElements.forEach { it.render(parentSnipRegion) }
     }
 
     override fun update() {
-        if (pagesOffset.minus(pagesOffsetTarget).absoluteValue > .1f) {
+        if (pagesOffset.minus(pagesOffsetTarget).absoluteValue > .01f) {
             val movement = pagesOffsetController.getReaction(pagesOffset, pagesOffsetTarget)
             pagesOffset = (pagesOffset + movement).coerceIn(pagesOffsetMin, pagesOffsetMax)
             calculateNewOffsets()
@@ -68,12 +90,17 @@ class GuiTabs(
         lastMouseLocation = location
         if (isHover(location)) {
             super.handleHover(location)
+            localElements.filterIsInstance<HasHover>().forEach { it.handleHover(location) }
         }
     }
 
     override fun handleLeftClick(startEvent: MouseButtonEvent, event: Observable<MouseButtonEvent>): Boolean {
         val isHovered = isHover(startEvent.location)
         if (isHovered) {
+            val tabsTakeEvent = localElements.filterIsInstance<HasClick>()
+                .any { it.handleLeftClick(startEvent, event) }
+            if (tabsTakeEvent) return true
+
             currentPhase = DRAG
 
             val movementEvent = event.filter { !it.isPress && !it.isRelease }
@@ -82,9 +109,7 @@ class GuiTabs(
             val distanceCalculator = DistanceCalculator()
             movementEvent.doOnComplete { currentPhase = IDLE }
                 .map { distanceCalculator.getLastDistance(it.location) }
-                .subscribe {
-                    addPagesOffset(it)
-                }
+                .subscribe { addPagesOffset(it) }
             movementEvent.lastElement()
                 .subscribe {
                     pagesOffsetTarget = kidElementOffsets.map { Pair(it, it.value.x + pagesOffsetTarget) }
@@ -95,7 +120,6 @@ class GuiTabs(
             val unsubscribeKid = PublishSubject.create<Boolean>()
             movementEvent.take(1).subscribe { unsubscribeKid.onNext(true) }
 
-            calculateNewOffsets()
             kidElements.filterIsInstance<HasClick>().any {
                 it.handleLeftClick(startEvent, event.takeUntil(unsubscribeKid))
             }
@@ -109,7 +133,7 @@ class GuiTabs(
     }
 
     private fun calculateSnipRegion() {
-        snipRegion = SnipRegion(offset.sub(scale), scale.mul(2f))
+        snipRegion = SnipRegion.create(this)
     }
 
     override fun calculateNewOffsets() {
@@ -120,15 +144,25 @@ class GuiTabs(
                 .add(Vec2(pagesOffset, 0f))
                 .add(offset))
         }
+
+        localElements.forEach { it.updateOffset(localElementOffsets[it]!!.add(offset)) }
     }
 
     override fun addKids(kids: List<GuiElement>): GuiTabs {
+        val pageScale = scale.sub(Vec2(0f, tabsScale.y * 2))
+        kids.forEach {
+            it.updateOffset(LayoutController.getOffsetForLayoutPosition(
+                LayoutPosition.TOP_LEFT, pageScale, it.scale))
+        }
+
         kidElements.addAll(kids)
         LayoutController.setElementsInColumns(kidElements, centered = false)
 
         kidElementOffsets.putAll(kids.map {
             Pair(it, it.offset.clone())
         })
+        addTabButtons()
+
         pagesOffsetMin = kids.last().let { -it.offset.x }
         calculateNewOffsets()
         return this

@@ -43,14 +43,20 @@ class Color {
     companion object {
 
         val WHITE = Color(1f, 1f, 1f, 1f)
+        val GRAY = Color(.5f, .5f, .5f, 1f)
         val BLACK = Color(0f, 0f, 0f, 1f)
         val RED = Color(1f, 0f, 0f, 1f)
+        val ORANGE = Color(1f, .5f, 0f, 1f)
+        val YELLOW = Color(1f, 1f, 0f, 1f)
+        val LIME = Color(1f, 1f, 0f, 1f)
         val GREEN = Color(0f, 1f, 0f, 1f)
+        val CYAN = Color(0f, 1f, 1f, 1f)
         val BLUE = Color(0f, 0f, 1f, 1f)
+        val MAGENTA = Color(1f, 0f, 1f, 1f)
         val TRANSPARENT = Color(0f, 0f, 0f, 0f)
 
-        val HEX = Color("#01FF6499")
-        val HSV = createFromHsv(.5f, 1f, .5f, 1f)
+//        val HEX = Color("#01FF6499")
+//        val HSV = createFromHsv(.5f, 1f, .5f, 1f)
 
         val PALETTE8 = (1..8).map { createFromHsv(it / 8f, 1f, .5f) }
         val PALETTE_TINT10 =

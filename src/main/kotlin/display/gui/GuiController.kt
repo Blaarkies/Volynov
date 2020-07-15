@@ -12,6 +12,7 @@ import display.gui.base.*
 import display.gui.elements.*
 import display.text.TextJustify
 import game.GamePlayer
+import game.fuel.FuelType
 import input.CameraView
 import io.reactivex.Observable
 import org.jbox2d.common.Vec2
@@ -250,23 +251,26 @@ class GuiController {
             .also { it.updateOffset(getOffsetForLayoutPosition(BOTTOM_RIGHT, windowSize.mul(.5f), it.scale)) }
 
         val tabsContainerSize = Vec2(150f, 100f)
-        val weaponsList = GuiScroll(scale = tabsContainerSize)
+        val tabsContainerPageSize = Vec2(150f, 80f)
+        val weaponsList = GuiScroll(scale = tabsContainerPageSize)
             .addKids((1..15).map {
                 GuiButton(scale = Vec2(tabsContainerSize.x, 25f),
                     title = "Boom $it", textSize = .15f,
                     onClick = { println("clicked [Boom $it]") })
             })
-        val shieldsList = GuiScroll(scale = tabsContainerSize)
+        val shieldsList = GuiScroll(scale = tabsContainerPageSize)
             .addKids((1..5).map {
                 GuiButton(scale = Vec2(tabsContainerSize.x, 25f),
                     title = "Shield $it", textSize = .15f,
                     onClick = { println("clicked [Shield $it]") })
             })
-        val fuelsList = GuiScroll(scale = tabsContainerSize)
-            .addKids((1..3).map {
+        val fuelsList = GuiScroll(scale = tabsContainerPageSize)
+            .addKids(FuelType.values().map {
                 GuiButton(scale = Vec2(tabsContainerSize.x, 25f),
-                    title = "Fuel $it", textSize = .15f,
-                    onClick = { println("clicked [Fuel $it]") })
+                    title = "Fuel ${it.name}", textSize = .15f,
+                    onClick = {
+                        player.playerAim.selectedFuel = it
+                        println("clicked [Fuel ${it.name}]") })
             })
 
         val tabs = GuiTabs(scale = tabsContainerSize)
