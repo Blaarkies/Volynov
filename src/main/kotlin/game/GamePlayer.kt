@@ -58,6 +58,7 @@ class GamePlayer(
 
     fun startJump() {
         vehicle?.startJump(playerAim)
+        playerAim.selectedFuel = null
     }
 
     fun thrustVehicle(event: Observable<MouseButtonEvent>) {

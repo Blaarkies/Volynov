@@ -12,6 +12,7 @@ import display.gui.base.*
 import display.gui.elements.*
 import display.text.TextJustify
 import game.GamePlayer
+import game.fuel.Fuel
 import game.fuel.FuelType
 import input.CameraView
 import io.reactivex.Observable
@@ -265,12 +266,10 @@ class GuiController {
                     onClick = { println("clicked [Shield $it]") })
             })
         val fuelsList = GuiScroll(scale = tabsContainerPageSize)
-            .addKids(FuelType.values().map {
+            .addKids(Fuel.descriptor.entries.map { (key, value) ->
                 GuiButton(scale = Vec2(tabsContainerSize.x, 25f),
-                    title = "Fuel ${it.name}", textSize = .15f,
-                    onClick = {
-                        player.playerAim.selectedFuel = it
-                        println("clicked [Fuel ${it.name}]") })
+                    title = value.name, textSize = .15f,
+                    onClick = { player.playerAim.selectedFuel = key })
             })
 
         val tabs = GuiTabs(scale = tabsContainerSize)
@@ -281,15 +280,15 @@ class GuiController {
         val actionButtonsOffset = Vec2(-200f, actionButtonScale.y * -1)
         val actionButtons = listOf(
             GuiButton(actionButtonsOffset.clone(), actionButtonScale,
-                title = "Aim", onClick = { onClickAim(player) }),
+                title = "Aim", textSize = .12f, onClick = { onClickAim(player) }),
             GuiButton(actionButtonsOffset.clone(), actionButtonScale,
-                title = "Power",
+                title = "Power", textSize = .12f,
                 onClick = { onClickPower(player) }),
             GuiButton(actionButtonsOffset.clone(), actionButtonScale,
-                title = "Jump",
+                title = "Jump", textSize = .12f,
                 onClick = { onClickMove(player) }),
             GuiButton(actionButtonsOffset.clone(), actionButtonScale,
-                title = "Fire",
+                title = "Fire", textSize = .12f,
                 onClick = { onClickFire(player) }))
             .also { setElementsInRows(it, centered = false) }
 
@@ -321,28 +320,43 @@ class GuiController {
 
         val playerStats = listOf(
             GuiLabel(justify = TextJustify.LEFT,
-                title = "HP      ${ceil(player.vehicle!!.hitPoints).toInt()}%",
-                textSize = .15f)
+                title = "HP       ${ceil(player.vehicle!!.hitPoints).toInt()}%",
+                textSize = .12f)
                 .also {
                     it.scale.addLocal(50f, 0f)
                     it.updateOffset(
                         getOffsetForLayoutPosition(TOP_RIGHT, commandPanel.scale, it.scale))
                 },
             GuiLabel(justify = TextJustify.LEFT,
-                title = "Energy ${ceil(player.vehicle!!.shield!!.energy).toInt()}%",
-                textSize = .15f),
+                title = "Energy  ${ceil(player.vehicle!!.shield!!.energy).toInt()}%",
+                textSize = .12f),
             GuiLabel(justify = TextJustify.LEFT,
-                title = "Wealth ${player.cash.toInt()}",
-                textSize = .15f))
+                title = "Cash     ${player.cash.toInt()}",
+                textSize = .12f))
             .also { labels ->
                 setElementsInRows(labels, centered = false)
                 val align = labels.first().offset.x
                 labels.forEach { it.offset.x = align }
             }
 
-        commandPanel.addKids(
-            actionButtons + aimingInfo + playerStats + tabs +
-                    GuiLabel(Vec2(-30f, 30f), TextJustify.LEFT, "Weapons not yet implemented", .12f))
+        val shoppingCart = listOf(
+            GuiLabel(Vec2(-100f, 130f),
+                textSize = .1f,
+                updateCallback = { e ->
+                    (e as GuiLabel).title = Fuel.descriptor[player.playerAim.selectedFuel]?.name ?: ""
+                }),
+            GuiLabel(title = "Weapon selected",
+                textSize = .1f),
+            GuiLabel(title = "Shield selected",
+                textSize = .1f))
+            .also { labels ->
+                setElementsInRows(labels, centered = false)
+                val align = labels.first().offset.x
+                labels.forEach { it.offset.x = align }
+            }
+
+        commandPanel.addKids(actionButtons + aimingInfo + playerStats + tabs + shoppingCart +
+                GuiLabel(Vec2(-30f, 30f), TextJustify.LEFT, "Weapons not yet implemented", .12f))
         elements.add(commandPanel)
 
         elements.add(GuiLabel(Vec2(-130f, -500f),

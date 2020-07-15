@@ -1,7 +1,6 @@
 package game
 
 import dI
-import display.draw.TextureEnum
 import display.events.*
 import display.graphic.Color
 import display.text.TextJustify
@@ -14,7 +13,6 @@ import io.reactivex.subjects.PublishSubject
 import org.jbox2d.common.Vec2
 import utility.Common.getTimingFunctionEaseIn
 import utility.Common.getTimingFunctionEaseOut
-import utility.Common.makeVec2
 import utility.Common.vectorUnit
 import java.util.concurrent.TimeUnit
 import kotlin.concurrent.thread
@@ -142,7 +140,7 @@ class GamePhaseHandler {
             PLAYERS_TURN_JUMPED -> {
                 drawPlayPhase()
 
-                val fuelRemaining = dI.gameState.playerOnTurn!!.vehicle!!.fuel.roundToInt()
+                val fuelRemaining = dI.gameState.playerOnTurn!!.vehicle!!.fuel!!.amount.roundToInt()
                 drawer.renderer.drawText(
                     "$fuelRemaining fuel remaining",
                     Vec2(100f, 0f),
@@ -251,7 +249,7 @@ class GamePhaseHandler {
             player = gameState.playerOnTurn!!,
             onClickAim = { startNewPhase(PLAYERS_TURN_AIMING) },
             onClickPower = { startNewPhase(PLAYERS_TURN_POWERING) },
-            onClickMove = { player -> playerMoves(player) },
+            onClickMove = { player -> playerJumps(player) },
             onClickFire = { player -> playerFires(player) }
         )
         addPlayerLabels()
@@ -261,7 +259,7 @@ class GamePhaseHandler {
         guiController.addPlayerLabels(gameState.gamePlayers.filter { it.vehicle!!.hitPoints > 0 }, camera)
     }
 
-    private fun playerMoves(player: GamePlayer) {
+    private fun playerJumps(player: GamePlayer) {
         guiController.clear()
 
         player.startJump()

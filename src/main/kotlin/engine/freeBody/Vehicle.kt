@@ -8,10 +8,10 @@ import display.graphic.BasicShapes
 import display.graphic.Color
 import engine.gameState.GameState
 import engine.gameState.GameState.Companion.getContactBodies
-import engine.motion.Director
 import engine.shields.VehicleShield
 import game.GamePlayer
 import game.PlayerAim
+import game.fuel.Fuel
 import io.reactivex.Observable
 import io.reactivex.subjects.PublishSubject
 import org.jbox2d.collision.shapes.PolygonShape
@@ -21,10 +21,8 @@ import org.jbox2d.dynamics.FixtureDef
 import org.jbox2d.dynamics.World
 import utility.Common
 import utility.Common.Pi
-import utility.Common.getTimingFunctionEaseIn
 import utility.Common.makeVec2
 import utility.Common.makeVec2Circle
-import kotlin.math.PI
 import kotlin.math.pow
 
 class Vehicle(
@@ -85,7 +83,6 @@ class Vehicle(
     private val unsubscribe = PublishSubject.create<Boolean>()
     var shield: VehicleShield? = null
     var hitPoints = 100f
-    var fuel = 0f
 
     val isStable: Boolean
         get() = worldBody.contactList != null && getContactBodies(worldBody.contactList)
@@ -93,43 +90,11 @@ class Vehicle(
             .any { other -> other.mass > 10f }
 
     private var lastUpdatedAt = dI.gameState.tickTime
-    private val updateInterval = 50f
-    private fun getRestTime(tickTime: Float) = tickTime - lastUpdatedAt
 
-    var thrustTarget = worldBody.position
-    var isThrusting = false
-    var lastThrustStartedAt = lastUpdatedAt
-    val thrustRampUpTime = 500f
+    var fuel: Fuel? = null
 
     fun update(tickTime: Float) {
-        if (getRestTime(tickTime) > updateInterval) {
-            lastUpdatedAt = tickTime
-
-            if (isThrusting && fuel > 0f) {
-                thrustTarget = dI.cameraView.getWorldLocation(dI.window.getCursorPosition())
-                val directionToMouse = Director.getDirection(
-                    thrustTarget.x, thrustTarget.y, worldBody.position.x, worldBody.position.y)
-                val exhaustDirection = makeVec2Circle(directionToMouse + Pi)
-
-                val thrusterLocation = worldBody.position.add(exhaustDirection.mul(radius))
-
-                val amplitude = (tickTime - lastThrustStartedAt)
-                    .div(thrustRampUpTime)
-                    .coerceIn(0f, 1f)
-                    .let { getTimingFunctionEaseIn(it) }
-                val engineEfficiency = .2f
-
-                val exhaustVelocity = exhaustDirection.mul(amplitude * engineEfficiency * 20f)
-                Particle("jump_thrust_$id", dI.gameState.particles, dI.gameState.world, worldBody, thrusterLocation,
-                    exhaustVelocity, amplitude, 600f,
-                    TextureEnum.rcs_puff, Color.WHITE, dI.gameState.tickTime)
-
-                knock(worldBody.mass * amplitude * 5f, directionToMouse)
-
-                fuel = (fuel - amplitude.div(engineEfficiency)).coerceAtLeast(0f)
-            }
-        }
-
+        fuel?.burn(tickTime)
     }
 
     fun fireWarhead(gameState: GameState,
@@ -181,20 +146,13 @@ class Vehicle(
     }
 
     fun startJump(playerAim: PlayerAim) {
-        fuel = 100f
-        val knockStrength = playerAim.power * .8f
-
-        val footPrintLocation = worldBody.position.add(makeVec2Circle(playerAim.angle + Pi).mul(radius))
-        Particle("jump_launch_$id", dI.gameState.particles, dI.gameState.world, worldBody, footPrintLocation,
-            Vec2(), knockStrength * .01f, 150f, TextureEnum.white_pixel, Color.WHITE, dI.gameState.tickTime)
-
-        knock(knockStrength * worldBody.mass, playerAim.angle)
+        fuel = Fuel.create(playerAim.selectedFuel, lastUpdatedAt, this)
+        fuel?.startJump(playerAim)
     }
 
     fun thrustVehicle(event: Observable<MouseButtonEvent>) {
-        isThrusting = true
-        lastThrustStartedAt = dI.gameState.tickTime
-        event.takeUntil(unsubscribe).doOnComplete { isThrusting = false }.subscribe()
+        fuel?.startThrust()
+        event.takeUntil(unsubscribe).doOnComplete { fuel?.endThrust() }.subscribe()
     }
 
     fun dispose(world: World, vehicles: MutableList<Vehicle>) {

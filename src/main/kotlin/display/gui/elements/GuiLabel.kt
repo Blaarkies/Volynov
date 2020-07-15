@@ -12,7 +12,7 @@ import org.jbox2d.common.Vec2
 class GuiLabel(
     override val offset: Vec2 = Vec2(),
     override val justify: TextJustify = TextJustify.LEFT,
-    override var title: String,
+    override var title: String = "",
     override val textSize: Float = 0f,
     override val color: Color = Color.WHITE.setAlpha(.7f),
     override val updateCallback: (GuiElement) -> Unit = {}
