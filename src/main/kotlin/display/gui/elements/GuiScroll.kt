@@ -79,16 +79,12 @@ class GuiScroll(
     }
 
     override fun render(parentSnipRegion: SnipRegion?) {
-        val unionSnipRegion = parentSnipRegion // + snipRegion
+        val unionSnipRegion = snipRegion.intersect(parentSnipRegion)!!
 
         dI.textures.getTexture(TextureEnum.white_pixel).bind()
         dI.renderer.drawStrip(outline, offset, useCamera = false, snipRegion = unionSnipRegion)
 
-        kidElements.filter {
-            it.offset.sub(it.scale).y < offset.add(scale).y
-                    && it.offset.add(it.scale).y > offset.sub(scale).y
-        }.forEach { it.render(unionSnipRegion) }
-
+        super<HasKids>.render(unionSnipRegion)
         thumb.render(unionSnipRegion)
     }
 
@@ -171,7 +167,7 @@ class GuiScroll(
     }
 
     private fun calculateSnipRegion() {
-        snipRegion = SnipRegion(offset.sub(scale), scale.mul(2f))
+        snipRegion = SnipRegion.create(this)
     }
 
     override fun calculateNewOffsets() {

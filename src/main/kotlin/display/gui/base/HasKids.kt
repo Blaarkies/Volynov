@@ -10,7 +10,12 @@ interface HasKids : HasClick {
 
     override fun render(parentSnipRegion: SnipRegion?) {
         super.render(parentSnipRegion)
-        kidElements.forEach { it.render(parentSnipRegion) }
+        kidElements.filter { kid ->
+            kid.offset.sub(kid.scale).y < offset.add(scale).y
+                    && kid.offset.add(kid.scale).y > offset.sub(scale).y
+                    && kid.offset.sub(kid.scale).x < offset.add(scale).x
+                    && kid.offset.add(kid.scale).x > offset.sub(scale).x
+        }.forEach { it.render(parentSnipRegion) }
     }
 
     override fun update() {

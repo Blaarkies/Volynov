@@ -36,6 +36,8 @@ class Renderer {
     private val vertexDimensionCount = 9
     private val cameraView = dI.cameraView
 
+    // Coordinate system is expected cartesian.
+    // y-value increases to top of screen, x-value increases to right of screen
     fun init() {
         setupShaderProgram()
 
@@ -122,6 +124,8 @@ class Renderer {
         useCamera: Boolean,
         snipRegion: SnipRegion?
     ) {
+        if (snipRegion != null && snipRegion.sizeX * snipRegion.sizeY == 0) return
+
         begin()
         if (vertices.remaining() < data.size) {
             flush(GL_TRIANGLES)
@@ -188,9 +192,10 @@ class Renderer {
             true -> gameCamera
             false -> {
                 if (snipRegion != null) {
-                    glScissor(cameraView.windowWidth.div(2).toInt() + snipRegion.offset.x.toInt(),
-                        cameraView.windowHeight.div(2).toInt() + snipRegion.offset.y.toInt(),
-                        snipRegion.scale.x.toInt(), snipRegion.scale.y.toInt())
+                    glScissor(
+                        cameraView.windowWidthInt.div(2) + snipRegion.x,
+                        cameraView.windowHeightInt.div(2) + snipRegion.y,
+                        snipRegion.sizeX, snipRegion.sizeY)
                     glEnable(GL_SCISSOR_TEST)
                 }
                 guiCamera

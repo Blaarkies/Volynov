@@ -3,13 +3,11 @@ package display.draw
 import dI
 import display.graphic.BasicShapes
 import display.graphic.Color
-import display.graphic.SnipRegion
 import display.text.TextJustify
-import engine.freeBody.MapBorder
 import engine.freeBody.FreeBody
+import engine.freeBody.MapBorder
 import engine.freeBody.Particle
 import engine.freeBody.Vehicle
-import engine.gameState.MapBackground
 import engine.physics.CellLocation
 import engine.physics.GravityCell
 import game.GamePlayer
