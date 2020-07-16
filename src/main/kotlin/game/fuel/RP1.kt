@@ -19,7 +19,7 @@ class RP1(override var lastUpdatedAt: Float, override val attachedTo: FreeBody) 
 
     override val timingFunction = { value: Float -> Common.getTimingFunctionEaseIn(value) }
     override val engineEfficiency = 1.4f
-    override val thrustMax = 5f
+    override val thrustMax = 6f
     override val jumpStrength = .9f
 
     private val thrustColorA = Color("#FFF8C9A0")

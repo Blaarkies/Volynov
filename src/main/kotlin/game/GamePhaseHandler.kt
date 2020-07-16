@@ -108,8 +108,14 @@ class GamePhaseHandler {
             cp == PLAYERS_TURN -> guiController.update()
             cp == PLAYERS_TURN_FIRED && isTransitioning -> tickGameUnpausing(quickTimeStart)
             cp == PLAYERS_TURN_FIRED -> handlePlayerShot()
-            cp == PLAYERS_TURN_JUMPED && isTransitioning -> tickGameUnpausing(jumpTimeStart)
-            cp == PLAYERS_TURN_JUMPED -> handlePlayerShot()
+            cp == PLAYERS_TURN_JUMPED && isTransitioning -> {
+                tickGameUnpausing(jumpTimeStart)
+                guiController.update()
+            }
+            cp == PLAYERS_TURN_JUMPED -> {
+                handlePlayerShot()
+                guiController.update()
+            }
             cp == PLAYERS_TURN_FIRED_ENDS_EARLY -> handlePlayerShotEndsEarly()
             cp == PLAYERS_TURN_AIMING -> guiController.update()
             cp == PLAYERS_TURN_POWERING -> guiController.update()
@@ -138,17 +144,7 @@ class GamePhaseHandler {
                 drawPlayerAimingGui()
             }
             PLAYERS_TURN_JUMPED -> {
-                drawPlayPhase()
-
-                val fuelRemaining = dI.gameState.playerOnTurn!!.vehicle!!.fuel!!.amount.roundToInt()
-                drawer.renderer.drawText(
-                    "$fuelRemaining fuel remaining",
-                    Vec2(100f, 0f),
-                    vectorUnit.mul(0.1f),
-                    Color.WHITE,
-                    useCamera = false)
-                //                drawer.renderer.drawText("x", dI.gameState.playerOnTurn!!.vehicle!!.thrustTarget, vectorUnit.mul(0.01f),
-                //                    Color.WHITE, useCamera = true)
+                drawWorldAndGui()
             }
             END_ROUND -> drawWorldAndGui()
             else -> drawPlayPhase()
@@ -263,8 +259,8 @@ class GamePhaseHandler {
         guiController.clear()
 
         player.startJump()
-
         startNewPhase(PLAYERS_TURN_JUMPED)
+        guiController.createJumpFuelBar(player)
     }
 
     private fun playerFires(player: GamePlayer) {

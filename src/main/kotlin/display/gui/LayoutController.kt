@@ -64,6 +64,7 @@ object LayoutController {
             LayoutPosition.TOP_RIGHT -> kid.sub(parent).also { it.x *= -1f }
             LayoutPosition.BOTTOM_LEFT -> kid.sub(parent).also { it.y *= -1f }
             LayoutPosition.BOTTOM_RIGHT -> parent.sub(kid)
+            LayoutPosition.CENTER_RIGHT -> Vec2(parent.x - kid.x, 0f)
         }.also { it.y *= -1f }
     }
 

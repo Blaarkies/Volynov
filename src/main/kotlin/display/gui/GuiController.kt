@@ -17,6 +17,8 @@ import game.fuel.FuelType
 import input.CameraView
 import io.reactivex.Observable
 import org.jbox2d.common.Vec2
+import utility.Common.Pi
+import utility.Common.PiH
 import utility.Common.makeVec2
 import utility.Common.roundFloat
 import kotlin.math.ceil
@@ -274,7 +276,7 @@ class GuiController {
 
         val tabs = GuiTabs(scale = tabsContainerSize)
             .addKids(listOf(weaponsList, shieldsList, fuelsList))
-            .also { it.updateOffset(getOffsetForLayoutPosition(BOTTOM_RIGHT, commandPanel.scale, it.scale)) }
+            .also { it.placeOnEdge(BOTTOM_RIGHT, commandPanel.scale) }
 
         val actionButtonScale = Vec2(50f, 25f)
         val actionButtonsOffset = Vec2(-200f, actionButtonScale.y * -1)
@@ -341,14 +343,14 @@ class GuiController {
 
         val shoppingCart = listOf(
             GuiLabel(Vec2(-100f, 130f),
-                textSize = .1f,
-                updateCallback = { e ->
-                    (e as GuiLabel).title = Fuel.descriptor[player.playerAim.selectedFuel]?.name ?: ""
-                }),
-            GuiLabel(title = "Weapon selected",
+                title = "Weapon:",
                 textSize = .1f),
-            GuiLabel(title = "Shield selected",
-                textSize = .1f))
+            GuiLabel(title = "Shield:",
+                textSize = .1f),
+            GuiLabel(textSize = .1f,
+                updateCallback = { e ->
+                    (e as GuiLabel).title = "Fuel: ${Fuel.descriptor[player.playerAim.selectedFuel]?.name ?: ""}"
+                }))
             .also { labels ->
                 setElementsInRows(labels, centered = false)
                 val align = labels.first().offset.x
@@ -362,6 +364,14 @@ class GuiController {
         elements.add(GuiLabel(Vec2(-130f, -500f),
             title = "When setting aim/power, hover the mouse cursor near your vehicle",
             textSize = .12f))
+    }
+
+    fun createJumpFuelBar(player: GamePlayer) {
+        clear()
+        elements.add(GuiProgressBar(Vec2(), Vec2(150f, 10f), PiH)
+        { e -> (e as GuiProgressBar).progressTarget = player.vehicle!!.fuel!!.amount * .01f }
+            .also { it.placeOnEdge(CENTER_RIGHT, windowSize.mul(.5f)) }
+        )
     }
 
     private fun getPlayerAimPowerDisplay(player: GamePlayer): String =

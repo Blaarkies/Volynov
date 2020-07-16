@@ -49,8 +49,9 @@ object Common {
     }
 
     const val Pi = PI.toFloat()
-
     const val Pi2 = 2f * Pi
+    const val PiH = Pi * .5f
+    const val PiQ = Pi * .25f
 
     val vectorUnit
         get() = Vec2(1f, 1f)

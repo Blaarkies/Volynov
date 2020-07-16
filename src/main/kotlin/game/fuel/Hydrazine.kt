@@ -17,8 +17,8 @@ class Hydrazine(override var lastUpdatedAt: Float, override val attachedTo: Free
     override val updateInterval = 300f
 
     override val timingFunction = { value: Float -> Common.getTimingFunctionEaseIn(value) }
-    override val engineEfficiency = .7f
-    override val thrustMax = 1.4f
+    override val engineEfficiency = .55f
+    override val thrustMax = 1.1f
     override val jumpStrength = .75f
 
     override fun onBurn(thrusterLocation: Vec2, throttleAmplitude: Float, exhaustDirection: Vec2) {
