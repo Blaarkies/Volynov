@@ -11,10 +11,10 @@ interface GuiElement {
     val offset: Vec2
     val scale: Vec2
     // TODO: add angle
-    val color: Color
+    var color: Color
     val updateCallback: (GuiElement) -> Unit
     var id: GuiElementIdentifierType
-    var currentPhase: GuiElementPhases
+    var currentPhase: GuiElementPhase
 
     fun render(parentSnipRegion: SnipRegion?) = Unit
 

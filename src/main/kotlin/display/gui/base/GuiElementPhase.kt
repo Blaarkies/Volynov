@@ -1,6 +1,6 @@
 package display.gui.base
 
-enum class GuiElementPhases {
+enum class GuiElementPhase {
     IDLE,
     HOVER,
     ACTIVE,

@@ -8,20 +8,20 @@ import display.graphic.Color
 import display.graphic.SnipRegion
 import display.gui.base.GuiElement
 import display.gui.base.GuiElementIdentifierType
-import display.gui.base.GuiElementPhases
+import display.gui.base.GuiElementPhase
 import org.jbox2d.common.Vec2
 import utility.Common.vectorUnit
 
 class GuiIcon(
     override val offset: Vec2 = Vec2(),
     override val scale: Vec2 = vectorUnit,
-    override val color: Color = Color.WHITE.setAlpha(.7f),
+    override var color: Color = Color.WHITE.setAlpha(.7f),
     texture: TextureEnum = TextureEnum.white_pixel,
     val padding: Vec2 = Vec2()
 ) : GuiElement {
 
     override var id = GuiElementIdentifierType.DEFAULT
-    override var currentPhase = GuiElementPhases.IDLE
+    override var currentPhase = GuiElementPhase.IDLE
     override val updateCallback = { _: GuiElement -> Unit }
 
     private val outputScale = scale.sub(padding)

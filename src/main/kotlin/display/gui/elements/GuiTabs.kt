@@ -7,8 +7,8 @@ import display.graphic.SnipRegion
 import display.gui.LayoutController
 import display.gui.LayoutPosition
 import display.gui.base.*
-import display.gui.base.GuiElementPhases.DRAG
-import display.gui.base.GuiElementPhases.IDLE
+import display.gui.base.GuiElementPhase.DRAG
+import display.gui.base.GuiElementPhase.IDLE
 import io.reactivex.Observable
 import io.reactivex.subjects.PublishSubject
 import org.jbox2d.common.Vec2
@@ -19,7 +19,7 @@ import kotlin.math.absoluteValue
 class GuiTabs(
     override val offset: Vec2 = Vec2(),
     override val scale: Vec2 = Vec2(100f, 100f),
-    override val color: Color = Color.WHITE.setAlpha(.5f),
+    override var color: Color = Color.WHITE.setAlpha(.5f),
     override val kidElements: MutableList<GuiElement> = mutableListOf(),
     override val updateCallback: (GuiElement) -> Unit = {}
 ) : HasKids {

@@ -8,7 +8,7 @@ import display.events.MouseButtonEvent
 import display.graphic.BasicShapes
 import display.graphic.Color
 import display.graphic.SnipRegion
-import display.gui.base.GuiElementPhases.*
+import display.gui.base.GuiElementPhase.*
 import display.gui.base.*
 import display.text.TextJustify
 import io.reactivex.Observable
@@ -20,7 +20,7 @@ class GuiPanel(
     override val offset: Vec2 = Vec2(),
     override val scale: Vec2 = Vec2(100f, 100f),
     var title: String = "",
-    override val color: Color = Color.BLACK.setAlpha(.5f),
+    override var color: Color = Color.BLACK.setAlpha(.5f),
     override val kidElements: MutableList<GuiElement> = mutableListOf(),
     override val draggable: Boolean = true,
     override val updateCallback: (GuiElement) -> Unit = {}

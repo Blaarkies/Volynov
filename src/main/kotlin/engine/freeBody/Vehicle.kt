@@ -28,7 +28,7 @@ import kotlin.math.pow
 class Vehicle(
     vehicles: MutableList<Vehicle>,
     world: World,
-    player: GamePlayer,
+    val player: GamePlayer,
     x: Float,
     y: Float,
     h: Float,
@@ -88,6 +88,7 @@ class Vehicle(
         get() = worldBody.contactList != null && getContactBodies(worldBody.contactList)
             .filter { it.userData !is MapBorder }
             .any { other -> other.mass > 10f }
+    var hasCollided = false
 
     private var lastUpdatedAt = dI.gameState.tickTime
 

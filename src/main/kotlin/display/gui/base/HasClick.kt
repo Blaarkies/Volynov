@@ -1,7 +1,7 @@
 package display.gui.base
 
 import display.events.MouseButtonEvent
-import display.gui.base.GuiElementPhases.*
+import display.gui.base.GuiElementPhase.*
 import io.reactivex.Observable
 
 interface HasClick : HasHover {

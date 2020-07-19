@@ -1,5 +1,6 @@
 package engine.gameState
 
+import engine.freeBody.Vehicle
 import engine.freeBody.Warhead
 import org.jbox2d.callbacks.ContactImpulse
 import org.jbox2d.callbacks.ContactListener
@@ -25,6 +26,10 @@ class GameContactListener(val gameState: GameState) : ContactListener {
                 gameState.activeCallbacks.add { warhead.freeBodyCallback.callback(warhead, otherBody) }
                 warhead.freeBodyCallback.isHandled = true
             }
+
+        bodies.filter { it.userData is Vehicle }
+            .forEach { (it.userData as Vehicle).hasCollided = true }
+
     }
 
     override fun postSolve(contact: Contact, impulse: ContactImpulse) {

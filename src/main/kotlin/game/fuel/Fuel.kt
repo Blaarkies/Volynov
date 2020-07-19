@@ -87,27 +87,41 @@ interface Fuel {
         val thrustColor = Color.WHITE
         val jumpColor = Color.WHITE
 
-        val descriptor = HashMap<FuelType, Descriptor>(mutableMapOf(
+        val descriptor = listOf(
             Pair(FuelType.Hydrazine, Descriptor(
                 "Hydrazine",
-                "Free fuel with low thrust and bad efficiency")
+                "Free fuel with low thrust and bad efficiency",
+                0)
             { a, b -> Hydrazine(a, b) }),
             Pair(FuelType.RP1, Descriptor(
                 "RP - 1",
-                "High thrust and medium efficiency, can launch into planetary orbit")
+                "High thrust and medium efficiency, can launch into planetary orbit",
+                600)
             { a, b -> RP1(a, b) }),
             Pair(FuelType.Xenon, Descriptor(
                 "Xenon",
                 "Terrible thrust and excellent efficiency, can cruise to any destination so long as gravity " +
-                        "isn't in the way")
+                        "isn't in the way",
+                800)
             { a, b -> Xenon(a, b) }),
             Pair(FuelType.NitrogenTetroxide, Descriptor(
                 "Nitrogen Tetroxide",
-                "Medium thrust and medium efficiency, can handle reliably move around moons")
+                "Medium thrust and medium efficiency, can handle reliably move around moons",
+                400)
             { a, b -> NitrogenTetroxide(a, b) })
-        ))
+        ).withIndex()
+            .map { (index, item) ->
+                val (_, descriptor) = item
+                descriptor.order = index
+                item
+            }
+            .toMap()
 
-        class Descriptor(val name: String, val description: String, val factory: (Float, FreeBody) -> Fuel)
+        class Descriptor(val name: String,
+                         val description: String,
+                         val price: Int = 0,
+                         var order: Int = 0,
+                         val factory: (Float, FreeBody) -> Fuel)
 
         fun create(selectedFuel: FuelType?, lastUpdatedAt: Float, vehicle: Vehicle): Fuel =
             descriptor[selectedFuel]?.factory?.invoke(lastUpdatedAt, vehicle) ?: Hydrazine(lastUpdatedAt, vehicle)

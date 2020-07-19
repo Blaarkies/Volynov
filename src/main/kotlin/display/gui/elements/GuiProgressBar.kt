@@ -7,7 +7,7 @@ import display.graphic.SnipRegion
 import display.gui.LayoutPosition
 import display.gui.base.GuiElement
 import display.gui.base.GuiElementIdentifierType
-import display.gui.base.GuiElementPhases
+import display.gui.base.GuiElementPhase
 import display.gui.base.HasOutline
 import org.jbox2d.common.Vec2
 import utility.Common
@@ -19,12 +19,12 @@ import kotlin.math.sin
 class GuiProgressBar(override val offset: Vec2 = Vec2(),
                      override val scale: Vec2 = Common.vectorUnit,
                      val angle: Float = 0f,
-                     override val color: Color = Color.WHITE.setAlpha(.5f),
+                     override var color: Color = Color.WHITE.setAlpha(.5f),
                      override val updateCallback: (GuiElement) -> Unit = {}
 ) : HasOutline, GuiElement {
 
     override var id = GuiElementIdentifierType.DEFAULT
-    override var currentPhase = GuiElementPhases.IDLE
+    override var currentPhase = GuiElementPhase.IDLE
     override lateinit var outline: FloatArray
     override lateinit var activeBackground: FloatArray
     override var backgroundColor = color

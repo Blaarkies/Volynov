@@ -26,7 +26,7 @@ class CameraView {
     var z = .05f
 
     private var targetZ = z
-    private val zoomController = PidController(-.08f, -.0001f, -.05f)
+    private val zoomController = PidController(-.06f, -.0001f, -.06f)
 
     private var targetLocation = location
     private val movementController = PidControllerVec2(-.06f, -.00025f, -.01f)

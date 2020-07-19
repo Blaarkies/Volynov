@@ -84,6 +84,7 @@ class Warhead(
 
         checkToDamageVehicles(world, tickTime, vehicles, particle)
         knockFreeBodies(gravityBodies, particle)
+        particle.radius = 0f
 
         dispose(world, warheads)
     }
@@ -125,7 +126,7 @@ class Warhead(
 
                 if (vehicle.hitPoints <= 0) {
                     firedBy.scoreKill(vehicle)
-                    vehicle.dispose(world, vehicles)
+//                    vehicle.dispose(world, vehicles)
                 }
             }
     }

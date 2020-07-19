@@ -11,13 +11,12 @@ import display.gui.LayoutPosition.*
 import display.gui.base.*
 import display.gui.elements.*
 import display.text.TextJustify
+import engine.freeBody.Vehicle
 import game.GamePlayer
 import game.fuel.Fuel
-import game.fuel.FuelType
 import input.CameraView
 import io.reactivex.Observable
 import org.jbox2d.common.Vec2
-import utility.Common.Pi
 import utility.Common.PiH
 import utility.Common.makeVec2
 import utility.Common.roundFloat
@@ -164,6 +163,41 @@ class GuiController {
         playerButtons.forEach { it.id = GuiElementIdentifierType.ADD_PLAYERS_GROUP }
     }
 
+    fun addPlayerFakeLabels(vehiclesAndHps: List<Pair<Vehicle, Float>>, camera: CameraView)
+            : HashMap<Vehicle, GuiLabel> {
+        val color = Color.WHITE.setAlpha(.7f)
+        val textSize = .1f
+        val justify = TextJustify.CENTER
+
+        return vehiclesAndHps.map { (vehicle, hp) ->
+            val updateNameOffsetCallback = { element: GuiElement ->
+                val offsetAboveVehicle = vehicle.worldBody.position.add(Vec2(0f, vehicle.radius))
+                val screenLocation = camera.getGuiLocation(offsetAboveVehicle)
+                    .add(Vec2(0f, 22f))
+                element.updateOffset(screenLocation)
+            }
+            val nameLabel = GuiLabel(Vec2(), justify, vehicle.player.name, textSize, color, updateNameOffsetCallback)
+
+            val updateHpOffsetCallback = { element: GuiElement ->
+                val screenLocation = nameLabel.offset.add(Vec2(0f, -15f))
+                element.updateOffset(screenLocation)
+            }
+            val hitPointsLabel = GuiLabel(Vec2(), justify, "HP ${ceil(hp).toInt().coerceAtLeast(0)}",
+                textSize, color, updateHpOffsetCallback)
+
+            elements.add(nameLabel)
+            elements.add(hitPointsLabel)
+
+            nameLabel.updateCallback(nameLabel)
+            hitPointsLabel.updateCallback(hitPointsLabel)
+
+            nameLabel.scale.setZero()
+            hitPointsLabel.scale.setZero()
+
+            Pair(vehicle, hitPointsLabel)
+        }.let { HashMap(it.toMap()) }
+    }
+
     fun addPlayerLabels(players: List<GamePlayer>, camera: CameraView) {
         val color = Color.WHITE.setAlpha(.7f)
         val textSize = .1f
@@ -177,14 +211,12 @@ class GuiController {
                         .add(Vec2(0f, 22f))
                     element.updateOffset(screenLocation)
                 }
-                val name =
-                    GuiLabel(Vec2(), justify, player.name, textSize, color,
-                        updateNameCallback)
+                val name = GuiLabel(Vec2(), justify, player.name, textSize, color, updateNameCallback)
 
                 val updateHpCallback = { element: GuiElement ->
                     val screenLocation = name.offset.add(Vec2(0f, -15f))
                     element.updateOffset(screenLocation)
-                    (element as HasLabel).title = "HP ${ceil(vehicle.hitPoints).toInt()}"
+                    (element as HasLabel).title = "HP ${ceil(vehicle.hitPoints).toInt().coerceAtLeast(0)}"
                 }
                 val hitPoints = GuiLabel(Vec2(), justify, "", textSize, color,
                     updateHpCallback)
@@ -268,11 +300,12 @@ class GuiController {
                     onClick = { println("clicked [Shield $it]") })
             })
         val fuelsList = GuiScroll(scale = tabsContainerPageSize)
-            .addKids(Fuel.descriptor.entries.map { (key, value) ->
-                GuiButton(scale = Vec2(tabsContainerSize.x, 25f),
-                    title = value.name, textSize = .15f,
-                    onClick = { player.playerAim.selectedFuel = key })
-            })
+            .addKids(Fuel.descriptor.entries.sortedBy { it.value.order }
+                .map { (key, value) ->
+                    GuiButton(scale = Vec2(tabsContainerSize.x, 25f),
+                        title = value.name, textSize = .15f,
+                        onClick = { if (player.cash >= value.price) player.playerAim.selectedFuel = key })
+                })
 
         val tabs = GuiTabs(scale = tabsContainerSize)
             .addKids(listOf(weaponsList, shieldsList, fuelsList))

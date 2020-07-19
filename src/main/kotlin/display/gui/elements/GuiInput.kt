@@ -9,7 +9,7 @@ import display.graphic.Color
 import display.graphic.SnipRegion
 import display.gui.base.GuiElement
 import display.gui.base.GuiElementIdentifierType
-import display.gui.base.GuiElementPhases.*
+import display.gui.base.GuiElementPhase.*
 import display.gui.base.HasClick
 import display.text.TextJustify
 import io.reactivex.Observable
@@ -24,7 +24,7 @@ class GuiInput(
     override val scale: Vec2 = Vec2(200f, 50f),
     val placeholder: String,
     private val textSize: Float = .15f,
-    override val color: Color = Color.WHITE.setAlpha(.7f),
+    override var color: Color = Color.WHITE.setAlpha(.7f),
     override val onClick: () -> Unit = {},
     override val updateCallback: (GuiElement) -> Unit = {},
     val onChange: (String) -> Unit

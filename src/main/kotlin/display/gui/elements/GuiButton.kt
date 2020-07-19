@@ -4,7 +4,7 @@ import dI
 import display.draw.TextureEnum
 import display.graphic.Color
 import display.graphic.SnipRegion
-import display.gui.base.GuiElementPhases.*
+import display.gui.base.GuiElementPhase.*
 import display.gui.base.*
 import display.text.TextJustify
 import org.jbox2d.common.Vec2
@@ -14,7 +14,7 @@ class GuiButton(
     override val scale: Vec2 = Vec2(200f, 50f),
     override var title: String = "",
     override val textSize: Float = .2f,
-    override val color: Color = Color.WHITE.setAlpha(.7f),
+    override var color: Color = Color.WHITE.setAlpha(.7f),
     override val onClick: () -> Unit = {},
     override val updateCallback: (GuiElement) -> Unit = {}
 ) : HasClick, HasOutline, HasLabel {

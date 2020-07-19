@@ -9,7 +9,7 @@ import display.graphic.BasicShapes
 import display.graphic.Color
 import display.graphic.SnipRegion
 import display.gui.*
-import display.gui.base.GuiElementPhases.*
+import display.gui.base.GuiElementPhase.*
 import display.gui.LayoutController.getOffsetForLayoutPosition
 import display.gui.LayoutController.setElementsInRows
 import display.gui.base.*
@@ -23,7 +23,7 @@ import utility.toSign
 class GuiScroll(
     override val offset: Vec2 = Vec2(),
     override val scale: Vec2 = Vec2(100f, 100f),
-    override val color: Color = Color.WHITE.setAlpha(.5f),
+    override var color: Color = Color.WHITE.setAlpha(.5f),
     override val kidElements: MutableList<GuiElement> = mutableListOf()
 ) : HasKids, HasScroll {
 
