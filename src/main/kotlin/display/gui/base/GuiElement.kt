@@ -26,7 +26,9 @@ interface GuiElement {
         offset.set(newOffset)
     }
 
-    fun updateScale(newScale: Vec2): Vec2 = scale.set(newScale)
+    fun updateScale(newScale: Vec2) {
+        scale.set(newScale)
+    }
 
     fun placeOnEdge(edge: LayoutPosition, parent: Vec2, adjustedScale: Vec2? = null) =
         updateOffset(LayoutController.getOffsetForLayoutPosition(edge, parent, adjustedScale ?: scale))

@@ -24,8 +24,8 @@ class GuiIcon(
     override var currentPhase = GuiElementPhase.IDLE
     override val updateCallback = { _: GuiElement -> Unit }
 
-    private val outputScale = scale.sub(padding)
-    private val textureConfig: TextureConfig = TextureConfig(texture,
+    private var outputScale = scale.sub(padding)
+    val textureConfig: TextureConfig = TextureConfig(texture,
         chunkedVertices = BasicShapes.square.chunked(2), color = color)
         .updateGpuBufferData()
 
@@ -40,6 +40,11 @@ class GuiIcon(
             outputScale,
             false,
             parentSnipRegion)
+    }
+
+    override fun updateScale(newScale: Vec2) {
+        super.updateScale(newScale)
+        outputScale = scale.sub(padding)
     }
 
 }

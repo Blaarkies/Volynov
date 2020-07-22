@@ -93,11 +93,11 @@ class Drawer {
         val scale = 0.707106781f * resolution
         gravityMap.forEach { (key, cell) ->
             val data = BasicShapes.polygon4.chunked(2)
-                .flatMap {
+                .flatMap { (x, y) ->
                     listOf(
-                        it[0], it[1], 0f,
+                        x, y, 0f,
                         1f, 1f, 1f, sqrt(cell.totalMass / maxMass) * .9f,
-                        (it[0] / 2 - 0.5f), (it[1] / 2 - 0.5f)
+                        (x / 2 - 0.5f), (y / 2 - 0.5f)
                     )
                 }.toFloatArray()
             renderer.drawShape(data, makeVec2(key.x, key.y).mul(resolution), 0f, makeVec2(scale))
@@ -202,9 +202,7 @@ class Drawer {
         ): List<Float> {
             val pointsLastIndex = points.lastIndex.toFloat() / 2f
 
-            return points
-                .chunked(2)
-                .withIndex()
+            return points.chunked(2).withIndex()
                 .flatMap { (index, chunk) ->
                     val interpolationDistance = index.toFloat() / pointsLastIndex
                     val color = endColor * interpolationDistance + startColor * (1f - interpolationDistance)

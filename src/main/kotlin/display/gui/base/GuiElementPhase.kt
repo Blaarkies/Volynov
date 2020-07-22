@@ -4,5 +4,6 @@ enum class GuiElementPhase {
     IDLE,
     HOVER,
     ACTIVE,
+    DISABLED,
     DRAG
 }

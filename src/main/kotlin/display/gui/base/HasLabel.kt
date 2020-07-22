@@ -11,6 +11,7 @@ interface HasLabel : GuiElement {
     val justify: TextJustify
     var title: String
     val textSize: Float
+    var maxWidth: Float
 
     override fun render(parentSnipRegion: SnipRegion?) {
         super.render(parentSnipRegion)
@@ -18,7 +19,8 @@ interface HasLabel : GuiElement {
         dI.renderer.drawText(title,
             offset, vectorUnit.mul(textSize),
             color, justify,
-            false, parentSnipRegion)
+            false, parentSnipRegion,
+            maxWidth)
     }
 
 }

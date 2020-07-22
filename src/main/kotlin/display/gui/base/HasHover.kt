@@ -22,11 +22,10 @@ interface HasHover : GuiElement {
         isInRegion(location, bottomLeft, topRight)
 
     fun handleHover(location: Vec2) {
-        if (currentPhase == ACTIVE
-            || currentPhase == DRAG) {
-            return
+        when (currentPhase) {
+            ACTIVE, DRAG, DISABLED -> return
+            else -> currentPhase = if (isHover(location)) HOVER else IDLE
         }
-        currentPhase = if (isHover(location)) HOVER else IDLE
     }
 
     fun calculateElementRegion() {

@@ -34,7 +34,7 @@ class GuiScroll(
     override var bottomLeft = Vec2()
     override val onClick: () -> Unit = {}
 
-    private var outline: FloatArray
+    private lateinit var outline: FloatArray
     private lateinit var snipRegion: SnipRegion
     override val kidElementOffsets = HashMap<GuiElement, Vec2>()
 
@@ -44,23 +44,29 @@ class GuiScroll(
     override var scrollBarMax = 0f
     override var scrollBarMin = 0f
 
-    private var scrollBarRegionScale: Vec2
-    private var scrollBarRegionRelativeOffset: Vec2
+    private lateinit var scrollBarRegionScale: Vec2
+    private lateinit var scrollBarRegionRelativeOffset: Vec2
     private lateinit var scrollBarRegionTopRight: Vec2
     private lateinit var scrollBarRegionBottomLeft: Vec2
 
-    private val thumb: GuiIcon
-    private val thumbScale: Vec2
-    private var thumbRelativeOffset: Vec2
+    private lateinit var thumb: GuiIcon
+    private lateinit var thumbScale: Vec2
+    private lateinit var thumbRelativeOffset: Vec2
     private lateinit var thumbTopRight: Vec2
     private lateinit var thumbBottomLeft: Vec2
+
+    private val availableScale
+        get() = scale.sub(Vec2(thumbScale.x, 0f))
 
     private var lastMouseLocation = offset.sub(scale).sub(makeVec2(1))
 
     init {
-        val outlinePoints = BasicShapes.square
-            .chunked(2)
-            .flatMap { listOf(it[0] * scale.x, it[1] * scale.y) }
+        init()
+    }
+
+    private fun init() {
+        val outlinePoints = BasicShapes.square.chunked(2)
+            .flatMap { (x, y) -> listOf(x * scale.x, y * scale.y) }
         outline = Drawer.getLine(outlinePoints, color, startWidth = 1f, wrapAround = true)
 
         thumbScale = Vec2(6f, scale.y * .5f)
@@ -70,9 +76,13 @@ class GuiScroll(
         scrollBarRegionScale = Vec2(thumbScale.x, scale.y * 2f)
         scrollBarRegionRelativeOffset = Vec2(scale.x - thumbScale.x, 0f)
 
-        kidElementOffsets.putAll(kidElements.map {
-            Pair(it, it.offset.add(Vec2(-thumbScale.x * 2, 0f)))
-        })
+        if (kidElementOffsets.isEmpty()) {
+            kidElementOffsets.putAll(kidElements.map {
+                Pair(it, it.offset.add(Vec2(-thumbScale.x * 2, 0f)))
+            })
+        } else {
+            updateScrollBarRange()
+        }
         calculateElementRegion()
         calculateThumbRegion()
         calculateSnipRegion()
@@ -92,6 +102,11 @@ class GuiScroll(
         super<HasScroll>.update()
         super<HasKids>.update()
         super<HasKids>.handleHover(lastMouseLocation)
+    }
+
+    override fun updateScale(newScale: Vec2) {
+        super<HasKids>.updateScale(newScale)
+        init()
     }
 
     override fun handleHover(location: Vec2) {
@@ -203,15 +218,16 @@ class GuiScroll(
         isInRegion(location, scrollBarRegionBottomLeft, scrollBarRegionTopRight)
 
     override fun addKids(kids: List<GuiElement>): GuiScroll {
-        val thumbHalfWidth = thumbScale.x
-        kids.forEach { it.updateScale(it.scale.sub(Vec2(thumbHalfWidth, 0f))) }
+        kids.filter { it.scale.x > availableScale.x }
+            .forEach {
+                it.updateScale(Vec2(availableScale.x, it.scale.y))
+                it.placeOnEdge(LayoutPosition.CENTER_LEFT, scale, it.scale)
+            }
 
         kidElements.addAll(kids)
         setElementsInRows(kidElements, centered = false)
 
-        kidElementOffsets.putAll(kids.map {
-            Pair(it, it.offset.sub(Vec2(thumbHalfWidth, 0f)))
-        })
+        kidElementOffsets.putAll(kids.map { Pair(it, it.offset.clone()) })
         calculateNewOffsets()
         updateScrollBarRange()
         return this

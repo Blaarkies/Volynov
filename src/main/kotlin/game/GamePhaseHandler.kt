@@ -74,7 +74,7 @@ class GamePhaseHandler {
             Pair(PLAYERS_TURN_POWERING, { guiController.update() }),
             Pair(PLAYERS_WATCH_DAMAGE_DEALT_INTRO, {
                 guiController.update()
-                waitOnPhase(1000f, PLAYERS_WATCH_DAMAGE_DEALT, true)
+                waitOnPhase(cameraPanDuration, PLAYERS_WATCH_DAMAGE_DEALT, true)
             }),
             Pair(PLAYERS_WATCH_DAMAGE_DEALT, {
                 guiController.update()
@@ -274,9 +274,8 @@ class GamePhaseHandler {
     private fun handlePlayerWatchDamageDealt() {
         val watchedVehicle = lastVehicleWatched!!
         when {
-            isTransitioning && elapsedTime < cameraPanDuration -> return
-            isTransitioning && elapsedTime < cameraPanDuration + watchHpDropDuration -> {
-                val interpolationStep = 1f - (elapsedTime - cameraPanDuration) / watchHpDropDuration
+            elapsedTime <  watchHpDropDuration -> {
+                val interpolationStep = 1f - elapsedTime / watchHpDropDuration
                 val range = lastVehicleDamageRecords[watchedVehicle]!! - watchedVehicle.hitPoints
                 val hp = (watchedVehicle.hitPoints +
                         getTimingFunctionEaseIn(interpolationStep) * range).coerceAtLeast(0f)
@@ -286,7 +285,7 @@ class GamePhaseHandler {
                         element.color = Color.createFromHsv((hp / 100f) * .3f, .5f, .7f)
                     })
             }
-            isTransitioning && elapsedTime < cameraPanDuration + watchHpDropDuration + watchHpIdleDuration -> return
+            elapsedTime < watchHpDropDuration + watchHpIdleDuration -> return
             else -> {
                 lastVehicleDamageRecords.remove(watchedVehicle)
                 currentPhase = PLAYERS_TURN_END
@@ -624,6 +623,10 @@ class GamePhaseHandler {
                 camera.moveLocation(movement.mulLocal(-camera.z))
             }
         }
+    }
+
+    fun dispose() {
+        guiController.dispose()
     }
 
     companion object {

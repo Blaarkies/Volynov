@@ -32,11 +32,22 @@ class GuiController {
 
     private val elements = mutableListOf<GuiElement>()
 
-    fun render() = elements.forEach { it.render(null) }
+    val tooltip = GuiTooltip()
 
-    fun update() = elements.forEach { it.update() }
+    fun render() {
+        elements.forEach { it.render(null) }
+        tooltip.render(null)
+    }
 
-    fun clear() = elements.clear()
+    fun update() {
+        elements.forEach { it.update() }
+        tooltip.update()
+    }
+
+    fun clear() {
+        elements.clear()
+        tooltip.clear()
+    }
 
     fun sendLeftClick(startEvent: MouseButtonEvent, event: Observable<MouseButtonEvent>) = elements.toList()
         .filterIsInstance<HasClick>().any { it.handleLeftClick(startEvent, event) }
@@ -53,6 +64,10 @@ class GuiController {
 
     fun locationIsGui(location: Vec2): Boolean = elements.filterIsInstance<HasHover>()
         .any { it.isHover(location) }
+
+    fun dispose() {
+        tooltip.dispose()
+    }
 
     fun createMainMenu(
         onClickNewGame: () -> Unit,
@@ -256,19 +271,14 @@ class GuiController {
         elements.add(shieldPickerPanel)
 
         listOf(
-            GuiLabel(title = "Right-click drag to move the camera",
-                textSize = .12f),
-            GuiLabel(title = "Mouse scroll to zoom the camera",
-                textSize = .12f),
-            GuiLabel(title = "Double-click on a planet to camera-track it",
-                textSize = .12f),
-            GuiLabel(title = "Left-click drag on a panel to move it",
-                textSize = .12f),
-            GuiLabel(title = "Destroy all opponents to win the round",
-                textSize = .12f)
+            GuiLabel(title = "Right-click drag to move the camera", textSize = .11f),
+            GuiLabel(title = "Mouse scroll to zoom the camera", textSize = .11f),
+            GuiLabel(title = "Double-click on a planet to camera-track it", textSize = .11f),
+            GuiLabel(title = "Left-click drag on a panel to move it", textSize = .11f),
+            GuiLabel(title = "Destroy all opponents to win the round", textSize = .11f)
         ).also { labels ->
             setElementsInRows(labels, centered = false)
-            labels.forEach { it.addOffset(Vec2(70f, -360f)) }
+            labels.forEach { it.addOffset(Vec2(-350f, -450f)) }
             elements.addAll(labels)
         }
     }
@@ -285,29 +295,35 @@ class GuiController {
             title = player.name, draggable = true)
             .also { it.updateOffset(getOffsetForLayoutPosition(BOTTOM_RIGHT, windowSize.mul(.5f), it.scale)) }
 
-        val tabsContainerSize = Vec2(150f, 100f)
-        val tabsContainerPageSize = Vec2(150f, 80f)
-        val weaponsList = GuiScroll(scale = tabsContainerPageSize)
+        val tabsContainerSize = Vec2(175f, 134f)
+        val scrollButtonScale = Vec2(tabsContainerSize.x, 22f)
+        val scrollButtonTextSize = .13f
+        val weaponsList = GuiScroll(scale = tabsContainerSize.clone())
             .addKids((1..15).map {
-                GuiButton(scale = Vec2(tabsContainerSize.x, 25f),
-                    title = "Boom $it", textSize = .15f,
+                GuiButton(scale = scrollButtonScale.clone(), title = "Boom #$it", textSize = scrollButtonTextSize,
                     onClick = { println("clicked [Boom $it]") })
             })
-        val shieldsList = GuiScroll(scale = tabsContainerPageSize)
+        val shieldsList = GuiScroll(scale = tabsContainerSize.clone())
             .addKids((1..5).map {
-                GuiButton(scale = Vec2(tabsContainerSize.x, 25f),
-                    title = "Shield $it", textSize = .15f,
+                GuiButton(scale = scrollButtonScale.clone(), title = "Shield #$it", textSize = scrollButtonTextSize,
                     onClick = { println("clicked [Shield $it]") })
             })
-        val fuelsList = GuiScroll(scale = tabsContainerPageSize)
-            .addKids(Fuel.descriptor.entries.sortedBy { it.value.order }
-                .map { (key, value) ->
-                    GuiButton(scale = Vec2(tabsContainerSize.x, 25f),
-                        title = value.name, textSize = .15f,
-                        onClick = { if (player.cash >= value.price) player.playerAim.selectedFuel = key })
-                })
+        val fuelsList = GuiScroll(scale = tabsContainerSize.clone())
+            .also { scrollBox ->
+                scrollBox.addKids(Fuel.descriptor.entries.sortedBy { it.value.order }
+                    .map { (key, value) ->
+                        GuiMerchandise(scale = scrollButtonScale.clone(),
+                            name = value.name, price = value.price, itemId = value.order.toString(),
+                            description = value.description,
+                            onClick = {
+                                player.playerAim.setSelectedFuel(
+                                    key, scrollBox.kidElements.filterIsInstance<GuiMerchandise>(), player)
+                            })
+                    })
+                player.playerAim.setSelectedFuel(null, scrollBox.kidElements.filterIsInstance<GuiMerchandise>(), player)
+            }
 
-        val tabs = GuiTabs(scale = tabsContainerSize)
+        val tabs = GuiTabs(scale = tabsContainerSize.clone(), tabsTitles = listOf("Weapons", "Shields", "Fuels"))
             .addKids(listOf(weaponsList, shieldsList, fuelsList))
             .also { it.placeOnEdge(BOTTOM_RIGHT, commandPanel.scale) }
 
@@ -340,7 +356,8 @@ class GuiController {
             .zip(listOf(
                 GuiLabel(Vec2(), TextJustify.LEFT, getPlayerAimAngleDisplay(player), textSize,
                     updateCallback = { (it as HasLabel).title = getPlayerAimAngleDisplay(player) })
-                    .also { it.scale.set(makeVec2(2f)) },
+                    .also { it.scale.set(makeVec2(2f)) }
+                ,
                 GuiLabel(Vec2(), TextJustify.LEFT, getPlayerAimPowerDisplay(player), .15f,
                     updateCallback = { (it as HasLabel).title = getPlayerAimPowerDisplay(player) })
                     .also { it.scale.set(makeVec2(2f)) }
@@ -358,16 +375,17 @@ class GuiController {
                 title = "HP       ${ceil(player.vehicle!!.hitPoints).toInt()}%",
                 textSize = .12f)
                 .also {
-                    it.scale.addLocal(50f, 0f)
-                    it.updateOffset(
-                        getOffsetForLayoutPosition(TOP_RIGHT, commandPanel.scale, it.scale))
+                    it.updateScale(Vec2(130f, 15f))
+                    it.placeOnEdge(TOP_RIGHT, commandPanel.scale)
                 },
             GuiLabel(justify = TextJustify.LEFT,
                 title = "Energy  ${ceil(player.vehicle!!.shield!!.energy).toInt()}%",
-                textSize = .12f),
+                textSize = .12f)
+                .also { it.updateScale(Vec2(50f, 10f)) },
             GuiLabel(justify = TextJustify.LEFT,
                 title = "Cash     ${player.cash.toInt()}",
-                textSize = .12f))
+                textSize = .12f)
+                .also { it.updateScale(Vec2(50f, 10f)) })
             .also { labels ->
                 setElementsInRows(labels, centered = false)
                 val align = labels.first().offset.x
@@ -377,13 +395,16 @@ class GuiController {
         val shoppingCart = listOf(
             GuiLabel(Vec2(-100f, 130f),
                 title = "Weapon:",
-                textSize = .1f),
+                textSize = .1f)
+                .also { it.updateScale(Vec2(50f, 10f)) },
             GuiLabel(title = "Shield:",
-                textSize = .1f),
+                textSize = .1f)
+                .also { it.updateScale(Vec2(50f, 10f)) },
             GuiLabel(textSize = .1f,
                 updateCallback = { e ->
                     (e as GuiLabel).title = "Fuel: ${Fuel.descriptor[player.playerAim.selectedFuel]?.name ?: ""}"
-                }))
+                })
+                .also { it.updateScale(Vec2(50f, 10f)) })
             .also { labels ->
                 setElementsInRows(labels, centered = false)
                 val align = labels.first().offset.x
@@ -391,12 +412,12 @@ class GuiController {
             }
 
         commandPanel.addKids(actionButtons + aimingInfo + playerStats + tabs + shoppingCart +
-                GuiLabel(Vec2(-30f, 30f), TextJustify.LEFT, "Weapons not yet implemented", .12f))
+                GuiLabel(Vec2(-40f, 64f), TextJustify.LEFT, "Weapons/Shields not implemented", .11f))
         elements.add(commandPanel)
 
-        elements.add(GuiLabel(Vec2(-130f, -500f),
+        elements.add(GuiLabel(Vec2(-350f, -450f),
             title = "When setting aim/power, hover the mouse cursor near your vehicle",
-            textSize = .12f))
+            textSize = .11f, maxWidth = 150f))
     }
 
     fun createJumpFuelBar(player: GamePlayer) {

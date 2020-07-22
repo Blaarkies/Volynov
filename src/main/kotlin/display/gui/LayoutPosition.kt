@@ -5,5 +5,6 @@ enum class LayoutPosition {
     TOP_RIGHT,
     BOTTOM_LEFT,
     BOTTOM_RIGHT,
-    CENTER_RIGHT
+    CENTER_LEFT,
+    CENTER_RIGHT,
 }

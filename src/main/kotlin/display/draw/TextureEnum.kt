@@ -12,6 +12,7 @@ enum class TextureEnum {
     icon_aim_direction,
     icon_aim_power,
     icon_draggable,
+    question_circle,
     danger,
     rcs_puff,
     white_dot_50_pad,

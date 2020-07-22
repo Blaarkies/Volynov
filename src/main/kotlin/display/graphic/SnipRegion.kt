@@ -2,6 +2,7 @@ package display.graphic
 
 import display.gui.base.GuiElement
 import org.jbox2d.common.Vec2
+import utility.Common.makeVec2
 import kotlin.math.absoluteValue
 import kotlin.math.max
 import kotlin.math.min
@@ -37,8 +38,9 @@ class SnipRegion(val bottomLeft: Vec2, val topRight: Vec2) {
     companion object {
 
         fun create(guiElement: GuiElement): SnipRegion {
-            val bottomLeft = guiElement.offset.sub(guiElement.scale)
-            val topRight = guiElement.offset.add(guiElement.scale)
+            val paddedScale = guiElement.scale.add(makeVec2(1))
+            val bottomLeft = guiElement.offset.sub(paddedScale)
+            val topRight = guiElement.offset.add(paddedScale)
             return SnipRegion(bottomLeft, topRight)
         }
 

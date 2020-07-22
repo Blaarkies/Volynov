@@ -19,6 +19,7 @@ class GuiButton(
     override val updateCallback: (GuiElement) -> Unit = {}
 ) : HasClick, HasOutline, HasLabel {
 
+    override var maxWidth = scale.x * 2
     override lateinit var outline: FloatArray
     override lateinit var activeBackground: FloatArray
     override var backgroundColor = color.setAlpha(.1f)
@@ -54,8 +55,6 @@ class GuiButton(
         super<HasLabel>.render(parentSnipRegion)
     }
 
-    override fun updateScale(newScale: Vec2): Vec2 =
-        super<HasOutline>.updateScale(newScale)
-            .also { calculateVisuals() }
+    override fun updateScale(newScale: Vec2) = super<HasOutline>.updateScale(newScale).also { calculateVisuals() }
 
 }

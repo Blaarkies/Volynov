@@ -14,8 +14,7 @@ interface HasOutline : GuiElement {
     var backgroundColor: Color
 
     fun calculateVisuals() {
-        val linePoints = BasicShapes.square
-            .chunked(2)
+        val linePoints = BasicShapes.square.chunked(2)
             .flatMap { (x, y) -> listOf(x * scale.x, y * scale.y) }
         outline = Drawer.getLine(linePoints, color, startWidth = 1f, wrapAround = true)
         activeBackground = Drawer.getColoredData(linePoints, backgroundColor).toFloatArray()

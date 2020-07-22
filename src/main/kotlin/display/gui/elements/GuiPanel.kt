@@ -50,10 +50,9 @@ class GuiPanel(
 
         dragHandleScale = Vec2(90f, 25f)
         dragHandleRelativeOffset = Vec2(0f, scale.y - dragHandleScale.y)
-        val linePoints = BasicShapes.square
-            .chunked(2)
+        val linePoints = BasicShapes.square.chunked(2)
             .flatMap { (x, y) -> listOf(x * dragHandleScale.x, y * dragHandleScale.y) }
-        draggableOutline = Drawer.getLine(linePoints, Color.WHITE.setAlpha(.3f), startWidth = 1f, wrapAround = true)
+        draggableOutline = Drawer.getLine(linePoints, Color.WHITE.setAlpha(.3f), startWidth = .5f, wrapAround = true)
 
         if (draggable) {
             addKids(listOf(-1f, 1f).map {
@@ -73,8 +72,7 @@ class GuiPanel(
         dI.renderer.drawShape(background, offset, 0f, scale, useCamera = false, snipRegion = parentSnipRegion)
 
         if (draggable) {
-            dI.renderer.drawStrip(draggableOutline, dragHandleOffset, useCamera = false,
-                snipRegion = parentSnipRegion)
+            dI.renderer.drawStrip(draggableOutline, dragHandleOffset, useCamera = false, snipRegion = parentSnipRegion)
         }
 
         dI.renderer.drawText(

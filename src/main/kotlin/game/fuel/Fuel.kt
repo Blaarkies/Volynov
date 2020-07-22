@@ -89,24 +89,23 @@ interface Fuel {
 
         val descriptor = listOf(
             Pair(FuelType.Hydrazine, Descriptor(
-                "Hydrazine",
-                "Free fuel with low thrust and bad efficiency",
+                "Breeze",
+                "Free fuel, but only provides low thrust with bad fuel efficiency",
                 0)
             { a, b -> Hydrazine(a, b) }),
             Pair(FuelType.RP1, Descriptor(
-                "RP - 1",
-                "High thrust and medium efficiency, can launch into planetary orbit",
+                "Typhoon",
+                "High thrust and medium efficiency, can easily launch into planetary orbit",
                 600)
             { a, b -> RP1(a, b) }),
             Pair(FuelType.Xenon, Descriptor(
-                "Xenon",
-                "Terrible thrust and excellent efficiency, can cruise to any destination so long as gravity " +
-                        "isn't in the way",
+                "Zephyr",
+                "Terrible thrust but excellent efficiency, can cruise to any destination given some time",
                 800)
             { a, b -> Xenon(a, b) }),
             Pair(FuelType.NitrogenTetroxide, Descriptor(
-                "Nitrogen Tetroxide",
-                "Medium thrust and medium efficiency, can handle reliably move around moons",
+                "Gust",
+                "Medium thrust and medium efficiency, can reliably move around moons",
                 400)
             { a, b -> NitrogenTetroxide(a, b) })
         ).withIndex()

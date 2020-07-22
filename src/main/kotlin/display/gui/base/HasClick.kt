@@ -9,7 +9,7 @@ interface HasClick : HasHover {
     val onClick: () -> Unit
 
     fun handleLeftClick(startEvent: MouseButtonEvent, event: Observable<MouseButtonEvent>): Boolean {
-        val isHovered = isHover(startEvent.location)
+        val isHovered = isHover(startEvent.location) && currentPhase != DISABLED
         if (isHovered) {
             currentPhase = ACTIVE
 

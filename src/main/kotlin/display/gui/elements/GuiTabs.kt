@@ -10,17 +10,28 @@ import display.gui.base.*
 import display.gui.base.GuiElementPhase.DRAG
 import display.gui.base.GuiElementPhase.IDLE
 import io.reactivex.Observable
+import io.reactivex.Observable.interval
+import io.reactivex.Observable.just
 import io.reactivex.subjects.PublishSubject
 import org.jbox2d.common.Vec2
 import utility.Common
+import utility.Common.Pi
+import utility.Common.getRandomDirection
+import utility.Common.getRandomMixed
+import utility.Common.vectorUnit
 import utility.PidController
+import java.lang.Float.min
+import java.sql.Time
+import java.util.concurrent.TimeUnit
 import kotlin.math.absoluteValue
+import kotlin.math.sin
 
 class GuiTabs(
     override val offset: Vec2 = Vec2(),
     override val scale: Vec2 = Vec2(100f, 100f),
     override var color: Color = Color.WHITE.setAlpha(.5f),
     override val kidElements: MutableList<GuiElement> = mutableListOf(),
+    private var tabsTitles: List<String> = listOf(),
     override val updateCallback: (GuiElement) -> Unit = {}
 ) : HasKids {
 
@@ -42,6 +53,8 @@ class GuiTabs(
     private val localElements = mutableListOf<GuiElement>()
     private val localElementOffsets = HashMap<GuiElement, Vec2>()
     private val tabsScale = Vec2(scale.x, 20f)
+    private val pageScale
+        get() = scale.sub(Vec2(0f, tabsScale.y))
 
     private var lastMouseLocation = offset.sub(scale).sub(Common.makeVec2(1))
 
@@ -55,15 +68,17 @@ class GuiTabs(
 
     private fun addTabButtons() {
         val tabCount = kidElements.size
-        val tabSize = scale.x / tabCount
+        val tabSize = Vec2(scale.x / tabCount, tabsScale.y)
+        if (tabsTitles.size < tabCount) {
+            tabsTitles = tabsTitles + (1..(tabCount - tabsTitles.size)).withIndex().map { it.index.toString() }
+        }
         localElements.clear()
         localElements.addAll(kidElements
-            .zip(listOf("Weapons", "Shields", "Fuels"))
+            .zip(tabsTitles)
             .withIndex().map { (index, page) ->
                 val (element, title) = page
-                val tabOffset = Vec2(-scale.x + tabSize, scale.y)
-                    .addLocal(index * scale.x * 2 / tabCount, -20f)
-                GuiButton(tabOffset, Vec2(tabSize, 20f), title, .1f,
+                val tabOffset = Vec2(-scale.x + tabSize.x + index * scale.x * 2 / tabCount, scale.y - tabSize.y * 2)
+                GuiButton(tabOffset, tabSize, title, .1f,
                     onClick = { pagesOffsetTarget = -kidElementOffsets[element]!!.x })
             })
         localElementOffsets.putAll(localElements.map { Pair(it, it.offset.clone()) })
@@ -149,18 +164,17 @@ class GuiTabs(
     }
 
     override fun addKids(kids: List<GuiElement>): GuiTabs {
-        val pageScale = scale.sub(Vec2(0f, tabsScale.y * 2))
-        kids.forEach {
-            it.updateOffset(LayoutController.getOffsetForLayoutPosition(
-                LayoutPosition.TOP_LEFT, pageScale, it.scale))
-        }
+        kids.filter { it.scale.x > pageScale.x || it.scale.y > pageScale.y }
+            .forEach {
+                it.updateScale(Vec2(min(it.scale.x, pageScale.x), min(it.scale.y, pageScale.y - tabsScale.y * .5f)))
+                it.placeOnEdge(LayoutPosition.TOP_LEFT, pageScale, it.scale)
+            }
+        kids.forEach { it.addOffset(Vec2(0f, -tabsScale.y * 2)) }
 
         kidElements.addAll(kids)
         LayoutController.setElementsInColumns(kidElements, centered = false)
 
-        kidElementOffsets.putAll(kids.map {
-            Pair(it, it.offset.clone())
-        })
+        kidElementOffsets.putAll(kids.map { Pair(it, it.offset.clone()) })
         addTabButtons()
 
         pagesOffsetMin = kids.last().let { -it.offset.x }
