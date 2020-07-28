@@ -65,7 +65,7 @@ internal class SnipRegionTest {
             val c = a.intersect(b)!!
 
             assert(c.x == -2)
-            assert(c.y == -1)
+            assert(c.y == -2)
             assert(c.sizeX == 1)
             assert(c.sizeY == 1)
         }
@@ -78,7 +78,7 @@ internal class SnipRegionTest {
             val c = a.intersect(b)!!
 
             assert(c.x == -2)
-            assert(c.y == 0)
+            assert(c.y == -1)
             assert(c.sizeX == 1)
             assert(c.sizeY == 1)
         }
@@ -91,7 +91,7 @@ internal class SnipRegionTest {
             val c = a.intersect(b)!!
 
             assert(c.x == -1)
-            assert(c.y == 0)
+            assert(c.y == -1)
             assert(c.sizeX == 1)
             assert(c.sizeY == 1)
         }
@@ -104,7 +104,7 @@ internal class SnipRegionTest {
             val c = a.intersect(b)!!
 
             assert(c.x == -1)
-            assert(c.y == -1)
+            assert(c.y == -2)
             assert(c.sizeX == 1)
             assert(c.sizeY == 1)
         }
@@ -119,7 +119,7 @@ internal class SnipRegionTest {
         fun `when element is centered, snip region is correct`() {
             val element: GuiElement = mockk()
             every { element.offset } returns Vec2()
-            every { element.scale } returns makeVec2(2)
+            every { element.scale } returns makeVec2(1)
 
             val snipRegion = SnipRegion.create(element)
 
@@ -131,7 +131,7 @@ internal class SnipRegionTest {
         fun `when element is bottom left, snip region is correct`() {
             val element: GuiElement = mockk()
             every { element.offset } returns Vec2(-1f, -1f)
-            every { element.scale } returns makeVec2(2)
+            every { element.scale } returns makeVec2(1)
 
             val snipRegion = SnipRegion.create(element)
 
@@ -143,7 +143,7 @@ internal class SnipRegionTest {
         fun `when element is top left, snip region is correct`() {
             val element: GuiElement = mockk()
             every { element.offset } returns Vec2(-1f, 1f)
-            every { element.scale } returns makeVec2(2)
+            every { element.scale } returns makeVec2(1)
 
             val snipRegion = SnipRegion.create(element)
 
@@ -155,7 +155,7 @@ internal class SnipRegionTest {
         fun `when element is top right, snip region is correct`() {
             val element: GuiElement = mockk()
             every { element.offset } returns Vec2(1f, 1f)
-            every { element.scale } returns makeVec2(2)
+            every { element.scale } returns makeVec2(1)
 
             val snipRegion = SnipRegion.create(element)
 
@@ -167,7 +167,7 @@ internal class SnipRegionTest {
         fun `when element is bottom right, snip region is correct`() {
             val element: GuiElement = mockk()
             every { element.offset } returns Vec2(1f, -1f)
-            every { element.scale } returns makeVec2(2)
+            every { element.scale } returns makeVec2(1)
 
             val snipRegion = SnipRegion.create(element)
 

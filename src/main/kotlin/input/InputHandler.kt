@@ -37,7 +37,7 @@ class InputHandler {
         mouseDownEvent.filter { it.isLeft }
             .takeUntil(unsubscribe)
             .subscribe { clickPress ->
-                val clickRelease = mouseUpEvent.filter { it.isLeft }
+                val clickRelease = mouseUpEvent.filter { it.isLeft } // TODO: release any button to cancel the other button?
 
                 val event = merge(just(clickPress.clone()), window.cursorPositionEvent, clickRelease)
                     .takeUntil { it.isRelease }

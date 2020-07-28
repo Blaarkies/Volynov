@@ -3,27 +3,37 @@ package engine.freeBody
 import TestConstants.positionIterations
 import TestConstants.timeStep
 import TestConstants.velocityIterations
+import dI
+import display.draw.Drawer
 import display.draw.TextureEnum
+import engine.gameState.GameState
 import engine.physics.Gravity
 import game.GamePlayer
+import io.mockk.mockk
 import org.jbox2d.common.Vec2
 import org.jbox2d.dynamics.World
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import utility.Common.Pi
 import kotlin.math.PI
 import kotlin.math.absoluteValue
 
 internal class FreeBodyTest {
 
     private val momentum = 1f
-    private val direction = PI.toFloat()
+    private val direction = Pi
 
     private lateinit var world: World
     private lateinit var aliceVehicle: Vehicle
     private lateinit var location: Vec2
     private lateinit var velocity: Vec2
     private var rotation: Float = 0f
+
+    init {
+        val gameState: GameState = mockk(relaxed = true)
+        dI.gameState = gameState
+    }
 
     @BeforeEach
     fun setUp() {

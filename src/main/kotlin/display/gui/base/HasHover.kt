@@ -18,6 +18,11 @@ interface HasHover : GuiElement {
         calculateElementRegion()
     }
 
+    override fun updateScale(newScale: Vec2) {
+        super.updateScale(newScale)
+        calculateElementRegion()
+    }
+
     fun isHover(location: Vec2): Boolean =
         isInRegion(location, bottomLeft, topRight)
 
