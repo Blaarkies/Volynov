@@ -1,5 +1,6 @@
-package display.gui
+package display.gui.base
 
+import display.gui.base.GuiElementPhase.*
 import org.jbox2d.common.Vec2
 
 interface HasHover : GuiElement {
@@ -17,17 +18,18 @@ interface HasHover : GuiElement {
         calculateElementRegion()
     }
 
+    override fun updateScale(newScale: Vec2) {
+        super.updateScale(newScale)
+        calculateElementRegion()
+    }
+
     fun isHover(location: Vec2): Boolean =
         isInRegion(location, bottomLeft, topRight)
 
-    fun handleHover(location: Vec2) = when {
-        isHover(location) -> {
-            currentPhase = GuiElementPhases.HOVER
-            true
-        }
-        else -> {
-            currentPhase = GuiElementPhases.IDLE
-            false
+    fun handleHover(location: Vec2) {
+        when (currentPhase) {
+            ACTIVE, DRAG, DISABLED -> return
+            else -> currentPhase = if (isHover(location)) HOVER else IDLE
         }
     }
 

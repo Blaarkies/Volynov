@@ -24,7 +24,7 @@ class Window(private val title: String, var width: Int, var height: Int, private
 
     val keyboardEvent = PublishSubject.create<KeyboardEvent>()
     val mouseButtonEvent = PublishSubject.create<MouseButtonEvent>()
-    val cursorPositionEvent = PublishSubject.create<Vec2>()
+    val cursorPositionEvent = PublishSubject.create<MouseButtonEvent>()
     val mouseScrollEvent = PublishSubject.create<MouseScrollEvent>()
     val textInputEvent = PublishSubject.create<String>()
 
@@ -95,8 +95,8 @@ class Window(private val title: String, var width: Int, var height: Int, private
             mouseButtonEvent.onNext(MouseButtonEvent(button, action, mods, getCursorPosition()))
         }?.let { callbacks.add(it) }
 
-        GLFW.glfwSetCursorPosCallback(windowHandle) { _, xPos, yPos ->
-            cursorPositionEvent.onNext(makeVec2(xPos, yPos))
+        GLFW.glfwSetCursorPosCallback(windowHandle) { _, _, _ ->
+            cursorPositionEvent.onNext(MouseButtonEvent(-1, -1, -1, getCursorPosition()))
         }?.let { callbacks.add(it) }
 
         GLFW.glfwSetScrollCallback(windowHandle) { _, xOffset, yOffset ->

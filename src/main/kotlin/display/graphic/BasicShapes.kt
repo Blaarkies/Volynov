@@ -2,6 +2,7 @@ package display.graphic
 
 import engine.motion.Director
 import org.jbox2d.common.Vec2
+import utility.Common.Pi2
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
@@ -37,7 +38,7 @@ object BasicShapes {
 
     private fun getPolygonVertices(corners: Int, rotate: Double = 1f.div(corners).toDouble()): List<Float> =
         (0 until corners).flatMap {
-            val t = 2 * PI * (it / corners.toFloat()) + PI * rotate
+            val t = Pi2 * (it / corners.toFloat()) + PI * rotate
             listOf(cos(t).toFloat(), sin(t).toFloat())
         }
 

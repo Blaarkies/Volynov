@@ -1,12 +1,15 @@
 package game
 
+import display.events.MouseButtonEvent
 import engine.freeBody.Vehicle
 import engine.freeBody.Warhead
+import io.reactivex.Observable
 import utility.Common.getTimingFunctionEaseIn
+import kotlin.math.floor
 
 class GamePlayer(
     var name: String,
-    val type: GamePlayerTypes = GamePlayerTypes.HUMAN,
+    val type: GamePlayerType = GamePlayerType.HUMAN,
     var vehicle: Vehicle? = null,
     val playerAim: PlayerAim = PlayerAim(),
     var score: Float = 0f,
@@ -14,6 +17,7 @@ class GamePlayer(
 ) {
 
     val warheads = mutableListOf<Warhead>()
+    val purchaseHistory = mutableListOf<String>()
 
     private val scoreConstant = 10f
     private val cashConstant = 40f
@@ -53,5 +57,25 @@ class GamePlayer(
     }
 
     fun clone(): GamePlayer = GamePlayer(name, type, null, playerAim.clone(), 0f, 0f)
+
+    fun startJump() {
+        vehicle?.startJump(playerAim)
+        playerAim.selectedFuel = null
+    }
+
+    fun thrustVehicle(event: Observable<MouseButtonEvent>) {
+        vehicle?.thrustVehicle(event)
+    }
+
+    fun buyItem(name: String, price: Int, gameTime: Float) {
+        val floatToPadded = { float: Float -> float.toInt().toString().padStart(2, '0') }
+        val minutes = gameTime / (1000 * 60)
+        val seconds = minutes.rem(1) * 60
+        val readableTime = "${floatToPadded(floor(minutes))}:${floatToPadded(seconds)}"
+
+        purchaseHistory.add("[$readableTime] item[$name] price[$price] balance[$cash]")
+        cash -= price
+
+    }
 
 }

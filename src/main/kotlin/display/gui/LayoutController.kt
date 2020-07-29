@@ -1,7 +1,10 @@
 package display.gui
 
+import display.gui.base.GuiElement
 import org.jbox2d.common.Vec2
 import utility.toSign
+import kotlin.math.max
+import kotlin.math.min
 
 object LayoutController {
 
@@ -63,7 +66,87 @@ object LayoutController {
             LayoutPosition.TOP_RIGHT -> kid.sub(parent).also { it.x *= -1f }
             LayoutPosition.BOTTOM_LEFT -> kid.sub(parent).also { it.y *= -1f }
             LayoutPosition.BOTTOM_RIGHT -> parent.sub(kid)
+            LayoutPosition.CENTER_LEFT -> Vec2(-(parent.x - kid.x), 0f)
+            LayoutPosition.CENTER_RIGHT -> Vec2(parent.x - kid.x, 0f)
         }.also { it.y *= -1f }
+    }
+
+    fun getOffsetToFitScaleInside(parentScale: Vec2, parentOffset: Vec2, kidScale: Vec2, kidOffset: Vec2): Vec2 {
+        val parentCorners = listOf(
+            parentOffset.add(parentScale),
+            parentOffset.add(Vec2(-parentScale.x, parentScale.y)),
+            parentOffset.sub(parentScale),
+            parentOffset.add(Vec2(parentScale.x, -parentScale.y)))
+
+        val kidCorners = listOf(
+            kidOffset.add(kidScale),
+            kidOffset.add(Vec2(-kidScale.x, kidScale.y)),
+            kidOffset.sub(kidScale),
+            kidOffset.add(Vec2(kidScale.x, -kidScale.y)))
+
+        val parentBottomLeft = parentCorners[2]
+        val parentTopRight = parentCorners[0]
+        val kidBottomLeft = kidCorners[2]
+        val kidTopRight = kidCorners[0]
+
+        val intersectBottomLeft = Vec2(
+            max(kidBottomLeft.x, parentBottomLeft.x),
+            max(kidBottomLeft.y, parentBottomLeft.y))
+
+        val intersectTopRight = Vec2(
+            min(kidTopRight.x, parentTopRight.x),
+            min(kidTopRight.y, parentTopRight.y))
+
+        val intersectCorners: List<Vec2>
+        if (intersectBottomLeft.x > intersectTopRight.x
+            || intersectBottomLeft.y > intersectTopRight.y
+            || intersectBottomLeft.sub(intersectTopRight).length() == 0f) {
+            val falseCorner = listOf(intersectBottomLeft, intersectTopRight)
+                .maxBy { it.length() }!!
+            val validCorner = parentCorners.minBy { it.sub(falseCorner).length() }!!
+            intersectCorners = listOf(validCorner)
+        } else {
+            intersectCorners = listOf(
+                intersectTopRight,
+                Vec2(intersectBottomLeft.x, intersectTopRight.y),
+                intersectBottomLeft,
+                Vec2(intersectTopRight.x, intersectBottomLeft.y))
+        }
+
+        return kidCorners.zip(intersectCorners)
+            .withIndex<Pair<Vec2, Vec2>>()
+            .filter { (_, zip) ->
+                val (kid, inter) = zip
+                kid.sub(inter).length() == 0f
+            }
+            .let { matches ->
+                when (matches.size) {
+                    0 -> { // Kid is out of bounds, match via furthest corners
+                        val falseCorner = kidCorners.maxBy { it.length() }!!
+                        val validCorner = intersectCorners[0]
+
+                        validCorner.sub(falseCorner)
+                    }
+                    1 -> { // Kid overlaps a parent corner, match via furthest corners
+                        val oppositeCornerIndex = matches.first().index.plus(2).rem(4)
+                        val falseCorner = kidCorners[oppositeCornerIndex]
+                        val validCorner = intersectCorners[oppositeCornerIndex]
+
+                        validCorner.sub(falseCorner)
+                    }
+                    2 -> { // Kid overlaps with 2 corners, match only 1 axis
+                        val cornerAIndex = matches[0].index
+                        val cornerBIndex = matches[1].index
+                        val falseCornerIndex = (cornerBIndex - cornerAIndex > 1).toSign().toInt()
+                        val oppositeCornerIndex = cornerAIndex.plus(falseCornerIndex).rem(4)
+                        val falseCorner = kidCorners[oppositeCornerIndex]
+                        val validCorner = intersectCorners[oppositeCornerIndex]
+
+                        validCorner.sub(falseCorner)
+                    }
+                    else -> Vec2()
+                }
+            }
     }
 
 }

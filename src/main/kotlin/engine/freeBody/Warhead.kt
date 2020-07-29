@@ -6,6 +6,7 @@ import display.graphic.BasicShapes
 import display.graphic.Color
 import engine.gameState.GameState
 import engine.motion.Director
+import engine.motion.Director.getDirection
 import game.GamePlayer
 import org.jbox2d.collision.shapes.PolygonShape
 import org.jbox2d.common.Vec2
@@ -13,6 +14,8 @@ import org.jbox2d.dynamics.Body
 import org.jbox2d.dynamics.BodyType
 import org.jbox2d.dynamics.World
 import utility.Common
+import utility.Common.Pi
+import utility.Common.makeVec2Circle
 import utility.PidController
 import kotlin.math.PI
 import kotlin.math.absoluteValue
@@ -76,12 +79,17 @@ class Warhead(
                  vehicles: MutableList<Vehicle>,
                  gravityBodies: List<FreeBody>,
                  impacted: Body? = null) {
-        val particle = Particle("1", particles, world, impacted ?: worldBody, worldBody.position, 2f, 1000f,
-            createdAt = tickTime)
+        val particle = Particle("1", particles, world, impacted ?: worldBody, worldBody.position,
+            radius = 2f, duration = 1000f, createdAt = tickTime)
 
         checkToDamageVehicles(world, tickTime, vehicles, particle)
         knockFreeBodies(gravityBodies, particle)
+        particle.radius = 0f
 
+        dispose(world, warheads)
+    }
+
+    private fun dispose(world: World, warheads: MutableList<Warhead>) {
         world.destroyBody(worldBody)
         warheads.remove(this)
     }
@@ -118,9 +126,7 @@ class Warhead(
 
                 if (vehicle.hitPoints <= 0) {
                     firedBy.scoreKill(vehicle)
-
-                    world.destroyBody(vehicle.worldBody)
-                    vehicles.remove(vehicle)
+//                    vehicle.dispose(world, vehicles)
                 }
             }
     }
@@ -152,7 +158,7 @@ class Warhead(
                                       tickTime: Float,
                                       particles: MutableList<Particle>) {
         val a = worldBody.linearVelocity.clone().also { it.normalize() }
-        val b = Common.makeVec2Circle(worldBody.angle)
+        val b = makeVec2Circle(worldBody.angle)
 
         val dotProduct = a.x * b.x + a.y * b.y
 
@@ -164,14 +170,16 @@ class Warhead(
 
         if (reactionSize > .03f) {
             val scaledReaction = reactionSize * 3f
-            val side = if (reaction < 0f) PI.toFloat() else 0f
-            val location = worldBody.position
-                .add(Common.makeVec2Circle(worldBody.angle - side).mul(sqrt(scaledReaction) * .4f))
+            val side = if (reaction < 0f) 0f else Pi
+            val exhaustDirection = makeVec2Circle(worldBody.angle - side)
+
+            val tailLocation = makeVec2Circle(worldBody.angle - Pi * .5f).mul(radius)
+            val location = worldBody.position.add(tailLocation)
 
             particles.add(
                 Particle("puff", particles, world, worldBody, location,
-                    sqrt(scaledReaction), scaledReaction * 100f + 100f,
-                    TextureEnum.rcs_puff, Color.WHITE.setAlpha(.3f), tickTime))
+                    exhaustDirection.mul(3f), sqrt(scaledReaction) * .7f,
+                    scaledReaction * 100f + 300f, TextureEnum.rcs_puff, Color.WHITE.setAlpha(.3f), tickTime))
         }
     }
 

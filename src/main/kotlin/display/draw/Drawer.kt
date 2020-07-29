@@ -3,10 +3,9 @@ package display.draw
 import dI
 import display.graphic.BasicShapes
 import display.graphic.Color
-import display.graphic.SnipRegion
 import display.text.TextJustify
-import engine.freeBody.MapBorder
 import engine.freeBody.FreeBody
+import engine.freeBody.MapBorder
 import engine.freeBody.Particle
 import engine.freeBody.Vehicle
 import engine.physics.CellLocation
@@ -59,8 +58,7 @@ class Drawer {
             mapBorder.textureConfig.gpuBufferData,
             mapBorder.worldBody.position,
             mapBorder.worldBody.angle,
-            vectorUnit
-        )
+            vectorUnit)
     }
 
     fun drawTrail(freeBody: FreeBody) {
@@ -95,22 +93,22 @@ class Drawer {
         val scale = 0.707106781f * resolution
         gravityMap.forEach { (key, cell) ->
             val data = BasicShapes.polygon4.chunked(2)
-                .flatMap {
+                .flatMap { (x, y) ->
                     listOf(
-                        it[0], it[1], 0f,
+                        x, y, 0f,
                         1f, 1f, 1f, sqrt(cell.totalMass / maxMass) * .9f,
-                        (it[0] / 2 - 0.5f), (it[1] / 2 - 0.5f)
+                        (x / 2 - 0.5f), (y / 2 - 0.5f)
                     )
                 }.toFloatArray()
             renderer.drawShape(data, makeVec2(key.x, key.y).mul(resolution), 0f, makeVec2(scale))
         }
     }
 
-    fun drawBackground(textureEnum: TextureEnum,
-                       textureScale: Vec2 = vectorUnit,
-                       textureOffset: Vec2 = Vec2(),
-                       backgroundScale: Vec2 = vectorUnit,
-                       backgroundOffset: Vec2 = Vec2()) {
+    fun drawBackgroundStars(textureEnum: TextureEnum,
+                            textureScale: Vec2 = vectorUnit,
+                            textureOffset: Vec2 = Vec2(),
+                            backgroundScale: Vec2 = vectorUnit.add(Vec2(.2f, -.2f)),
+                            backgroundOffset: Vec2 = Vec2()) {
         val texture = textures.getTexture(textureEnum).bind()
 
         val left = -texture.width / 2f
@@ -129,30 +127,6 @@ class Drawer {
         }.toFloatArray()
 
         renderer.drawShape(data, backgroundOffset, scale = backgroundScale.mul(30f))
-    }
-
-    fun drawIcon(textureEnum: TextureEnum,
-                 scale: Vec2 = vectorUnit,
-                 offset: Vec2 = Vec2(),
-                 color: Color) {
-        val texture = textures.getTexture(textureEnum).bind()
-
-        val left = -texture.width / 2f
-        val right = texture.width / 2f
-        val top = texture.height / 2f
-        val bottom = -texture.height / 2f
-
-        val data = listOf(left, bottom, left, top, right, top, right, bottom).chunked(2)
-            .flatMap {
-                listOf(
-                    it[0], it[1], 0f,
-                    color.red, color.green, color.blue, color.alpha,
-                    (it[0] / 2f - 0.5f), (it[1] / 2f - 0.5f)
-                )
-            }.toFloatArray()
-
-        renderer.drawShape(data, offset, 0f, scale, useCamera = false,
-            snipRegion = SnipRegion(offset.sub(scale), scale.mul(2f)))
     }
 
     fun drawPlayerAimingPointer(player: GamePlayer) {
@@ -228,9 +202,7 @@ class Drawer {
         ): List<Float> {
             val pointsLastIndex = points.lastIndex.toFloat() / 2f
 
-            return points
-                .chunked(2)
-                .withIndex()
+            return points.chunked(2).withIndex()
                 .flatMap { (index, chunk) ->
                     val interpolationDistance = index.toFloat() / pointsLastIndex
                     val color = endColor * interpolationDistance + startColor * (1f - interpolationDistance)

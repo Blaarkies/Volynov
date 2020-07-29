@@ -184,10 +184,12 @@ class Font(font: Font = Font(MONOSPACED, BOLD, 32), antiAlias: Boolean = true) {
         color: Color,
         justify: TextJustify,
         useCamera: Boolean,
-        snipRegion: SnipRegion?
+        snipRegion: SnipRegion?,
+        maxWidth: Float
     ) {
-        drawLetters(fontBitMapShadow, offset, scale, renderer, text, Color.BLACK, justify, useCamera, snipRegion)
-        drawLetters(fontBitMap, offset, scale, renderer, text, color, justify, useCamera, snipRegion)
+        drawLetters(fontBitMapShadow, offset, scale, renderer, text, Color.BLACK, justify, useCamera, snipRegion,
+            maxWidth)
+        drawLetters(fontBitMap, offset, scale, renderer, text, color, justify, useCamera, snipRegion, maxWidth)
     }
 
     private fun drawLetters(
@@ -199,31 +201,59 @@ class Font(font: Font = Font(MONOSPACED, BOLD, 32), antiAlias: Boolean = true) {
         color: Color,
         justify: TextJustify,
         useCamera: Boolean,
-        snipRegion: SnipRegion?
+        snipRegion: SnipRegion?,
+        maxWidth: Float
     ) {
-        val glyphs = text.mapNotNull {
+        val glyphsList = text.mapNotNull {
             try {
                 glyphs[it]
             } catch (e: NullPointerException) {
-                throw Exception("Could not find text character in font", e)
+                throw Exception("Could not find text character [$it] in font", e)
             }
         }
-        val justifyment = when (justify) {
-            TextJustify.LEFT -> Vec2()
-            TextJustify.CENTER -> Vec2(-getTextTotalWidth(glyphs, scale), 0f)
-            TextJustify.RIGHT -> Vec2()
+
+        val spaceIndexes = glyphsList.withIndex()
+            .filter { (_, g) -> g == glyphs[32.toChar()] } // 32 = space char
+            .map { (index, _) -> index }
+        var totalLength = 0f
+        val lineLengthAtChars = glyphsList.withIndex()
+            .map { (index, g) ->
+                totalLength += g.width * scale.x
+                Pair(index, totalLength)
+            }
+
+        var lastEndLine = 0f
+        val endLineIndexes = mutableMapOf<Int, Boolean>()
+        if (maxWidth > 0f) {
+            lineLengthAtChars.forEach { (charIndex, length) ->
+                if (length - lastEndLine > maxWidth) {
+                    val lastSpaceIndex = spaceIndexes.reversed().find { spaceIndex -> spaceIndex < charIndex }
+                    endLineIndexes[lastSpaceIndex!!] = true
+                    lastEndLine = lineLengthAtChars[lastSpaceIndex].second
+                }
+            }
         }
 
-        var x = 0f //glyphs[0].width * scale.x
+        val justifyment = when (justify) {
+            TextJustify.LEFT -> Vec2()
+            TextJustify.CENTER -> Vec2(-getTextTotalWidth(glyphsList, scale), 0f)
+            TextJustify.RIGHT -> Vec2(-getTextTotalWidth(glyphsList, scale) * 2, 0f)
+        }
+
+        val lineHeight = glyphsList.maxBy { it.height }!!.height * 2
+        var x = 0f
         var y = 0f
-        glyphs.forEach {
+        glyphsList.withIndex().forEach { (index, it) ->
             x += it.width * scale.x
 
-            drawTextPosition(
-                texture, renderer, Vec2(x, y).add(offset).add(justifyment),
-                scale, it, color, useCamera, snipRegion
-            )
+            drawTextPosition(texture, renderer, Vec2(x, y).add(offset).add(justifyment),
+                scale, it, color, useCamera, snipRegion)
             x += it.width * scale.x
+
+            if (endLineIndexes[index] == true) {
+                x = 0f
+                y -= lineHeight * scale.y
+            }
         }
     }
 
@@ -243,10 +273,8 @@ class Font(font: Font = Font(MONOSPACED, BOLD, 32), antiAlias: Boolean = true) {
         val glyphOffset = Vec2((glyph.x + glyph.width) / textureWidth, glyph.y / textureHeight)
         val debug = renderer.debugOffset
 
-        val data = BasicShapes.square
-            .chunked(2)
-            .flatMap {
-                val (x, y) = it
+        val data = BasicShapes.square.chunked(2)
+            .flatMap { (x, y) ->
                 listOf(
                     x * glyph.width, y * glyph.height, 0f,
                     color.red, color.green, color.blue, color.alpha,
@@ -264,11 +292,6 @@ class Font(font: Font = Font(MONOSPACED, BOLD, 32), antiAlias: Boolean = true) {
 
     fun dispose() {
         fontBitMap.delete()
-    }
-
-    fun getScale(text: String, size: Float): Vec2 {
-        // TODO: Implement real measurement
-        return Vec2(text.length * size * 60f, size * 100f)
     }
 
     companion object {

@@ -11,8 +11,8 @@ fun main() = runBlocking {
             if (it.exists()) it.readLines()[0] else "isDebugMode=1"
         }
         val isDebugMode = (configLine == "isDebugMode=1")
-        val screenX = if (isDebugMode) 800 else 1920
-        val screenY = if (isDebugMode) 800 else 1080
+        val screenX = if (isDebugMode) 1000 else 1920
+        val screenY = if (isDebugMode) 1000 else 1080
         dI.isDebugMode = isDebugMode
 
         val gameLogic: IGameLogic = AppLogic()

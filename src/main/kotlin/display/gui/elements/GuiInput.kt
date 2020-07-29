@@ -1,12 +1,19 @@
-package display.gui
+package display.gui.elements
 
 import dI
 import display.draw.Drawer
 import display.draw.TextureEnum
+import display.events.MouseButtonEvent
 import display.graphic.BasicShapes
 import display.graphic.Color
 import display.graphic.SnipRegion
+import display.gui.base.GuiElement
+import display.gui.base.GuiElementIdentifierType
+import display.gui.base.GuiElementPhase.*
+import display.gui.base.HasClick
 import display.text.TextJustify
+import io.reactivex.Observable
+import io.reactivex.Observable.merge
 import org.jbox2d.common.Vec2
 import utility.Common.makeVec2
 import utility.Common.vectorUnit
@@ -17,17 +24,16 @@ class GuiInput(
     override val scale: Vec2 = Vec2(200f, 50f),
     val placeholder: String,
     private val textSize: Float = .15f,
-    override val color: Color = Color.WHITE.setAlpha(.7f),
+    override var color: Color = Color.WHITE.setAlpha(.7f),
     override val onClick: () -> Unit = {},
     override val updateCallback: (GuiElement) -> Unit = {},
     val onChange: (String) -> Unit
 ) : HasClick {
 
-    override var isPressed = false
     override var topRight = Vec2()
     override var bottomLeft = Vec2()
     override var id = GuiElementIdentifierType.DEFAULT
-    override var currentPhase = GuiElementPhases.IDLE
+    override var currentPhase = IDLE
 
     private val blinkRate = 400
     private var cursorLine: FloatArray
@@ -37,20 +43,18 @@ class GuiInput(
 
     private var inputText = ""
     private val paddedScale = Vec2(scale.x - 8f, 20f)
-    val textInputIsBusy
-        get() = currentPhase == GuiElementPhases.INPUT
 
     init {
         val verticalCursorLinePoint = BasicShapes.verticalLine.chunked(2)
-            .flatMap {
-                val location = makeVec2(it[0] * paddedScale.x, it[1] * paddedScale.y)
+            .flatMap { (x, y) ->
+                val location = makeVec2(x * paddedScale.x, y * paddedScale.y)
                     .also { vec -> vec.x -= paddedScale.x }
                 location.toList()
             }
         cursorLine = Drawer.getLine(verticalCursorLinePoint, color, startWidth = 1.2f)
 
         val linePoints = BasicShapes.square.chunked(2)
-            .flatMap { listOf(it[0] * scale.x, it[1] * scale.y) }
+            .flatMap { (x, y) -> listOf(x * scale.x, y * scale.y) }
         buttonOutline = Drawer.getLine(linePoints, color, startWidth = 1f, wrapAround = true)
         buttonBackground = Drawer.getColoredData(linePoints, backgroundColor).toFloatArray()
 
@@ -61,9 +65,8 @@ class GuiInput(
         dI.textures.getTexture(TextureEnum.white_pixel).bind()
 
         when (currentPhase) {
-            GuiElementPhases.HOVER ->
-                dI.renderer.drawShape(buttonBackground, offset, useCamera = false, snipRegion = parentSnipRegion)
-            GuiElementPhases.INPUT -> {
+            HOVER -> dI.renderer.drawShape(buttonBackground, offset, useCamera = false, snipRegion = parentSnipRegion)
+            ACTIVE -> {
                 dI.renderer.drawShape(buttonBackground, offset, useCamera = false, snipRegion = parentSnipRegion)
 
                 if (System.currentTimeMillis().rem(blinkRate * 2) < blinkRate) {
@@ -84,75 +87,44 @@ class GuiInput(
         super.render(parentSnipRegion)
     }
 
-    override fun handleHover(location: Vec2): Boolean {
-        return when {
-            textInputIsBusy -> false
-            super.isHover(location) -> {
-                currentPhase = GuiElementPhases.HOVER
-                true
-            }
-            else -> {
-                currentPhase = GuiElementPhases.IDLE
-                false
-            }
-        }
-    }
-
-    override fun handleLeftClickPress(location: Vec2): Boolean {
-        val isHovered = super.handleLeftClickPress(location)
-        if (!isHovered) {
-            currentPhase = GuiElementPhases.IDLE
+    override fun handleLeftClick(startEvent: MouseButtonEvent, event: Observable<MouseButtonEvent>): Boolean {
+        val isHovered = isHover(startEvent.location)
+        if (isHovered) {
+            setActive()
         }
         return isHovered
-    }
-
-    override fun handleLeftClickRelease(location: Vec2): Boolean {
-        if (!isPressed) return false
-
-        if (isHover(location)) {
-            currentPhase = GuiElementPhases.INPUT
-            onClick()
-        }
-        isPressed = false
-        return true
-    }
-
-    fun handleAddTextInput(text: String): Boolean {
-        return when {
-            textInputIsBusy -> {
-                inputText += text
-                onChange(inputText)
-                true
-            }
-            else -> false
-        }
-    }
-
-    fun handleRemoveTextInput(): Boolean {
-        return when {
-            textInputIsBusy -> {
-                inputText = inputText.dropLast(1)
-                onChange(inputText)
-                true
-            }
-            else -> false
-        }
-    }
-
-    fun stopTextInput(): Boolean {
-        return when {
-            textInputIsBusy -> {
-                currentPhase = GuiElementPhases.IDLE
-                true
-            }
-            else -> false
-        }
     }
 
     fun setTextValue(text: String): GuiInput {
         inputText = text
         onChange(inputText)
         return this
+    }
+
+    fun setActive() {
+        currentPhase = ACTIVE
+
+        val mouseLeftClickEvent = dI.inputHandler.mouseButtonEvent.doOnNext { it.toScreen() }
+            .filter { it.isLeft && it.isPress && !isHover(it.location) }
+
+        val keyPressEvent = dI.inputHandler.keyboardEvent.filter { it.isPress }
+
+        val enterKeyEvent = keyPressEvent.filter { it.isEnter }
+        val escapeKeyEvent = keyPressEvent.filter { it.isEscape }
+        val tabKeyEvent = keyPressEvent.filter { it.isTab }
+            .doAfterNext { dI.guiController.cycleActiveElement(this, it.shiftHeld) }
+        val backspaceKeyEvent = keyPressEvent.filter { it.isBackspace }
+            .doOnNext { inputText = inputText.dropLast(1) }
+
+        val endInputEvent = merge(mouseLeftClickEvent, enterKeyEvent, tabKeyEvent, escapeKeyEvent)
+            .take(1)
+            .doOnNext { currentPhase = IDLE }
+
+        val textInputEvent = dI.inputHandler.textInputEvent.doOnNext { text -> inputText += text }
+
+        merge(textInputEvent, backspaceKeyEvent)
+            .takeUntil(endInputEvent)
+            .subscribe { onChange(inputText) }
     }
 
 }

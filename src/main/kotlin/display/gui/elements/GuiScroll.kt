@@ -1,13 +1,20 @@
-package display.gui
+package display.gui.elements
 
 import dI
 import display.draw.Drawer
 import display.draw.TextureEnum
+import display.events.DistanceCalculator
+import display.events.MouseButtonEvent
 import display.graphic.BasicShapes
 import display.graphic.Color
 import display.graphic.SnipRegion
+import display.gui.*
+import display.gui.base.GuiElementPhase.*
 import display.gui.LayoutController.getOffsetForLayoutPosition
 import display.gui.LayoutController.setElementsInRows
+import display.gui.base.*
+import io.reactivex.Observable
+import io.reactivex.subjects.PublishSubject
 import org.jbox2d.common.Vec2
 import utility.Common.makeVec2
 import utility.PidController
@@ -16,74 +23,79 @@ import utility.toSign
 class GuiScroll(
     override val offset: Vec2 = Vec2(),
     override val scale: Vec2 = Vec2(100f, 100f),
-    override val color: Color = Color.WHITE.setAlpha(.5f),
+    override var color: Color = Color.WHITE.setAlpha(.5f),
     override val kidElements: MutableList<GuiElement> = mutableListOf()
 ) : HasKids, HasScroll {
 
     override var id = GuiElementIdentifierType.DEFAULT
-    override var currentPhase = GuiElementPhases.IDLE
+    override var currentPhase = IDLE
     override val updateCallback: (GuiElement) -> Unit = {}
     override var topRight = Vec2()
     override var bottomLeft = Vec2()
     override val onClick: () -> Unit = {}
 
-    private var outline: FloatArray
+    private lateinit var outline: FloatArray
     private lateinit var snipRegion: SnipRegion
     override val kidElementOffsets = HashMap<GuiElement, Vec2>()
-    override var isPressed = false
-    private var isThumbed = false
 
     override var scrollBarPosition = 0f
     override var scrollBarPositionTarget = scrollBarPosition
     override val scrollController = PidController(-.06f, -.0001f, -.08f)
-    override var scrollBarMax: Float = 0f
-    override var scrollBarMin: Float = 0f
+    override var scrollBarMax = 0f
+    override var scrollBarMin = 0f
 
-    private var scrollBarRegionScale: Vec2
-    private var scrollBarRegionRelativeOffset: Vec2
+    private lateinit var scrollBarRegionScale: Vec2
+    private lateinit var scrollBarRegionRelativeOffset: Vec2
     private lateinit var scrollBarRegionTopRight: Vec2
     private lateinit var scrollBarRegionBottomLeft: Vec2
 
-    private val thumb: GuiIcon
-    private val thumbScale: Vec2
-    private var thumbRelativeOffset: Vec2
+    private lateinit var thumb: GuiIcon
+    private lateinit var thumbScale: Vec2
+    private lateinit var thumbRelativeOffset: Vec2
     private lateinit var thumbTopRight: Vec2
     private lateinit var thumbBottomLeft: Vec2
+
+    private val availableScale
+        get() = scale.sub(Vec2(thumbScale.x, 0f))
 
     private var lastMouseLocation = offset.sub(scale).sub(makeVec2(1))
 
     init {
-        val outlinePoints = BasicShapes.square
-            .chunked(2)
-            .flatMap { listOf(it[0] * scale.x, it[1] * scale.y) }
+        init()
+    }
+
+    private fun init() {
+        val outlinePoints = BasicShapes.square.chunked(2)
+            .flatMap { (x, y) -> listOf(x * scale.x, y * scale.y) }
         outline = Drawer.getLine(outlinePoints, color, startWidth = 1f, wrapAround = true)
 
         thumbScale = Vec2(6f, scale.y * .5f)
         thumbRelativeOffset = getOffsetForLayoutPosition(LayoutPosition.TOP_RIGHT, scale, thumbScale)
-        thumb = GuiIcon(scale = thumbScale, color = color)
+        thumb = GuiIcon(scale = thumbScale, color = color, texture = TextureEnum.white_pixel)
 
         scrollBarRegionScale = Vec2(thumbScale.x, scale.y * 2f)
         scrollBarRegionRelativeOffset = Vec2(scale.x - thumbScale.x, 0f)
 
-        kidElementOffsets.putAll(kidElements.map {
-            Pair(it, it.offset.add(Vec2(-thumbScale.x * 2, 0f)))
-        })
+        if (kidElementOffsets.isEmpty()) {
+            kidElementOffsets.putAll(kidElements.map {
+                Pair(it, it.offset.add(Vec2(-thumbScale.x * 2, 0f)))
+            })
+        } else {
+            updateScrollBarRange()
+        }
         calculateElementRegion()
         calculateThumbRegion()
         calculateSnipRegion()
     }
 
     override fun render(parentSnipRegion: SnipRegion?) {
+        val unionSnipRegion = snipRegion.intersect(parentSnipRegion)!!
+
         dI.textures.getTexture(TextureEnum.white_pixel).bind()
-        dI.renderer.drawStrip(outline, offset, useCamera = false, snipRegion = snipRegion)
+        dI.renderer.drawStrip(outline, offset, useCamera = false, snipRegion = unionSnipRegion)
 
-        kidElements.filter {
-            it.offset.sub(it.scale).y < offset.add(scale).y
-                    && it.offset.add(it.scale).y > offset.sub(scale).y
-        }.forEach { it.render(snipRegion) }
-
-        thumb.render(snipRegion)
-        super<HasKids>.render(snipRegion)
+        super<HasKids>.render(unionSnipRegion)
+        thumb.render(unionSnipRegion)
     }
 
     override fun update() {
@@ -92,13 +104,15 @@ class GuiScroll(
         super<HasKids>.handleHover(lastMouseLocation)
     }
 
-    override fun handleHover(location: Vec2): Boolean {
+    override fun updateScale(newScale: Vec2) {
+        super<HasKids>.updateScale(newScale)
+        init()
+    }
+
+    override fun handleHover(location: Vec2) {
         lastMouseLocation = location
-        return when {
-            this.isHover(location) -> {
-                super<HasKids>.handleHover(location)
-            }
-            else -> false
+        if (isHover(location)) {
+            super<HasKids>.handleHover(location)
         }
     }
 
@@ -108,42 +122,48 @@ class GuiScroll(
         super.scrollBarOnMove()
     }
 
-    override fun handleLeftClickPress(location: Vec2): Boolean {
+    override fun handleLeftClick(startEvent: MouseButtonEvent, event: Observable<MouseButtonEvent>): Boolean {
         return when {
-            isThumbRegion(location) -> {
-                isThumbed = true
+            isThumbRegion(startEvent.location) -> {
+                currentPhase = ACTIVE
+
+                val distanceCalculator = DistanceCalculator()
+                event.doOnNext {
+                    val movement = distanceCalculator.getLastDistance(it.location)
+                    addScrollBarPosition(-(movement.y / scale.y) * scrollBarMin)
+                    calculateNewOffsets()
+                }
+                    .doOnComplete { currentPhase = IDLE }
+                    .subscribe()
                 true
             }
-            isScrollbarRegion(location) -> {
-                val isAbove = location.y > thumb.offset.y
+            isScrollbarRegion(startEvent.location) -> {
+                val isAbove = startEvent.location.y > thumb.offset.y
                 addScrollBarPosition(isAbove.toSign() * scale.y * 1.8f * 3f)
                 true
             }
-            super<HasKids>.isHover(location) -> {
-                isPressed = true
-                super<HasKids>.handleLeftClickPress(location)
-            }
-            else -> false
-        }
-    }
+            isHover(startEvent.location) -> {
+                currentPhase = DRAG
 
-    override fun handleLeftClickRelease(location: Vec2): Boolean {
-        isThumbed = false
-        return super<HasKids>.handleLeftClickRelease(location)
-    }
+                val movementEvent = event.filter { !it.isPress && !it.isRelease }
+                    .skip(1)
 
-    override fun handleLeftClickDrag(location: Vec2, movement: Vec2): Boolean {
-        return when {
-            isThumbed -> {
-                addScrollBarPosition(-(movement.y / scale.y) * scrollBarMin)
+                val distanceCalculator = DistanceCalculator()
+                movementEvent.doOnComplete { currentPhase = IDLE }
+                    .subscribe {
+                        val movement = distanceCalculator.getLastDistance(it.location)
+                        addScrollBarPosition(-movement.y)
+                        calculateNewOffsets()
+                    }
+
+                val unsubscribeKid = PublishSubject.create<Boolean>()
+                movementEvent.take(1).subscribe { unsubscribeKid.onNext(true) }
+
                 calculateNewOffsets()
-                true
-            }
-            super<HasScroll>.handleLeftClickDrag(location, movement) -> {
-                // TODO: slow drag should not cause button click on release. Reset inner button "isPressed" status
-                kidElements.filterIsInstance<HasClick>()
-                    .forEach { it.handleLeftClickRelease(it.offset.sub(it.scale).sub(makeVec2(1f))) }
-                calculateNewOffsets()
+                kidElements.filterIsInstance<HasClick>().any {
+                    it.handleLeftClick(startEvent, event.takeUntil(unsubscribeKid))
+                }
+
                 true
             }
             else -> false
@@ -162,7 +182,7 @@ class GuiScroll(
     }
 
     private fun calculateSnipRegion() {
-        snipRegion = SnipRegion(offset.sub(scale), scale.mul(2f))
+        snipRegion = SnipRegion.create(this)
     }
 
     override fun calculateNewOffsets() {
@@ -198,20 +218,19 @@ class GuiScroll(
         isInRegion(location, scrollBarRegionBottomLeft, scrollBarRegionTopRight)
 
     override fun addKids(kids: List<GuiElement>): GuiScroll {
-        val thumbHalfWidth = thumbScale.x
-        kids.forEach { it.updateScale(it.scale.sub(Vec2(thumbHalfWidth, 0f))) }
+        kids.filter { it.scale.x > availableScale.x }
+            .forEach {
+                it.updateScale(Vec2(availableScale.x, it.scale.y))
+                it.placeOnEdge(LayoutPosition.CENTER_LEFT, scale, it.scale)
+            }
 
         kidElements.addAll(kids)
         setElementsInRows(kidElements, centered = false)
 
-        kidElementOffsets.putAll(kids.map {
-            Pair(it, it.offset.sub(Vec2(thumbHalfWidth, 0f)))
-        })
+        kidElementOffsets.putAll(kids.map { Pair(it, it.offset.clone()) })
         calculateNewOffsets()
         updateScrollBarRange()
         return this
     }
-
-    override fun addKid(kid: GuiElement): GuiScroll = addKids(listOf(kid))
 
 }

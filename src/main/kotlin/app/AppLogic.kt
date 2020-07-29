@@ -23,5 +23,6 @@ class AppLogic : IGameLogic {
     override fun cleanup() {
         dI.renderer.dispose()
         dI.inputHandler.dispose()
+        dI.gamePhaseHandler.dispose()
     }
 }

@@ -36,6 +36,8 @@ class Renderer {
     private val vertexDimensionCount = 9
     private val cameraView = dI.cameraView
 
+    // Coordinate system is expected cartesian.
+    // y-value increases to top of screen, x-value increases to right of screen
     fun init() {
         setupShaderProgram()
 
@@ -92,8 +94,12 @@ class Renderer {
                  color: Color,
                  justify: TextJustify = TextJustify.LEFT,
                  useCamera: Boolean = true,
-                 snipRegion: SnipRegion? = null
-    ) = font.drawText(this, text, offset, scale, color, justify, useCamera, snipRegion)
+                 snipRegion: SnipRegion? = null,
+                 maxWidth: Float = 0f
+    ) {
+        if (text.isEmpty()) return
+        font.drawText(this, text, offset, scale, color, justify, useCamera, snipRegion, maxWidth)
+    }
 
     fun drawShape(
         data: FloatArray,
@@ -122,6 +128,8 @@ class Renderer {
         useCamera: Boolean,
         snipRegion: SnipRegion?
     ) {
+        if (snipRegion != null && snipRegion.sizeX * snipRegion.sizeY == 0) return
+
         begin()
         if (vertices.remaining() < data.size) {
             flush(GL_TRIANGLES)
@@ -175,24 +183,23 @@ class Renderer {
     ) {
         //        val uniTex = program!!.getUniformLocation("texImage")
         //        program!!.setUniform(uniTex, 0)
-
-        val gameCamera = cameraView.getRenderCamera()
-        val guiCamera = Matrix4f()
-        glDisable(GL_SCISSOR_TEST)
-
         val model = Matrix4f.translate(offset.x, offset.y, z)
             .multiply(Matrix4f.rotate(h * Common.radianToDegree, 0f, 0f, 1f))
             .multiply(Matrix4f.scale(scale.x, scale.y, 1f))
         val uniModel = program.getUniformLocation("model")
         program.setUniform(uniModel, model)
 
+        val gameCamera = cameraView.getRenderCamera()
+        val guiCamera = Matrix4f()
+        glDisable(GL_SCISSOR_TEST)
         val view = when (useCamera) {
             true -> gameCamera
             false -> {
                 if (snipRegion != null) {
-                    glScissor(cameraView.windowWidth.div(2).toInt() + snipRegion.offset.x.toInt(),
-                        cameraView.windowHeight.div(2).toInt() + snipRegion.offset.y.toInt(),
-                        snipRegion.scale.x.toInt(), snipRegion.scale.y.toInt())
+                    glScissor(
+                        cameraView.windowWidthInt.div(2) + snipRegion.x,
+                        cameraView.windowHeightInt.div(2) + snipRegion.y,
+                        snipRegion.sizeX, snipRegion.sizeY)
                     glEnable(GL_SCISSOR_TEST)
                 }
                 guiCamera

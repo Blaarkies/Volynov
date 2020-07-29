@@ -1,28 +1,33 @@
-package display.gui
+package display.gui.elements
 
 import dI
 import display.draw.Drawer
 import display.draw.TextureEnum
+import display.events.DistanceCalculator
+import display.events.MouseButtonEvent
 import display.graphic.BasicShapes
 import display.graphic.Color
 import display.graphic.SnipRegion
+import display.gui.base.GuiElementPhase.*
+import display.gui.base.*
 import display.text.TextJustify
+import io.reactivex.Observable
 import org.jbox2d.common.Vec2
-import utility.Common
 import utility.Common.makeVec2
+import utility.Common.vectorUnit
 
 class GuiPanel(
     override val offset: Vec2 = Vec2(),
     override val scale: Vec2 = Vec2(100f, 100f),
     var title: String = "",
-    override val color: Color = Color.BLACK.setAlpha(.5f),
+    override var color: Color = Color.BLACK.setAlpha(.5f),
     override val kidElements: MutableList<GuiElement> = mutableListOf(),
     override val draggable: Boolean = true,
     override val updateCallback: (GuiElement) -> Unit = {}
 ) : HasKids, HasDrag {
 
     override var id = GuiElementIdentifierType.DEFAULT
-    override var currentPhase = GuiElementPhases.IDLE
+    override var currentPhase = IDLE
     override var topRight = Vec2()
     override var bottomLeft = Vec2()
     override val onClick: () -> Unit = {}
@@ -31,7 +36,6 @@ class GuiPanel(
     private val background: FloatArray
 
     override val kidElementOffsets = HashMap<GuiElement, Vec2>()
-    override var isPressed = false
 
     override val dragHandleScale: Vec2
     override lateinit var dragHandleRelativeOffset: Vec2
@@ -46,15 +50,15 @@ class GuiPanel(
 
         dragHandleScale = Vec2(90f, 25f)
         dragHandleRelativeOffset = Vec2(0f, scale.y - dragHandleScale.y)
-        val linePoints = BasicShapes.square
-            .chunked(2)
+        val linePoints = BasicShapes.square.chunked(2)
             .flatMap { (x, y) -> listOf(x * dragHandleScale.x, y * dragHandleScale.y) }
-        draggableOutline = Drawer.getLine(linePoints, Color.WHITE.setAlpha(.3f), startWidth = 1f, wrapAround = true)
+        draggableOutline = Drawer.getLine(linePoints, Color.WHITE.setAlpha(.3f), startWidth = .5f, wrapAround = true)
 
         if (draggable) {
             addKids(listOf(-1f, 1f).map {
-                GuiIcon(dragHandleRelativeOffset.add(Vec2(it * (dragHandleScale.x - 20), 0f)), makeVec2(6),
-                    texture = TextureEnum.icon_draggable)
+                GuiIcon(dragHandleRelativeOffset.add(Vec2(it * (dragHandleScale.x - 20), 0f)),
+                    makeVec2(20), Color.WHITE.setAlpha(.5f),
+                    texture = TextureEnum.icon_draggable, padding = makeVec2(10))
             })
         }
 
@@ -65,30 +69,27 @@ class GuiPanel(
 
     override fun render(parentSnipRegion: SnipRegion?) {
         dI.textures.getTexture(TextureEnum.white_pixel).bind()
-
         dI.renderer.drawShape(background, offset, 0f, scale, useCamera = false, snipRegion = parentSnipRegion)
 
         if (draggable) {
-            dI.renderer.drawStrip(draggableOutline, dragHandleOffset, useCamera = false,
-                snipRegion = parentSnipRegion)
+            dI.renderer.drawStrip(draggableOutline, dragHandleOffset, useCamera = false, snipRegion = parentSnipRegion)
         }
 
         dI.renderer.drawText(
             title,
             offset.add(Vec2(0f, scale.y - 25f)),
-            Common.vectorUnit.mul(.15f),
-            Color.WHITE,
+            vectorUnit.mul(.15f),
+            Color.WHITE.setAlpha(.7f),
             TextJustify.CENTER,
             false,
             parentSnipRegion
         )
 
-        kidElements.forEach { it.render(parentSnipRegion) }
-
         super<HasKids>.render(parentSnipRegion)
     }
 
     override fun addOffset(movement: Vec2) {
+        if (movement.length() == 0f) return
         super<HasKids>.addOffset(movement)
         super.calculateDraggableRegion()
     }
@@ -98,14 +99,27 @@ class GuiPanel(
         super.calculateDraggableRegion()
     }
 
-    override fun handleLeftClickPress(location: Vec2): Boolean =
-        super<HasKids>.handleLeftClickPress(location)
-                || super<HasDrag>.handleLeftClickPress(location)
+    override fun handleLeftClick(startEvent: MouseButtonEvent, event: Observable<MouseButtonEvent>): Boolean {
+        val isHovered = isHover(startEvent.location)
+        if (isHovered) {
+            val kidTakesEvent = kidElements.filterIsInstance<HasClick>()
+                .any { it.handleLeftClick(startEvent, event) }
 
-    override fun handleLeftClickDrag(location: Vec2, movement: Vec2): Boolean {
-        val kidDragged = kidElements.filterIsInstance<HasScroll>()
-            .any { it.handleLeftClickDrag(location, movement) }
-        return kidDragged || super<HasDrag>.handleLeftClickDrag(location, movement)
+            if (!kidTakesEvent
+                && isDragRegion(startEvent.location)
+                && draggable) {
+                currentPhase = ACTIVE
+
+                val distanceCalculator = DistanceCalculator()
+                event.doOnComplete { currentPhase = IDLE }
+                    .subscribe {
+                        val movement = distanceCalculator.getLastDistance(it.location)
+                        addOffset(movement)
+                    }
+                return true
+            }
+        }
+        return isHovered
     }
 
 }

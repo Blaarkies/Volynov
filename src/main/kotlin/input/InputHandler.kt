@@ -3,9 +3,13 @@ package input
 import dI
 import display.Window
 import display.events.MouseButtonEvent
+import io.reactivex.Observable
+import io.reactivex.Observable.just
+import io.reactivex.Observable.merge
 import io.reactivex.subjects.PublishSubject
 import org.jbox2d.common.Vec2
 import org.lwjgl.glfw.GLFW
+import java.util.concurrent.TimeUnit
 
 class InputHandler {
 
@@ -14,46 +18,45 @@ class InputHandler {
 
     private val unsubscribe = PublishSubject.create<Boolean>()
 
+    val keyboardEvent = window.keyboardEvent
+    val mouseButtonEvent = window.mouseButtonEvent
+    val textInputEvent = window.textInputEvent
+
     init {
-        setupDragClick()
         setupDoubleLeftClick()
         setupMouseScroll()
         setupKeyboard()
         setupMouseMove()
         setupMouseClicks()
-        setupTextInput()
-    }
-
-    private fun setupTextInput() {
-        window.textInputEvent.takeUntil(unsubscribe).subscribe {
-            gamePhaseHandler.inputText(it)
-        }
     }
 
     private fun setupMouseClicks() {
-        window.mouseButtonEvent.takeUntil(unsubscribe).subscribe {
-            when (it.action) {
-                GLFW.GLFW_PRESS -> {
-                    when (it.button) {
-                        GLFW.GLFW_MOUSE_BUTTON_LEFT -> gamePhaseHandler.leftClickMousePress(it)
-                        GLFW.GLFW_MOUSE_BUTTON_RIGHT -> {
-                        }
-                    }
-                }
-                GLFW.GLFW_RELEASE -> {
-                    when (it.button) {
-                        GLFW.GLFW_MOUSE_BUTTON_LEFT -> gamePhaseHandler.leftClickMouseRelease(it)
-                        GLFW.GLFW_MOUSE_BUTTON_RIGHT -> {
-                        }
-                    }
-                }
+        val mouseDownEvent = window.mouseButtonEvent.filter { it.isPress }
+        val mouseUpEvent = window.mouseButtonEvent.filter { it.isRelease }
+
+        mouseDownEvent.filter { it.isLeft }
+            .takeUntil(unsubscribe)
+            .subscribe { clickPress ->
+                val clickRelease = mouseUpEvent.filter { it.isLeft } // TODO: release any button to cancel the other button?
+
+                val event = merge(just(clickPress.clone()), window.cursorPositionEvent, clickRelease)
+                    .takeUntil { it.isRelease }
+                gamePhaseHandler.eventLeftClick(clickPress.clone(), event)
             }
-        }
+
+        mouseDownEvent.filter { it.isRight }
+            .takeUntil(unsubscribe)
+            .subscribe { clickPress ->
+                val clickRelease = mouseUpEvent.filter { it.isRight }
+                val event = merge(just(clickPress.clone()), window.cursorPositionEvent, clickRelease)
+                    .takeUntil { it.isRelease }
+                gamePhaseHandler.eventRightClick(clickPress.clone(), event)
+            }
     }
 
     private fun setupMouseMove() {
         window.cursorPositionEvent.takeUntil(unsubscribe).subscribe {
-            gamePhaseHandler.moveMouse(it)
+            gamePhaseHandler.moveMouse(it.location)
         }
     }
 
@@ -62,7 +65,7 @@ class InputHandler {
             when (it.action) {
                 GLFW.GLFW_PRESS -> {
                     when (it.key) {
-                        //                        GLFW.GLFW_KEY_SPACE -> gamePhaseHandler.pauseGame(it)
+                        // GLFW.GLFW_KEY_SPACE -> gamePhaseHandler.pauseGame(it)
                         GLFW.GLFW_KEY_LEFT -> gamePhaseHandler.keyPressArrowLeft(it)
                         GLFW.GLFW_KEY_RIGHT -> gamePhaseHandler.keyPressArrowRight(it)
                         GLFW.GLFW_KEY_ESCAPE -> gamePhaseHandler.keyPressEscape(it)
@@ -90,54 +93,7 @@ class InputHandler {
             }
             .filter { (isDoubleClick, _) -> isDoubleClick }
             .takeUntil(unsubscribe)
-            .subscribe { (_, click) -> gamePhaseHandler.doubleLeftClick(window.getCursorPosition()) }
-    }
-
-    private fun setupDragClick() {
-        val mouseButtonLeftRelease = PublishSubject.create<Boolean>()
-        val mouseButtonRightRelease = PublishSubject.create<Boolean>()
-        window.mouseButtonEvent.takeUntil(unsubscribe)
-            .subscribe { click -> dragClick(click, window, mouseButtonLeftRelease, mouseButtonRightRelease) }
-    }
-
-    private fun dragClick(click: MouseButtonEvent,
-                          window: Window,
-                          mouseButtonLeftRelease: PublishSubject<Boolean>,
-                          mouseButtonRightRelease: PublishSubject<Boolean>
-    ) {
-        if (click.button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
-            when (click.action) {
-                GLFW.GLFW_PRESS -> {
-                    window.cursorPositionEvent.takeUntil(mouseButtonLeftRelease)
-                        .subscribe {
-                            handleMouseMovement(click.location, it) { movement ->
-                                gamePhaseHandler.dragMouseLeftClick(click.location, movement)
-                            }
-                        }
-                }
-                GLFW.GLFW_RELEASE -> mouseButtonLeftRelease.onNext(true)
-            }
-        }
-
-        if (click.button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
-            when (click.action) {
-                GLFW.GLFW_PRESS -> {
-                    window.cursorPositionEvent.takeUntil(mouseButtonRightRelease)
-                        .subscribe {
-                            handleMouseMovement(click.location, it) { movement ->
-                                gamePhaseHandler.dragMouseRightClick(movement)
-                            }
-                        }
-                }
-                GLFW.GLFW_RELEASE -> mouseButtonRightRelease.onNext(true)
-            }
-        }
-    }
-
-    private fun handleMouseMovement(startLocation: Vec2, location: Vec2, callback: (Vec2) -> Unit) {
-        val movement = startLocation.add(location.mul(-1f)).also { it.x *= -1f }
-        callback(movement)
-        startLocation.set(location)
+            .subscribe { (_, click) -> gamePhaseHandler.doubleLeftClick(click.location) }
     }
 
     fun dispose() {

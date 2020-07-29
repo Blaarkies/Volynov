@@ -1,7 +1,7 @@
 package game
 
 import utility.Common
-import kotlin.math.PI
+import utility.Common.Pi2
 
 class VehiclePlacement(private val space: Int) {
 
@@ -11,7 +11,7 @@ class VehiclePlacement(private val space: Int) {
     val nowDirection: Float
         get() {
             check(bodyCount > 0) { "Must addBody() before using nowDirection" }
-            return (bodyCount.toFloat() / space.toFloat()) * 2f * PI.toFloat() + randomDirection
+            return (bodyCount.toFloat() / space.toFloat()) * Pi2 + randomDirection
         }
 
     fun addBody() {

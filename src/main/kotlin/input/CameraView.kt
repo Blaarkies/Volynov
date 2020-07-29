@@ -17,11 +17,16 @@ class CameraView {
     val windowHeight: Float
         get() = dI.window.height.toFloat()
 
+    val windowWidthInt: Int
+        get() = dI.window.width
+    val windowHeightInt: Int
+        get() = dI.window.height
+
     var location = Vec2()
     var z = .05f
 
     private var targetZ = z
-    private val zoomController = PidController(-.08f, -.0001f, -.05f)
+    private val zoomController = PidController(-.06f, -.0001f, -.06f)
 
     private var targetLocation = location
     private val movementController = PidControllerVec2(-.06f, -.00025f, -.01f)

@@ -48,9 +48,13 @@ object Common {
         return value.times(multiplier).roundToInt().div(multiplier)
     }
 
-    const val Pi2 = 2f * PI.toFloat()
+    const val Pi = PI.toFloat()
+    const val Pi2 = 2f * Pi
+    const val PiH = Pi * .5f
+    const val PiQ = Pi * .25f
 
-    val vectorUnit = Vec2(1f, 1f)
+    val vectorUnit
+        get() = Vec2(1f, 1f)
 
     fun makeVec2(list: List<Float>): Vec2 = Vec2(list[0], list[1])
 
@@ -68,12 +72,12 @@ object Common {
 
     fun getTimingFunctionEaseIn(interpolateStep: Float) = 1f - getTimingFunctionEaseOut(1f - interpolateStep)
 
-    fun getTimingFunctionFullSine(interpolateStep: Float) = (sin(interpolateStep * PI - PI * .5) * .5 + .5).toFloat()
+    fun getTimingFunctionFullSine(interpolateStep: Float) = (sin(interpolateStep * Pi - Pi * .5f) * .5f + .5f)
 
     fun getTimingFunctionSigmoid(interpolateStep: Float, centerGradient: Float = 1f) =
         (1f / (1f + exp((-(interpolateStep - .5f) * 10f)) * centerGradient)) * 1.023f - 0.0022f
 
-    fun getRandomDirection() = Math.random().toFloat() * 2f * PI.toFloat()
+    fun getRandomDirection() = Math.random().toFloat() * Pi2
 
     fun getRandomMixed() = Math.random().toFloat() * 2f - 1f
 

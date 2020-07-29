@@ -14,13 +14,24 @@ class TextureConfig(
 ) {
 
     fun updateGpuBufferData(): TextureConfig {
-        gpuBufferData = chunkedVertices.flatMap {
-            val (x, y) = it
+        gpuBufferData = chunkedVertices.flatMap { (x, y) ->
             listOf(
                 x, y, 0f,
                 color.red, color.green, color.blue, color.alpha,
-                (x * .5f - 0.5f) * scale.x + offset.x,
-                (y * .5f - 0.5f) * scale.y + offset.y
+                (x * .5f - .5f) * scale.x + offset.x,
+                (y * .5f - .5f) * scale.y + offset.y
+            )
+        }.toFloatArray()
+        return this
+    }
+
+    fun updateGpuBufferDataWithTilingFactor(tilingFactor: Vec2): TextureConfig {
+        gpuBufferData = chunkedVertices.flatMap { (x, y) ->
+            listOf(
+                x, y, 0f,
+                color.red, color.green, color.blue, color.alpha,
+                ((x * .5f - .5f) * scale.x + offset.x) * tilingFactor.x,
+                ((y * .5f - .5f) * scale.y + offset.y) * tilingFactor.y
             )
         }.toFloatArray()
         return this

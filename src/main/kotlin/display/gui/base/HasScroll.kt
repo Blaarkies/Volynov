@@ -1,4 +1,4 @@
-package display.gui
+package display.gui.base
 
 import org.jbox2d.common.Vec2
 import utility.PidController
@@ -39,13 +39,5 @@ interface HasScroll : HasClick {
 
     fun updateScrollBarRange() = Unit
 
-    fun handleLeftClickDrag(location: Vec2, movement: Vec2): Boolean =
-        when {
-            isPressed && isHover(location) -> {
-                addScrollBarPosition(-movement.y)
-                true
-            }
-            else -> false
-        }
 
 }
