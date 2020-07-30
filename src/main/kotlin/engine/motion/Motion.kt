@@ -1,19 +1,23 @@
 package engine.motion
 
 import engine.freeBody.FreeBody
+import utility.toList
 
 class Motion(val trailers: MutableList<Float> = mutableListOf(),
-             private var trailerQuantity: Int = 80) {
+             private var trailerQuantity: Int = 40) {
 
     private var lastTrailer: Array<Float>? = null
 
-    fun addNewTrailer(x: Float, y: Float) {
+    fun addNewTrailer(freeBody: FreeBody) {
+        val (x, y) = freeBody.worldBody.position.toList()
+
         if (lastTrailer == null) {
             lastTrailer = arrayOf(x, y)
             return
         }
         val distance = Director.getDistance(x, y, lastTrailer!![0], lastTrailer!![1])
-        if (distance > .25f) {
+        val maxDistance = freeBody.worldBody.linearVelocity.length() * .06f
+        if (distance > maxDistance) {
             val nowTrailer = arrayOf(x, y)
             lastTrailer = nowTrailer
             trailers.addAll(nowTrailer)
@@ -28,9 +32,7 @@ class Motion(val trailers: MutableList<Float> = mutableListOf(),
     companion object {
 
         fun addNewTrailers(freeBodies: List<FreeBody>) {
-            freeBodies.forEach {
-                it.motion.addNewTrailer(it.worldBody.position.x, it.worldBody.position.y)
-            }
+            freeBodies.forEach { it.motion.addNewTrailer(it) }
         }
 
     }
