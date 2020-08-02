@@ -1,11 +1,11 @@
 package input
 
 import dI
-import display.Window
 import engine.freeBody.FreeBody
 import org.jbox2d.common.Vec2
 import utility.PidController
 import utility.PidControllerVec2
+import utility.StopWatch
 import utility.math.Matrix4f
 import kotlin.math.absoluteValue
 import kotlin.math.pow
@@ -28,30 +28,47 @@ class CameraView {
     private var targetZ = z
     private val zoomController = PidController(-.06f, -.0001f, -.06f)
 
+    private var targetVelocity = Vec2()
+    private var targetVelocityAverage = Vec2()
     private var targetLocation = location
-    private val movementController = PidControllerVec2(-.06f, -.00025f, -.01f)
+    private val normalMovementController = PidControllerVec2(-.06f, -.00025f, -.01f)
+    private val slowMovementController = PidControllerVec2(-.02f, 0f, -.01f)
+
+    private val stopWatch = StopWatch()
 
     fun update() {
         if (z.minus(targetZ).absoluteValue > .0001f) {
             z += zoomController.getReaction(z, targetZ)
         }
-        if (location.sub(targetLocation).length() > .01f) {
-            location.addLocal(movementController.getReaction(location, targetLocation))
+        val newTargetLocation = targetLocation.add(targetVelocityAverage.mul(.7f))
+        if (location.sub(newTargetLocation).length() > .01f) {
+            when {
+                stopWatch.elapsedTime < 130f -> location.addLocal(slowMovementController.getReaction(location, newTargetLocation))
+                else -> location.addLocal(normalMovementController.getReaction(location, newTargetLocation))
+            }
         }
+        targetVelocityAverage = targetVelocityAverage.mul(oldPortion).add(targetVelocity.mul(newPortion))
     }
 
     fun setNewLocation(position: Vec2) {
         targetLocation = position
+        targetVelocity = Vec2()
     }
 
     fun trackFreeBody(newFreeBody: FreeBody) {
         targetLocation = newFreeBody.worldBody.position
+        targetVelocity = newFreeBody.worldBody.linearVelocity
+        targetVelocityAverage = Vec2()
+        stopWatch.reset()
     }
 
     fun moveLocation(movement: Vec2) {
         location.addLocal(movement)
         targetLocation = location
-        movementController.reset()
+        targetVelocity = Vec2()
+        targetVelocityAverage = Vec2()
+        normalMovementController.reset()
+        slowMovementController.reset()
     }
 
     fun moveZoom(movement: Float) {
@@ -61,6 +78,9 @@ class CameraView {
     fun reset() {
         targetLocation = Vec2()
         targetZ = .05f
+        targetVelocity = Vec2()
+        targetVelocityAverage = Vec2()
+        stopWatch.reset()
     }
 
     fun getRenderCamera(): Matrix4f {
@@ -76,5 +96,12 @@ class CameraView {
     fun getWorldLocation(screenLocation: Vec2): Vec2 = getScreenLocation(screenLocation).mul(z).add(location)
 
     fun getGuiLocation(worldLocation: Vec2): Vec2 = worldLocation.sub(location).mul(1f / z)
+
+    companion object {
+
+        const val newPortion = .05f
+        const val oldPortion = 1f - newPortion
+
+    }
 
 }
