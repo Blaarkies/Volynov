@@ -1,5 +1,6 @@
 package engine.freeBody
 
+import dI
 import display.draw.TextureConfig
 import display.draw.TextureEnum
 import display.graphic.BasicShapes
@@ -8,6 +9,10 @@ import engine.gameState.GameState
 import engine.motion.Director
 import engine.motion.Director.getDirection
 import game.GamePlayer
+import game.GamePlayerType
+import io.reactivex.Observable
+import io.reactivex.Observable.empty
+import io.reactivex.Observable.just
 import org.jbox2d.collision.shapes.PolygonShape
 import org.jbox2d.common.Vec2
 import org.jbox2d.dynamics.Body
@@ -17,6 +22,7 @@ import utility.Common
 import utility.Common.Pi
 import utility.Common.makeVec2Circle
 import utility.PidController
+import java.util.concurrent.TimeUnit
 import kotlin.math.PI
 import kotlin.math.absoluteValue
 import kotlin.math.sqrt
@@ -87,6 +93,13 @@ class Warhead(
         particle.radius = 0f
 
         dispose(world, warheads)
+
+        if (firedBy.type != GamePlayerType.CLONE) {
+            just(0)
+                .delay(1000, TimeUnit.MILLISECONDS)
+                .takeUntil(dI.cameraView.unsubscribeCheckCameraEvent)
+                .subscribe { dI.cameraView.checkCameraEvent() }
+        }
     }
 
     private fun dispose(world: World, warheads: MutableList<Warhead>) {
