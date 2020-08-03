@@ -52,6 +52,13 @@ class GamePhaseHandler {
 
     private val phaseUpdateMap: HashMap<GamePhase, () -> Unit>
     private val phaseRenderMap: HashMap<GamePhase, () -> Unit>
+
+    val damagedVehicles
+        get() = lastVehicleDamageRecords
+            .filter { (vehicle, oldHp) -> vehicle.hitPoints < oldHp }
+            .map { (vehicle, _) -> vehicle }
+            .toList()
+
     private var lastVehicleDamageRecords = HashMap<Vehicle, Float>()
     private var lastVehicleWatched: Vehicle? = null
     private var playerLabels: MutableMap<Vehicle, GuiLabel>? = null
@@ -192,9 +199,15 @@ class GamePhaseHandler {
     }
 
     private fun handleIntro() {
+        val interpolationStep = elapsedTime / introDuration
+        camera.setNewZoom(.05f + (.1f - .05f) * getTimingFunctionEaseOut(interpolationStep))
+
         when {
             isTransitioning -> tickGameUnpausing()
-            elapsedTime > introDuration -> playerSelectsShield()
+            elapsedTime > introDuration -> {
+                camera.setNewZoom(.05f)
+                playerSelectsShield()
+            }
             elapsedTime > (introDuration - introTimeEnd) -> tickGamePausing(
                 introTimeEnd, calculatedElapsedTime = (elapsedTime - introDuration + introTimeEnd))
             else -> tickClockNormalSpeed()
@@ -264,7 +277,7 @@ class GamePhaseHandler {
 
             lastVehicleWatched = damageRecordsList.first().first
 
-            camera.trackFreeBody(lastVehicleWatched!!)
+            camera.trackFreeBody(lastVehicleWatched!!, false)
             startNewPhase(PLAYERS_WATCH_DAMAGE_DEALT_INTRO)
         } else {
             setupNextPlayersFireTurn()
@@ -274,7 +287,7 @@ class GamePhaseHandler {
     private fun handlePlayerWatchDamageDealt() {
         val watchedVehicle = lastVehicleWatched!!
         when {
-            elapsedTime <  watchHpDropDuration -> {
+            elapsedTime < watchHpDropDuration -> {
                 val interpolationStep = 1f - elapsedTime / watchHpDropDuration
                 val range = lastVehicleDamageRecords[watchedVehicle]!! - watchedVehicle.hitPoints
                 val hp = (watchedVehicle.hitPoints +
@@ -397,7 +410,8 @@ class GamePhaseHandler {
         val players = gameState.gamePlayers.filter { it.vehicle!!.hitPoints > 0 }
         gameState.playerOnTurn = players[(players.indexOf(playerOnTurn) + 1).rem(players.size)]
 
-        camera.trackFreeBody(gameState.playerOnTurn!!.vehicle!!)
+        camera.unsubscribeCheckCameraEvent.onNext(true)
+        camera.trackFreeBody(gameState.playerOnTurn!!.vehicle!!, false)
     }
 
     private fun setupPlayersPickShields() {
@@ -589,6 +603,7 @@ class GamePhaseHandler {
             .filter { (_, player) -> player.name.length <= 1 }
             .forEach { (index, player) -> player.name = "Player ${index + 1}" }
         guiController.clear()
+        camera.reset()
         startNewPhase(NEW_GAME_INTRO)
 
         MapGenerator.populateNewGameMap(gameState)

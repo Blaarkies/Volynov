@@ -89,14 +89,15 @@ tasks {
     }
 
     register<Zip>("zipFolder") {
-        from("$buildDir/Volynov-$version")
+        archiveFileName.set("volynov.zip")
         destinationDirectory.set(File("$buildDir/"))
+        from("$buildDir/Volynov")
     }
 
     task("renameFolder") {
         mustRunAfter("createBat")
         doLast {
-            file("$buildDir/libs").renameTo(file("$buildDir/Volynov-$version"))
+            file("$buildDir/libs").renameTo(file("$buildDir/Volynov"))
         }
     }
 

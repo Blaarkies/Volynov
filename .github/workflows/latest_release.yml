@@ -26,8 +26,8 @@ jobs:
         with:
           arguments: package
 
-      - name: Zip package
-        run: zip -r volynov.zip build/Volynov-0.0.0
+#      - name: Zip package
+#        run: zip -r volynov.zip . -i build/Volynov-0.0.0
 
       - name: Publish release
         uses: Xotl/cool-github-releases@v1
@@ -36,6 +36,6 @@ jobs:
           tag_name: latest-build
           release_name: "Latest build"
           body_mrkdwn: "### Download the volynov.zip file\n Unzip it into a folder, and run the run.bat file"
-          assets: volynov.zip
+          assets: build/volynov.zip
           replace_assets: true
           github_token: ${{ github.token }}

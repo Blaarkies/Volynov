@@ -1,6 +1,6 @@
 package game
 
 enum class GamePlayerType {
-    HUMAN
-
+    HUMAN,
+    CLONE
 }
