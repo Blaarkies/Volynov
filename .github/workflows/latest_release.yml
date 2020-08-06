@@ -25,10 +25,7 @@ jobs:
         uses: eskatos/gradle-command-action@v1
         with:
           arguments: package
-
-#      - name: Zip package
-#        run: zip -r volynov.zip . -i build/Volynov-0.0.0
-
+          
       - name: Publish release
         uses: Xotl/cool-github-releases@v1
         with:

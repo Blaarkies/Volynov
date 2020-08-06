@@ -16,7 +16,7 @@ import org.jbox2d.common.Vec2
 import utility.Common.makeVec2
 import utility.Common.vectorUnit
 
-class GuiPanel(
+open class GuiPanel(
     override val offset: Vec2 = Vec2(),
     override val scale: Vec2 = Vec2(100f, 100f),
     var title: String = "",

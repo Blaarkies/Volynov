@@ -12,7 +12,7 @@ class GuiLabel(
     override val offset: Vec2 = Vec2(),
     override val justify: TextJustify = TextJustify.LEFT,
     override var title: String = "",
-    override val textSize: Float = 0f,
+    override val textSize: Float = .1f,
     override var color: Color = Color.WHITE.setAlpha(.7f),
     override val updateCallback: (GuiElement) -> Unit = {},
     override var maxWidth: Float = 500f

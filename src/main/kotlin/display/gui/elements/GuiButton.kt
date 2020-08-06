@@ -9,7 +9,7 @@ import display.gui.base.*
 import display.text.TextJustify
 import org.jbox2d.common.Vec2
 
-class GuiButton(
+open class GuiButton(
     override val offset: Vec2 = Vec2(),
     override val scale: Vec2 = Vec2(200f, 50f),
     override var title: String = "",
