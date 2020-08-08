@@ -42,9 +42,9 @@ interface HasElements : HasHover {
     fun handleLeftClick(startEvent: MouseButtonEvent, event: Observable<MouseButtonEvent>): Boolean {
         val isHovered = isHover(startEvent.location)
         if (isHovered) {
-            val tabsTakeEvent = localElements.filterIsInstance<HasClick>()
+            val localTakeEvent = localElements.filterIsInstance<HasClick>()
                 .any { it.handleLeftClick(startEvent, event) }
-            if (tabsTakeEvent) return true
+            if (localTakeEvent) return true
         }
         return isHovered
     }

@@ -17,7 +17,7 @@ open class GuiButtonRepeater(
     color: Color = Color.WHITE.setAlpha(.7f),
     onClick: () -> Unit = {},
     updateCallback: (GuiElement) -> Unit = {})
-    : GuiButton(offset, scale, title, textSize, color, onClick, updateCallback) {
+    : GuiButton(offset, scale, title, textSize, null, color, onClick, updateCallback) {
 
     override fun handleLeftClick(startEvent: MouseButtonEvent, event: Observable<MouseButtonEvent>): Boolean {
         val isHovered = isHover(startEvent.location) && currentPhase != GuiElementPhase.DISABLED

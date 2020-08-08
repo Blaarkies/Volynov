@@ -116,7 +116,7 @@ class GamePhaseHandler {
     }
 
     fun init() {
-        when (0) {
+        when (2) {
             0 -> setupMainMenu()
             1 -> setupMainMenuSelectPlayers()
             2 -> {

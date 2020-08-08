@@ -36,8 +36,8 @@ class GuiCommandPanel(player: GamePlayer,
 
         val tabs = getBuyItemsTabsContainer(player, this)
         val actionButtons = getActionButtons(player, onClickMove, onClickFire)
-        val aimingInfo = getAimSetter(this, player, onChangeAim, onClickAim)
-        val playerStats = getPlayerStats(player, this)
+        val aimingInfo = getAimSetter(player, onChangeAim, onClickAim)
+        val playerStats = getPlayerStats(player)
         val shoppingCart = getShoppingCart(player)
 
         addKids(actionButtons + aimingInfo + playerStats + tabs + shoppingCart +
@@ -64,7 +64,7 @@ class GuiCommandPanel(player: GamePlayer,
             }
     }
 
-    private fun getPlayerStats(player: GamePlayer, commandPanel: GuiPanel): List<GuiLabel> {
+    private fun getPlayerStats(player: GamePlayer): List<GuiLabel> {
         val hp = ceil(player.vehicle!!.hitPoints).toInt()
         val energy = ceil(player.vehicle!!.shield!!.energy).toInt()
         val cash = player.cash.toInt()
@@ -82,14 +82,11 @@ class GuiCommandPanel(player: GamePlayer,
             }
     }
 
-    private fun getAimSetter(commandPanel: GuiPanel,
-                             player: GamePlayer,
-                             onChangeAim: () -> Unit,
-                             onClickAim: () -> Unit): List<GuiElement> {
+    private fun getAimSetter(player: GamePlayer, onChangeAim: () -> Unit, onClickAim: () -> Unit): List<GuiElement> {
         val iconScale = makeVec2(13)
         val iconAim = GuiIcon(scale = iconScale, texture = TextureEnum.icon_aim_direction)
         val iconPower = GuiIcon(scale = iconScale, texture = TextureEnum.icon_aim_power)
-        val buttonTarget = GuiButton(scale = iconScale, title = "¤", textSize = .17f, onClick = onClickAim)
+        val buttonTarget = GuiButton(scale = iconScale, icon = TextureEnum.icon_target, onClick = onClickAim)
 
         return listOf(
             GuiSpinner(

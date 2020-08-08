@@ -42,7 +42,7 @@ class GuiMerchandise(
         localElements.addAll(listOf(
             GuiIcon(Vec2(), scale, Color.WHITE.setAlpha(.4f), TextureEnum.danger, Vec2(2f, 4f))
                 .also { it.textureConfig.updateGpuBufferDataWithTilingFactor(Vec2(8f, 1f)) },
-            GuiIcon(Vec2(scale.x - scale.y, 0f), makeVec2(scale.y), texture = TextureEnum.question_circle,
+            GuiIcon(Vec2(scale.x - scale.y, 0f), makeVec2(scale.y), texture = TextureEnum.icon_question_circle,
                 padding = makeVec2(10f))
         ))
         localElementOffsets.putAll(localElements.map { Pair(it, it.offset.clone()) })

@@ -10,14 +10,9 @@ import display.gui.base.*
 import display.gui.base.GuiElementPhase.DRAG
 import display.gui.base.GuiElementPhase.IDLE
 import io.reactivex.Observable
-import io.reactivex.Observable.interval
-import io.reactivex.Observable.just
 import io.reactivex.subjects.PublishSubject
 import org.jbox2d.common.Vec2
 import utility.Common
-import utility.Common.Pi
-import utility.Common.getRandomDirection
-import utility.Common.getRandomMixed
 import utility.Common.vectorUnit
 import utility.PidController
 import java.lang.Float.min

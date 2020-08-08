@@ -116,11 +116,8 @@ class GuiController {
 
         val actionButtonSize = Vec2(100f, 25f)
         val actionButtons = listOf(
-            GuiButton(scale = actionButtonSize, title = "Cancel",
-                textSize = .15f,
-                onClick = onClickCancel),
-            GuiButton(scale = actionButtonSize, title = "Start",
-                textSize = .15f, onClick = onClickStart))
+            GuiButton(scale = actionButtonSize, title = "Cancel", textSize = .15f, onClick = onClickCancel),
+            GuiButton(scale = actionButtonSize, title = "Start", textSize = .15f, onClick = onClickStart))
             .also { buttons ->
                 setElementsInColumns(buttons, 40f)
                 buttons.forEach { it.addOffset(Vec2(0f, -150f)) }
@@ -143,12 +140,10 @@ class GuiController {
         val playerButtonHalfSize = playerButtonSize.clone().also { it.y *= .5f }
 
         val addPlayerButton =
-            GuiButton(scale = playerButtonHalfSize, title = " + ",
-                textSize = .3f,
+            GuiButton(scale = playerButtonHalfSize, title = " + ", textSize = .3f,
                 onClick = if (players.size < 6) onAddPlayer else noOpCallback)
         val removePlayerButton =
-            GuiButton(scale = playerButtonHalfSize, title = " - ",
-                textSize = .3f,
+            GuiButton(scale = playerButtonHalfSize, title = " - ", textSize = .3f,
                 onClick = if (players.size > 2) onRemovePlayer else noOpCallback)
         val addRemoveButtons = listOf(addPlayerButton, removePlayerButton)
             .also { setElementsInRows(it) }
@@ -255,8 +250,7 @@ class GuiController {
             }
         val shieldsList = GuiScroll(Vec2(50f, -50f), Vec2(100f, 100f)).addKids(
             (1..5).map {
-                GuiButton(scale = Vec2(100f, 25f), title = "Shield $it",
-                    textSize = .15f, onClick = {
+                GuiButton(scale = Vec2(100f, 25f), title = "Shield $it", textSize = .15f, onClick = {
                         onClickShield(player)
                         println("clicked [Shield $it]")
                     })
@@ -326,11 +320,7 @@ class GuiController {
         setElementsInRows(playerLines, 10f)
 
         leaderBoardPanel.addKids(playerLines)
-        leaderBoardPanel.addKid(
-            GuiButton(
-                Vec2(0f, -250f), Vec2(100f, 25f), "Next Match", onClick = onClickNextRound
-            )
-        )
+        leaderBoardPanel.addKid(GuiButton(Vec2(0f, -250f), Vec2(100f, 25f), "Next Match", onClick = onClickNextRound))
         elements.add(leaderBoardPanel)
     }
 

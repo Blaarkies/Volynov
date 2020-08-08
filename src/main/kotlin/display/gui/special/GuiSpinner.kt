@@ -1,16 +1,16 @@
 package display.gui.special
 
+import display.events.DistanceCalculator
+import display.events.MouseButtonEvent
 import display.graphic.Color
 import display.graphic.Color.Companion.WHITE
 import display.graphic.SnipRegion
-import display.gui.base.GuiElement
-import display.gui.base.GuiElementIdentifierType
+import display.gui.base.*
 import display.gui.base.GuiElementPhase.IDLE
-import display.gui.base.HasElements
-import display.gui.base.HasLabel
 import display.gui.elements.GuiButton
 import display.gui.elements.GuiLabel
 import display.text.TextJustify
+import io.reactivex.Observable
 import org.jbox2d.common.Vec2
 import utility.Common.roundFloat
 
@@ -18,8 +18,8 @@ class GuiSpinner(override val offset: Vec2 = Vec2(),
                  override val scale: Vec2 = Vec2(61f, 16f),
                  override var color: Color = WHITE,
                  override val updateCallback: (GuiElement) -> Unit = {},
-                 onClickMore: () -> Unit = {},
-                 onClickLess: () -> Unit = {},
+                 val onClickMore: () -> Unit = {},
+                 val onClickLess: () -> Unit = {},
                  labelCallback: (GuiElement) -> Unit = {})
     : HasElements {
 
@@ -40,6 +40,28 @@ class GuiSpinner(override val offset: Vec2 = Vec2(),
         localElementOffsets.putAll(localElements.map { Pair(it, it.offset.clone()) })
 
         calculateElementRegion()
+    }
+
+    override fun handleLeftClick(startEvent: MouseButtonEvent, event: Observable<MouseButtonEvent>): Boolean {
+        val isHovered = isHover(startEvent.location)
+        if (isHovered) {
+            val localTakeEvent = localElements.filterIsInstance<HasClick>()
+                .any { it.handleLeftClick(startEvent, event) }
+            if (localTakeEvent) return true
+
+            currentPhase = GuiElementPhase.ACTIVE
+
+            val distanceCalculator = DistanceCalculator()
+            event.doOnComplete { currentPhase = IDLE }
+                .subscribe {
+                    val movement = distanceCalculator.getLastDistance(it.location)
+                    when {
+                        movement.y > 0 -> onClickMore()
+                        movement.y < 0 -> onClickLess()
+                    }
+                }
+        }
+        return isHovered
     }
 
 }
