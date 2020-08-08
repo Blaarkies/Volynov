@@ -2,22 +2,23 @@ package display.gui.special
 
 import dI
 import display.draw.TextureEnum
+import display.graphic.Color
 import display.gui.LayoutController
 import display.gui.LayoutPosition
 import display.gui.base.GuiElement
 import display.gui.base.HasLabel
 import display.gui.elements.*
-import display.text.TextJustify
 import game.GamePlayer
 import game.fuel.Fuel
 import org.jbox2d.common.Vec2
 import utility.Common
+import utility.Common.muCron
 import utility.Common.makeVec2
 import kotlin.math.ceil
 
 class GuiCommandPanel(player: GamePlayer,
-                      onClickAim: (player: GamePlayer) -> Unit,
-                      onClickPower: (player: GamePlayer) -> Unit,
+                      onClickAim: () -> Unit,
+                      onChangeAim: () -> Unit,
                       onClickMove: (player: GamePlayer) -> Unit,
                       onClickFire: (player: GamePlayer) -> Unit)
     : GuiPanel(
@@ -34,8 +35,8 @@ class GuiCommandPanel(player: GamePlayer,
         placeOnEdge(LayoutPosition.BOTTOM_RIGHT, windowSize.mul(.5f))
 
         val tabs = getBuyItemsTabsContainer(player, this)
-        val actionButtons = getActionButtons(player, onClickAim, onClickPower, onClickMove, onClickFire)
-        val aimingInfo = getAimSetter(this, player)
+        val actionButtons = getActionButtons(player, onClickMove, onClickFire)
+        val aimingInfo = getAimSetter(this, player, onChangeAim, onClickAim)
         val playerStats = getPlayerStats(player, this)
         val shoppingCart = getShoppingCart(player)
 
@@ -71,7 +72,7 @@ class GuiCommandPanel(player: GamePlayer,
         return listOf(
             GuiLabel(title = "HP      $hp%", textSize = .12f),
             GuiLabel(title = "Energy ${energy}", textSize = .12f),
-            GuiLabel(title = "Cash    ${cash}μ", textSize = .12f))
+            GuiLabel(title = "Cash    $cash$muCron", textSize = .12f))
             .also { labels ->
                 labels.forEach { it.updateScale(Vec2(1f, 10f)) }
                 val first = labels.first()
@@ -81,43 +82,51 @@ class GuiCommandPanel(player: GamePlayer,
             }
     }
 
-    private fun getAimSetter(commandPanel: GuiPanel, player: GamePlayer): List<GuiElement> {
-//        val iconScale = makeVec2(20)
-//        val textSize = .15f
-//        val iconPadding = makeVec2(5)
-//        val iconAim = GuiIcon(scale = iconScale, texture = TextureEnum.icon_aim_direction, padding = iconPadding)
-//            .also {
-//                it.updateOffset(
-//                    LayoutController.getOffsetForLayoutPosition(LayoutPosition.CENTER_LEFT, commandPanel.scale,
-//                        it.scale))
-//            }
-//        val iconPower = GuiIcon(iconAim.offset.clone(), iconScale,
-//            texture = TextureEnum.icon_aim_power, padding = iconPadding)
-//
-//        return listOf(iconAim, iconPower)
-//            .also { icons -> LayoutController.setElementsInRows(icons, centered = false) }
-//            .zip(listOf(
-//                GuiLabel(Vec2(), TextJustify.LEFT, getPlayerAimAngleDisplay(player), textSize,
-//                    updateCallback = { (it as HasLabel).title = getPlayerAimAngleDisplay(player) })
-//                    .also { it.scale.set(makeVec2(2f)) },
-//                GuiLabel(Vec2(), TextJustify.LEFT, getPlayerAimPowerDisplay(player), .15f,
-//                    updateCallback = { (it as HasLabel).title = getPlayerAimPowerDisplay(player) })
-//                    .also { it.scale.set(makeVec2(2f)) }
-//            ))
-//            .also {
-//                it.forEach { (icon, label) ->
-//                    label.updateOffset(icon.offset)
-//                    LayoutController.setElementsInColumns(listOf(icon, label), centered = false)
-//                }
-//            }
-//            .flatMap { it.toList() }
+    private fun getAimSetter(commandPanel: GuiPanel,
+                             player: GamePlayer,
+                             onChangeAim: () -> Unit,
+                             onClickAim: () -> Unit): List<GuiElement> {
+        val iconScale = makeVec2(13)
+        val iconAim = GuiIcon(scale = iconScale, texture = TextureEnum.icon_aim_direction)
+        val iconPower = GuiIcon(scale = iconScale, texture = TextureEnum.icon_aim_power)
+        val buttonTarget = GuiButton(scale = iconScale, title = "¤", textSize = .17f, onClick = onClickAim)
 
         return listOf(
-            GuiSpinner(Vec2()).also {
-                it.placeOnEdge(LayoutPosition.CENTER_LEFT, scale, makeVec2(74f))
-                it.addOffset(Vec2(0f, 90f))
+            GuiSpinner(
+                onClickMore = {
+                    player.playerAim.addAngle()
+                    onChangeAim()
+                },
+                onClickLess = {
+                    player.playerAim.addAngle(-1f)
+                    onChangeAim()
+                },
+                labelCallback = { (it as HasLabel).title = getPlayerAimAngleDisplay(player) }),
+            GuiSpinner(
+                onClickMore = {
+                    player.playerAim.addPower()
+                    onChangeAim()
+                },
+                onClickLess = {
+                    player.playerAim.addPower(-1f)
+                    onChangeAim()
+                },
+                labelCallback = { (it as HasLabel).title = getPlayerAimPowerDisplay(player) }),
+            GuiProgressBar(scale = Vec2(61f, 10f), title = "Precision", color = Color.WHITE.setAlpha(.3f),
+                onDrag = { value: Float -> player.playerAim.setPrecisionFromBar(value)})
+            { e -> (e as GuiProgressBar).progressTarget = player.playerAim.getPrecisionForBar() })
+            .also { elements ->
+                val first = elements.first()
+                first.placeOnEdge(LayoutPosition.CENTER_LEFT, scale, makeVec2(74f))
+                first.addOffset(Vec2(0f, 90f))
+                elements.drop(1).forEach { it.addOffset(Vec2(first.offset.x, 0f)) }
+                LayoutController.setElementsInRows(elements, 10f, false)
             }
-        )
+            .zip(listOf(iconAim, iconPower, buttonTarget))
+            .flatMap { (left, right) ->
+                right.updateOffset(left.offset.add(Vec2(80f, 0f)))
+                listOf(left, right)
+            }
     }
 
     private fun getPlayerAimAngleDisplay(player: GamePlayer): String =
@@ -130,8 +139,6 @@ class GuiCommandPanel(player: GamePlayer,
         Common.roundFloat(value, decimals).toString()
 
     private fun getActionButtons(player: GamePlayer,
-                                 onClickAim: (player: GamePlayer) -> Unit,
-                                 onClickPower: (player: GamePlayer) -> Unit,
                                  onClickMove: (player: GamePlayer) -> Unit,
                                  onClickFire: (player: GamePlayer) -> Unit): List<GuiButton> {
         val actionButtonScale = Vec2(50f, 25f) // dragHandleScale = Vec2(90f, 25f)

@@ -284,14 +284,14 @@ class GuiController {
 
     fun createPlayerCommandPanel(
         player: GamePlayer,
-        onClickAim: (player: GamePlayer) -> Unit,
-        onClickPower: (player: GamePlayer) -> Unit,
+        onClickAim: () -> Unit,
+        onChangeAim: () -> Unit,
         onClickMove: (player: GamePlayer) -> Unit,
         onClickFire: (player: GamePlayer) -> Unit
     ) {
         clear()
-        val commandPanel2 = GuiCommandPanel(player, onClickAim, onClickPower, onClickMove, onClickFire)
-        elements.add(commandPanel2)
+        val commandPanel = GuiCommandPanel(player, onClickAim, onChangeAim, onClickMove, onClickFire)
+        elements.add(commandPanel)
         elements.add(GuiLabel(Vec2(-450f, -450f),
             title = "When setting aim/power, hover the mouse cursor near your vehicle",
             textSize = .11f, maxWidth = 150f))
@@ -299,7 +299,8 @@ class GuiController {
 
     fun createJumpFuelBar(player: GamePlayer) {
         clear()
-        elements.add(GuiProgressBar(Vec2(), Vec2(150f, 10f), PiH)
+        elements.add(GuiProgressBar(Vec2(), Vec2(150f, 10f), PiH,
+            onDrag = { value: Float -> player.playerAim.precision = value })
         { e -> (e as GuiProgressBar).progressTarget = player.vehicle!!.fuel!!.amount * .01f }
             .also { it.placeOnEdge(CENTER_RIGHT, windowSize.mul(.5f)) }
         )

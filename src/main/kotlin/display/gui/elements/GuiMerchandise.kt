@@ -11,6 +11,7 @@ import display.gui.base.*
 import display.text.TextJustify
 import io.reactivex.Observable
 import org.jbox2d.common.Vec2
+import utility.Common.muCron
 import utility.Common.makeVec2
 
 class GuiMerchandise(
@@ -64,7 +65,7 @@ class GuiMerchandise(
         val tooltipIcon = localElements[1]
         tooltipIcon.render(parentSnipRegion)
 
-        dI.renderer.drawText("$price",
+        dI.renderer.drawText("$price$muCron",
             offset.add(Vec2(scale.x - tooltipIcon.scale.x * 2, 0f)), makeVec2(.13),
             color, justify = TextJustify.RIGHT, useCamera = false, snipRegion = parentSnipRegion)
 

@@ -2,16 +2,16 @@ package utility
 
 class StopWatch {
 
-    private val currentTime
+    val currentTime
         get() = System.currentTimeMillis()
 
     val elapsedTime
-        get() = (currentTime - lastPhaseTimestamp)
+        get() = (currentTime - lastTimestamp)
 
-    private var lastPhaseTimestamp = currentTime
+    private var lastTimestamp = currentTime
 
     fun reset() {
-        lastPhaseTimestamp = currentTime
+        lastTimestamp = currentTime
     }
 
 }

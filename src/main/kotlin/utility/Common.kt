@@ -1,9 +1,14 @@
 package utility
 
+import display.events.ButtonPress
+import io.reactivex.Observable
+import io.reactivex.Observable.interval
+import io.reactivex.subjects.PublishSubject
 import org.jbox2d.common.Vec2
 import java.io.File
 import java.nio.DoubleBuffer
 import java.util.*
+import java.util.concurrent.TimeUnit
 import kotlin.math.*
 
 object Common {
@@ -48,6 +53,8 @@ object Common {
         return value.times(multiplier).roundToInt().div(multiplier)
     }
 
+    const val muCron = "µ"
+
     const val Pi = PI.toFloat()
     const val Pi2 = 2f * Pi
     const val PiH = Pi * .5f
@@ -67,6 +74,7 @@ object Common {
     fun makeVec2Circle(angle: Float): Vec2 = Vec2(cos(angle), sin(angle))
 
     val radianToDegree = Math.toDegrees(1.0).toFloat()
+    val degreeToRadian = 1f / radianToDegree
 
     fun getTimingFunctionEaseOut(interpolateStep: Float) = getTimingFunctionFullSine(sqrt(interpolateStep))
 
@@ -82,6 +90,33 @@ object Common {
     fun getRandomMixed() = Math.random().toFloat() * 2f - 1f
 
     fun getRandomSign() = if (Math.random() > .5) -1f else 1f
+
+    fun <T : ButtonPress> pressAndHoldAction(event: Observable<T>,
+                           rampDuration: Float = 3000f,
+                           startInterval: Float = 300f,
+                           endInterval: Float = 25f): Observable<Unit> {
+        val stopWatch = StopWatch()
+        val outputStream = PublishSubject.create<Unit>()
+
+        val pauseDuration = PublishSubject.create<Float>()
+        val complete = event.filter { it.isRelease }
+            .doOnNext { pauseDuration.onComplete() }
+
+        pauseDuration
+            .doOnComplete { outputStream.onComplete() }
+            .switchMap { interval(it.toLong(), TimeUnit.MILLISECONDS) }
+            .takeUntil(complete)
+            .subscribe {
+                outputStream.onNext(Unit)
+                val duration = stopWatch.elapsedTime.div(rampDuration).coerceIn(0f, 1f)
+                    .let { getTimingFunctionEaseIn(1f - it) * startInterval }
+                    .coerceAtLeast(endInterval)
+                pauseDuration.onNext(duration)
+            }
+        pauseDuration.onNext(0f)
+
+        return outputStream
+    }
 
 }
 

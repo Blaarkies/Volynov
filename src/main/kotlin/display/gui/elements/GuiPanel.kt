@@ -104,6 +104,8 @@ open class GuiPanel(
         if (isHovered) {
             val kidTakesEvent = kidElements.filterIsInstance<HasClick>()
                 .any { it.handleLeftClick(startEvent, event) }
+                    || kidElements.filterIsInstance<HasElements>()
+                .any { it.handleLeftClick(startEvent, event) }
 
             if (!kidTakesEvent
                 && isDragRegion(startEvent.location)
