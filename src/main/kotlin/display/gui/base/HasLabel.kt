@@ -12,6 +12,7 @@ interface HasLabel : GuiElement {
     var title: String
     val textSize: Float
     var maxWidth: Float
+    val angle: Float
 
     override fun render(parentSnipRegion: SnipRegion?) {
         super.render(parentSnipRegion)
@@ -20,7 +21,7 @@ interface HasLabel : GuiElement {
             offset, vectorUnit.mul(textSize),
             color, justify,
             false, parentSnipRegion,
-            maxWidth)
+            maxWidth, angle)
     }
 
 }

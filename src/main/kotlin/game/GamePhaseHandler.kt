@@ -1,7 +1,10 @@
 package game
 
 import dI
-import display.events.*
+import display.events.DistanceCalculator
+import display.events.KeyboardEvent
+import display.events.MouseButtonEvent
+import display.events.MouseScrollEvent
 import display.graphic.Color
 import display.gui.elements.GuiLabel
 import display.text.TextJustify
@@ -16,9 +19,13 @@ import game.fuel.FuelType
 import io.reactivex.Observable
 import io.reactivex.subjects.PublishSubject
 import org.jbox2d.common.Vec2
+import org.lwjgl.glfw.GLFW
+import utility.Common
 import utility.Common.getTimingFunctionEaseIn
 import utility.Common.getTimingFunctionEaseOut
+import utility.Common.pressAndHoldAction
 import utility.Common.vectorUnit
+import utility.StopWatch
 import java.util.concurrent.TimeUnit
 import kotlin.concurrent.thread
 import kotlin.math.ceil
@@ -38,15 +45,9 @@ class GamePhaseHandler {
     private var currentPhase = NONE
     private var isTransitioning = false
 
-    private val currentTime
-        get() = System.currentTimeMillis()
+    private val stopWatch = StopWatch()
 
-    private val elapsedTime
-        get() = (currentTime - lastPhaseTimestamp)
-
-    private var lastPhaseTimestamp = currentTime
-
-    var latestPrediction = TrajectoryPrediction(currentTime)
+    var latestPrediction = TrajectoryPrediction(stopWatch.currentTime)
     var playerAimChanged = PublishSubject.create<Boolean>()
     private val unsubscribe = PublishSubject.create<Boolean>()
 
@@ -78,7 +79,6 @@ class GamePhaseHandler {
             Pair(PLAYERS_TURN_END, { handlePlayerTurnEnd() }),
             Pair(PLAYERS_TURN_JUMPED, { handlePlayerJumped() }),
             Pair(PLAYERS_TURN_AIMING, { guiController.update() }),
-            Pair(PLAYERS_TURN_POWERING, { guiController.update() }),
             Pair(PLAYERS_WATCH_DAMAGE_DEALT_INTRO, {
                 guiController.update()
                 waitOnPhase(cameraPanDuration, PLAYERS_WATCH_DAMAGE_DEALT, true)
@@ -96,13 +96,9 @@ class GamePhaseHandler {
             Pair(PLAYERS_PICK_SHIELDS, { drawWorldAndGui() }),
             Pair(PLAYERS_TURN, {
                 drawWorldAndGui()
-                gameState.gravityBodies.forEach { drawer.drawMotionPredictors(it) }
-            }),
-            Pair(PLAYERS_TURN_AIMING, {
-                drawWorldAndGui()
                 drawPlayerAimingGui()
             }),
-            Pair(PLAYERS_TURN_POWERING, {
+            Pair(PLAYERS_TURN_AIMING, {
                 drawWorldAndGui()
                 drawPlayerAimingGui()
             }),
@@ -149,7 +145,7 @@ class GamePhaseHandler {
     }
 
     private fun startTransition() {
-        lastPhaseTimestamp = currentTime
+        stopWatch.reset()
         isTransitioning = true
     }
 
@@ -186,7 +182,7 @@ class GamePhaseHandler {
             vectorUnit.mul(0.1f), debugColor, TextJustify.LEFT, false)
 
         drawer.renderer.drawText(
-            "GameTime ${gameState.tickTime.div(100f).roundToInt().div(10f)}s / PhaseTime ${elapsedTime.div(100f)
+            "GameTime ${gameState.tickTime.div(100f).roundToInt().div(10f)}s / PhaseTime ${stopWatch.elapsedTime.div(100f)
                 .roundToInt().div(10f)}s",
             Vec2(5f - camera.windowWidth * .5f, -30f + camera.windowHeight * .5f),
             vectorUnit.mul(0.1f), debugColor, TextJustify.LEFT, false)
@@ -199,17 +195,17 @@ class GamePhaseHandler {
     }
 
     private fun handleIntro() {
-        val interpolationStep = elapsedTime / introDuration
+        val interpolationStep = stopWatch.elapsedTime / introDuration
         camera.setNewZoom(.05f + (.1f - .05f) * getTimingFunctionEaseOut(interpolationStep))
 
         when {
             isTransitioning -> tickGameUnpausing()
-            elapsedTime > introDuration -> {
+            stopWatch.elapsedTime > introDuration -> {
                 camera.setNewZoom(.05f)
                 playerSelectsShield()
             }
-            elapsedTime > (introDuration - introTimeEnd) -> tickGamePausing(
-                introTimeEnd, calculatedElapsedTime = (elapsedTime - introDuration + introTimeEnd))
+            stopWatch.elapsedTime > (introDuration - introTimeEnd) -> tickGamePausing(
+                introTimeEnd, calculatedElapsedTime = (stopWatch.elapsedTime - introDuration + introTimeEnd))
             else -> tickClockNormalSpeed()
         }
     }
@@ -222,20 +218,20 @@ class GamePhaseHandler {
         }
         when {
             isTransitioning -> tickGameUnpausing(quickTimeStart)
-            elapsedTime > maxTurnDuration || roundEndsEarly() -> startNewPhase(PLAYERS_TURN_FIRED_WAIT_STABILIZE)
+            stopWatch.elapsedTime > maxTurnDuration || roundEndsEarly() -> startNewPhase(PLAYERS_TURN_FIRED_WAIT_STABILIZE)
             else -> tickClockNormalSpeed()
         }
     }
 
-    private fun endOfJump() = (elapsedTime > maxTurnDuration && gameState.playerOnTurn!!.vehicle!!.fuel!!.amount < .1f)
-            || elapsedTime > maxJumpDuration
+    private fun endOfJump() = (stopWatch.elapsedTime > maxTurnDuration && gameState.playerOnTurn!!.vehicle!!.fuel!!.amount < .1f)
+            || stopWatch.elapsedTime > maxJumpDuration
             || gameState.playerOnTurn!!.vehicle!!.hasCollided
 
     private fun handlePlayerJumped() {
         guiController.update()
         when {
             isTransitioning -> tickGameUnpausing(jumpTimeStart)
-            elapsedTime < jumpTimeSafeDuration -> {
+            stopWatch.elapsedTime < jumpTimeSafeDuration -> {
                 gameState.playerOnTurn!!.vehicle!!.hasCollided = false
                 tickClockNormalSpeed()
             }
@@ -249,7 +245,7 @@ class GamePhaseHandler {
                             paused: Boolean = false,
                             callback: () -> Unit = {}) {
         when {
-            elapsedTime > duration -> {
+            stopWatch.elapsedTime > duration -> {
                 startNewPhase(nextGamePhase)
                 startTransition()
                 callback()
@@ -287,8 +283,8 @@ class GamePhaseHandler {
     private fun handlePlayerWatchDamageDealt() {
         val watchedVehicle = lastVehicleWatched!!
         when {
-            elapsedTime < watchHpDropDuration -> {
-                val interpolationStep = 1f - elapsedTime / watchHpDropDuration
+            stopWatch.elapsedTime < watchHpDropDuration -> {
+                val interpolationStep = 1f - stopWatch.elapsedTime / watchHpDropDuration
                 val range = lastVehicleDamageRecords[watchedVehicle]!! - watchedVehicle.hitPoints
                 val hp = (watchedVehicle.hitPoints +
                         getTimingFunctionEaseIn(interpolationStep) * range).coerceAtLeast(0f)
@@ -298,7 +294,7 @@ class GamePhaseHandler {
                         element.color = Color.createFromHsv((hp / 100f) * .3f, .5f, .7f)
                     })
             }
-            elapsedTime < watchHpDropDuration + watchHpIdleDuration -> return
+            stopWatch.elapsedTime < watchHpDropDuration + watchHpIdleDuration -> return
             else -> {
                 lastVehicleDamageRecords.remove(watchedVehicle)
                 currentPhase = PLAYERS_TURN_END
@@ -347,6 +343,7 @@ class GamePhaseHandler {
         }
         setNextPlayerOnTurn()
         setupPlayerCommandPanel()
+        playerAimChanged.onNext(true)
 
         startNewPhase(PLAYERS_TURN)
     }
@@ -366,7 +363,7 @@ class GamePhaseHandler {
         guiController.createPlayerCommandPanel(
             player = gameState.playerOnTurn!!,
             onClickAim = { startNewPhase(PLAYERS_TURN_AIMING) },
-            onClickPower = { startNewPhase(PLAYERS_TURN_POWERING) },
+            onChangeAim = { playerAimChanged.onNext(true) },
             onClickMove = { player -> playerJumps(player) },
             onClickFire = { player -> playerFires(player) }
         )
@@ -445,7 +442,7 @@ class GamePhaseHandler {
         endSpeed: Float = 1f,
         callback: () -> Unit = {}
     ) {
-        val interpolateStep = (calculatedElapsedTime ?: elapsedTime.toFloat()) / duration
+        val interpolateStep = (calculatedElapsedTime ?: stopWatch.elapsedTime.toFloat()) / duration
         if (interpolateStep >= 1f) {
             currentPhase = endPhase ?: currentPhase
             isTransitioning = false
@@ -463,7 +460,7 @@ class GamePhaseHandler {
         endSpeed: Float = 0f,
         callback: () -> Unit = {}
     ) {
-        val interpolateStep = (calculatedElapsedTime ?: elapsedTime.toFloat()) / duration
+        val interpolateStep = (calculatedElapsedTime ?: stopWatch.elapsedTime.toFloat()) / duration
         if (interpolateStep >= 1f) {
             currentPhase = endPhase ?: currentPhase
             isTransitioning = false
@@ -484,15 +481,6 @@ class GamePhaseHandler {
         }
     }
 
-    fun pauseGame(event: KeyboardEvent) {
-        currentPhase = when (currentPhase) {
-            PAUSE -> PLAY
-            PLAY -> PAUSE
-            else -> PAUSE
-        }
-        startTransition()
-    }
-
     fun doubleLeftClick(location: Vec2) {
         val transformedLocation = camera.getWorldLocation(location)
 
@@ -507,33 +495,16 @@ class GamePhaseHandler {
         camera.trackFreeBody(clickedBody)
     }
 
-    fun keyPressArrowLeft(event: KeyboardEvent) {
-        drawer.renderer.debugOffset.addLocal(Vec2(-0.005f, 0f))
-    }
-
-    fun keyPressArrowRight(event: KeyboardEvent) {
-        drawer.renderer.debugOffset.addLocal(Vec2(0.005f, 0f))
-    }
-
     fun moveMouse(location: Vec2) {
         when {
             mouseElementPhases.any { currentPhase == it } -> guiController.checkHover(
                 camera.getScreenLocation(location))
             currentPhase == PLAYERS_TURN_AIMING -> {
                 val (playerOnTurn, transformedLocation, playerLocation) = getPlayerAndMouseLocations(location)
-                val aimDirection = Director.getDirection(
-                    transformedLocation.x, transformedLocation.y, playerLocation.x, playerLocation.y
-                )
+                val aimDirection = Director.getDirection(transformedLocation, playerLocation)
                 playerOnTurn.playerAim.angle = aimDirection
-                guiController.update()
 
-                playerAimChanged.onNext(true)
-            }
-            currentPhase == PLAYERS_TURN_POWERING -> {
-                val (playerOnTurn, transformedLocation, playerLocation) = getPlayerAndMouseLocations(location)
-                val distance = Director.getDistance(
-                    transformedLocation.x, transformedLocation.y, playerLocation.x, playerLocation.y
-                )
+                val distance = Director.getDistance(transformedLocation, playerLocation)
                 playerOnTurn.playerAim.power = (distance - 1f) * 10f
                 guiController.update()
 
@@ -548,19 +519,6 @@ class GamePhaseHandler {
         val transformedLocation = camera.getWorldLocation(location)
         val playerLocation = playerOnTurn.vehicle!!.worldBody.position
         return Triple(playerOnTurn, transformedLocation, playerLocation)
-    }
-
-    fun keyPressEscape(event: KeyboardEvent) {
-        when (currentPhase) {
-            MAIN_MENU -> dI.window.exit()
-            else -> setupMainMenu()
-        }
-    }
-
-    fun keyPressBackspace(event: KeyboardEvent) {
-    }
-
-    fun keyPressEnter(event: KeyboardEvent) {
     }
 
     private fun setupMainMenu() {
@@ -610,6 +568,39 @@ class GamePhaseHandler {
 
         check(gameState.gamePlayers.size > 1) { "Cannot play a game with less than 2 players" }
         gameState.playerOnTurn = gameState.gamePlayers.random()
+    }
+
+    fun eventKeyboardKey(startEvent: KeyboardEvent, event: Observable<KeyboardEvent>) {
+        when {
+            currentPhase == PLAYERS_TURN -> {
+                when (startEvent.key) {
+                    GLFW.GLFW_KEY_LEFT -> pressAndHoldAction(event, rampDuration = 1500f).subscribe {
+                        gameState.playerOnTurn!!.playerAim.addAngle()
+                        playerAimChanged.onNext(true)
+                    }
+                    GLFW.GLFW_KEY_RIGHT -> pressAndHoldAction(event, rampDuration = 1500f).subscribe {
+                        gameState.playerOnTurn!!.playerAim.addAngle(-1f)
+                        playerAimChanged.onNext(true)
+                    }
+                    GLFW.GLFW_KEY_UP -> pressAndHoldAction(event, rampDuration = 1500f).subscribe {
+                        gameState.playerOnTurn!!.playerAim.addPower()
+                        playerAimChanged.onNext(true)
+                    }
+                    GLFW.GLFW_KEY_DOWN -> pressAndHoldAction(event, rampDuration = 1500f).subscribe {
+                        gameState.playerOnTurn!!.playerAim.addPower(-1f)
+                        playerAimChanged.onNext(true)
+                    }
+                    GLFW.GLFW_KEY_KP_ADD -> pressAndHoldAction(event, rampDuration = 1500f)
+                        .subscribe { gameState.playerOnTurn!!.playerAim.addPrecision() }
+                    GLFW.GLFW_KEY_KP_SUBTRACT -> pressAndHoldAction(event, rampDuration = 1500f)
+                        .subscribe { gameState.playerOnTurn!!.playerAim.addPrecision(-1f) }
+                    GLFW.GLFW_KEY_ESCAPE -> when (currentPhase) {
+                        MAIN_MENU -> dI.window.exit()
+                        else -> setupMainMenu()
+                    }
+                }
+            }
+        }
     }
 
     fun eventLeftClick(startEvent: MouseButtonEvent, event: Observable<MouseButtonEvent>) {

@@ -1,15 +1,11 @@
 package input
 
 import dI
-import display.Window
-import display.events.MouseButtonEvent
-import io.reactivex.Observable
 import io.reactivex.Observable.just
 import io.reactivex.Observable.merge
 import io.reactivex.subjects.PublishSubject
-import org.jbox2d.common.Vec2
+import kotlinx.coroutines.flow.merge
 import org.lwjgl.glfw.GLFW
-import java.util.concurrent.TimeUnit
 
 class InputHandler {
 
@@ -37,7 +33,8 @@ class InputHandler {
         mouseDownEvent.filter { it.isLeft }
             .takeUntil(unsubscribe)
             .subscribe { clickPress ->
-                val clickRelease = mouseUpEvent.filter { it.isLeft } // TODO: release any button to cancel the other button?
+                val clickRelease =
+                    mouseUpEvent.filter { it.isLeft } // TODO: release any button to cancel the other button?
 
                 val event = merge(just(clickPress.clone()), window.cursorPositionEvent, clickRelease)
                     .takeUntil { it.isRelease }
@@ -61,20 +58,14 @@ class InputHandler {
     }
 
     private fun setupKeyboard() {
-        window.keyboardEvent.takeUntil(unsubscribe).subscribe {
-            when (it.action) {
-                GLFW.GLFW_PRESS -> {
-                    when (it.key) {
-                        // GLFW.GLFW_KEY_SPACE -> gamePhaseHandler.pauseGame(it)
-                        GLFW.GLFW_KEY_LEFT -> gamePhaseHandler.keyPressArrowLeft(it)
-                        GLFW.GLFW_KEY_RIGHT -> gamePhaseHandler.keyPressArrowRight(it)
-                        GLFW.GLFW_KEY_ESCAPE -> gamePhaseHandler.keyPressEscape(it)
-                        GLFW.GLFW_KEY_BACKSPACE -> gamePhaseHandler.keyPressBackspace(it)
-                        GLFW.GLFW_KEY_ENTER -> gamePhaseHandler.keyPressEnter(it)
-                    }
-                }
+        window.keyboardEvent
+            .filter { it.isPress }
+            .takeUntil(unsubscribe)
+            .subscribe { keyPress ->
+                val keyRelease = window.keyboardEvent.filter { it.isRelease && it.key == keyPress.key }
+                val event = merge(just(keyPress), keyRelease).take(2)
+                gamePhaseHandler.eventKeyboardKey(keyPress, event)
             }
-        }
     }
 
     private fun setupMouseScroll() {

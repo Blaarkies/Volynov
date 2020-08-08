@@ -4,16 +4,19 @@ import dI
 import display.draw.TextureEnum
 import display.graphic.Color
 import display.graphic.SnipRegion
-import display.gui.base.GuiElementPhase.*
 import display.gui.base.*
+import display.gui.base.GuiElementPhase.*
 import display.text.TextJustify
 import org.jbox2d.common.Vec2
+import utility.Common.makeVec2
 
-class GuiButton(
+open class GuiButton(
     override val offset: Vec2 = Vec2(),
     override val scale: Vec2 = Vec2(200f, 50f),
     override var title: String = "",
     override val textSize: Float = .2f,
+    val icon: TextureEnum? = null,
+    override val angle: Float = 0f,
     override var color: Color = Color.WHITE.setAlpha(.7f),
     override val onClick: () -> Unit = {},
     override val updateCallback: (GuiElement) -> Unit = {}
@@ -30,7 +33,12 @@ class GuiButton(
     override var id = GuiElementIdentifierType.DEFAULT
     override var currentPhase = IDLE
 
+    private var guiIcon: GuiIcon? = null
+
     init {
+        if (icon != null) {
+            guiIcon = GuiIcon(offset, scale, angle = angle, texture = icon, padding = makeVec2(1))
+        }
         calculateVisuals()
         calculateElementRegion()
     }
@@ -53,6 +61,10 @@ class GuiButton(
 
         super<HasClick>.render(parentSnipRegion)
         super<HasLabel>.render(parentSnipRegion)
+
+        if (icon != null) {
+            guiIcon!!.render(parentSnipRegion)
+        }
     }
 
     override fun updateScale(newScale: Vec2) = super<HasOutline>.updateScale(newScale).also { calculateVisuals() }

@@ -77,17 +77,8 @@ class Window(private val title: String, var width: Int, var height: Int, private
 
     private fun setupInputCallbacks() {
         GLFW.glfwSetKeyCallback(windowHandle) { _, key, scancode, action, mods ->
-            if (action == GLFW.GLFW_PRESS) {
-                when {
-                    key == GLFW.GLFW_KEY_F12 -> {
-                        when (glGetInteger(GL_POLYGON_MODE)) {
-                            GL_LINE -> glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
-                            GL_POINT -> glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
-                            else -> glPolygonMode(GL_FRONT_AND_BACK, GL_POINT)
-                        }
-                    }
-                    else -> keyboardEvent.onNext(KeyboardEvent(key, scancode, action, mods))
-                }
+            if (!handleDebugKeys(key, scancode, action, mods)) {
+                keyboardEvent.onNext(KeyboardEvent(key, scancode, action, mods))
             }
         }?.let { callbacks.add(it) }
 
@@ -107,6 +98,18 @@ class Window(private val title: String, var width: Int, var height: Int, private
             textInputEvent.onNext(Character.toChars(codepoint)[0].toString())
         }?.let { callbacks.add(it) }
         //        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    }
+
+    private fun handleDebugKeys(key: Int, scancode: Int, action: Int, mods: Int): Boolean {
+        if (key == GLFW.GLFW_KEY_F12) {
+            when (glGetInteger(GL_POLYGON_MODE)) {
+                GL_LINE -> glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+                GL_POINT -> glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
+                else -> glPolygonMode(GL_FRONT_AND_BACK, GL_POINT)
+            }
+            return true
+        }
+        return false
     }
 
     fun setClearColor(r: Float, g: Float, b: Float, alpha: Float) {

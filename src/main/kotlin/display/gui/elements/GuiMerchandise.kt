@@ -11,6 +11,7 @@ import display.gui.base.*
 import display.text.TextJustify
 import io.reactivex.Observable
 import org.jbox2d.common.Vec2
+import utility.Common.muCron
 import utility.Common.makeVec2
 
 class GuiMerchandise(
@@ -41,7 +42,7 @@ class GuiMerchandise(
         localElements.addAll(listOf(
             GuiIcon(Vec2(), scale, Color.WHITE.setAlpha(.4f), TextureEnum.danger, Vec2(2f, 4f))
                 .also { it.textureConfig.updateGpuBufferDataWithTilingFactor(Vec2(8f, 1f)) },
-            GuiIcon(Vec2(scale.x - scale.y, 0f), makeVec2(scale.y), texture = TextureEnum.question_circle,
+            GuiIcon(Vec2(scale.x - scale.y, 0f), makeVec2(scale.y), texture = TextureEnum.icon_question_circle,
                 padding = makeVec2(10f))
         ))
         localElementOffsets.putAll(localElements.map { Pair(it, it.offset.clone()) })
@@ -64,7 +65,7 @@ class GuiMerchandise(
         val tooltipIcon = localElements[1]
         tooltipIcon.render(parentSnipRegion)
 
-        dI.renderer.drawText("$price",
+        dI.renderer.drawText("$price$muCron",
             offset.add(Vec2(scale.x - tooltipIcon.scale.x * 2, 0f)), makeVec2(.13),
             color, justify = TextJustify.RIGHT, useCamera = false, snipRegion = parentSnipRegion)
 
