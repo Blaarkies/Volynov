@@ -12,6 +12,7 @@ import display.gui.elements.GuiLabel
 import display.text.TextJustify
 import io.reactivex.Observable
 import org.jbox2d.common.Vec2
+import utility.Common.Pi
 import utility.Common.roundFloat
 
 class GuiSpinner(override val offset: Vec2 = Vec2(),
@@ -33,8 +34,8 @@ class GuiSpinner(override val offset: Vec2 = Vec2(),
 
     init {
         localElements.addAll(listOf(
-            GuiButtonRepeater(Vec2(-50f, 8f), Vec2(11f, 8f), "^", .1f, onClick = onClickMore),
-            GuiButtonRepeater(Vec2(-50f, -8f), Vec2(11f, 8f), "v", .1f, onClick = onClickLess),
+            GuiButtonRepeater(Vec2(-50f, 8f), Vec2(11f, 8f), "V", .07f, angle = Pi, onClick = onClickMore),
+            GuiButtonRepeater(Vec2(-50f, -8f), Vec2(11f, 8f), "V", .07f, onClick = onClickLess),
             GuiLabel(Vec2(50f, 0f), TextJustify.RIGHT, textSize = .14f, updateCallback = labelCallback)
         ))
         localElementOffsets.putAll(localElements.map { Pair(it, it.offset.clone()) })

@@ -185,11 +185,12 @@ class Font(font: Font = Font(MONOSPACED, BOLD, 32), antiAlias: Boolean = true) {
         justify: TextJustify,
         useCamera: Boolean,
         snipRegion: SnipRegion?,
-        maxWidth: Float
+        maxWidth: Float,
+        angle: Float
     ) {
         drawLetters(fontBitMapShadow, offset, scale, renderer, text, Color.BLACK, justify, useCamera, snipRegion,
-            maxWidth)
-        drawLetters(fontBitMap, offset, scale, renderer, text, color, justify, useCamera, snipRegion, maxWidth)
+            maxWidth, angle)
+        drawLetters(fontBitMap, offset, scale, renderer, text, color, justify, useCamera, snipRegion, maxWidth, angle)
     }
 
     private fun drawLetters(
@@ -202,7 +203,8 @@ class Font(font: Font = Font(MONOSPACED, BOLD, 32), antiAlias: Boolean = true) {
         justify: TextJustify,
         useCamera: Boolean,
         snipRegion: SnipRegion?,
-        maxWidth: Float
+        maxWidth: Float,
+        angle: Float
     ) {
         val glyphsList = text.mapNotNull {
             try {
@@ -247,7 +249,7 @@ class Font(font: Font = Font(MONOSPACED, BOLD, 32), antiAlias: Boolean = true) {
             x += it.width * scale.x
 
             drawTextPosition(texture, renderer, Vec2(x, y).add(offset).add(justifyment),
-                scale, it, color, useCamera, snipRegion)
+                scale, it, color, useCamera, snipRegion, angle)
             x += it.width * scale.x
 
             if (endLineIndexes[index] == true) {
@@ -265,7 +267,8 @@ class Font(font: Font = Font(MONOSPACED, BOLD, 32), antiAlias: Boolean = true) {
         glyph: Glyph,
         color: Color,
         useCamera: Boolean,
-        snipRegion: SnipRegion?
+        snipRegion: SnipRegion?,
+        angle: Float
     ) {
         val textureWidth = texture.width.toFloat()
         val textureHeight = texture.height.toFloat()
@@ -284,7 +287,7 @@ class Font(font: Font = Font(MONOSPACED, BOLD, 32), antiAlias: Boolean = true) {
             }.toFloatArray()
 
         texture.bind()
-        renderer.drawShape(data, offset, 0f, scale, useCamera, snipRegion)
+        renderer.drawShape(data, offset, angle, scale, useCamera, snipRegion)
 
         //        textures.white_pixel.bind()
         //        renderer.drawShape(data, offset, 0f, scale, useCamera)

@@ -1,5 +1,6 @@
 package display.gui.special
 
+import display.draw.TextureEnum
 import display.events.MouseButtonEvent
 import display.graphic.Color
 import display.gui.base.GuiElement
@@ -16,8 +17,10 @@ open class GuiButtonRepeater(
     textSize: Float = .2f,
     color: Color = Color.WHITE.setAlpha(.7f),
     onClick: () -> Unit = {},
-    updateCallback: (GuiElement) -> Unit = {})
-    : GuiButton(offset, scale, title, textSize, null, color, onClick, updateCallback) {
+    updateCallback: (GuiElement) -> Unit = {},
+    icon: TextureEnum? = null,
+    angle: Float = 0f)
+    : GuiButton(offset, scale, title, textSize, icon, angle, color, onClick, updateCallback) {
 
     override fun handleLeftClick(startEvent: MouseButtonEvent, event: Observable<MouseButtonEvent>): Boolean {
         val isHovered = isHover(startEvent.location) && currentPhase != GuiElementPhase.DISABLED

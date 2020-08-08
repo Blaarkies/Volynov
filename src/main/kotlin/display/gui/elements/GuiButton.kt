@@ -16,6 +16,7 @@ open class GuiButton(
     override var title: String = "",
     override val textSize: Float = .2f,
     val icon: TextureEnum? = null,
+    override val angle: Float = 0f,
     override var color: Color = Color.WHITE.setAlpha(.7f),
     override val onClick: () -> Unit = {},
     override val updateCallback: (GuiElement) -> Unit = {}
@@ -36,7 +37,7 @@ open class GuiButton(
 
     init {
         if (icon != null) {
-            guiIcon = GuiIcon(offset, scale, texture = icon, padding = makeVec2(1))
+            guiIcon = GuiIcon(offset, scale, angle = angle, texture = icon, padding = makeVec2(1))
         }
         calculateVisuals()
         calculateElementRegion()

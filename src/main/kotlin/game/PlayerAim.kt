@@ -20,9 +20,9 @@ class PlayerAim(angle: Float = 0f, power: Float = 100f) {
             field = value.coerceIn(0f, 100f)
         }
 
-    var precision = 1f
+    var precision = precisionMax - 1f
         set(value) {
-            field = value.coerceIn(0f, 10f)
+            field = value.coerceIn(0f, precisionMax - precisionMin)
         }
 
     var selectedFuel: FuelType? = null
@@ -41,21 +41,28 @@ class PlayerAim(angle: Float = 0f, power: Float = 100f) {
     }
 
     fun addAngle(sign: Float = 1f) {
-        angle += sign * precision * degreeToRadian
+        angle += sign * (precisionMax - precision) * degreeToRadian
     }
 
     fun addPower(sign: Float = 1f) {
-        power += sign * precision
+        power += sign * (precisionMax - precision)
     }
 
     fun addPrecision(sign: Float = 1f) {
-        precision += sign * .4f
+        precision += sign * .1f
     }
 
     fun setPrecisionFromBar(value: Float) {
-        precision = value.pow(2f).times(10f).coerceAtLeast(.01f)
+        precision = value.pow(1f / precisionExponent).times(precisionMax).coerceAtMost(precisionMax - precisionMin)
     }
 
-    fun getPrecisionForBar(): Float = precision.div(10f).pow(1f / 2f)
+    fun getPrecisionForBar(): Float = precision.div(precisionMax).pow(precisionExponent)
 
+    companion object {
+
+        private const val precisionMin = .01f
+        private const val precisionMax = 10f
+        private const val precisionExponent = 8f
+
+    }
 }

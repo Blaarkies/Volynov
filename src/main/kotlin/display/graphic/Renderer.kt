@@ -95,10 +95,11 @@ class Renderer {
                  justify: TextJustify = TextJustify.LEFT,
                  useCamera: Boolean = true,
                  snipRegion: SnipRegion? = null,
-                 maxWidth: Float = 0f
+                 maxWidth: Float = 0f,
+                 angle: Float = 0f
     ) {
         if (text.isEmpty()) return
-        font.drawText(this, text, offset, scale, color, justify, useCamera, snipRegion, maxWidth)
+        font.drawText(this, text, offset, scale, color, justify, useCamera, snipRegion, maxWidth, angle)
     }
 
     fun drawShape(

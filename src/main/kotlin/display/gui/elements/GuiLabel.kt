@@ -15,7 +15,8 @@ class GuiLabel(
     override val textSize: Float = .1f,
     override var color: Color = Color.WHITE.setAlpha(.7f),
     override val updateCallback: (GuiElement) -> Unit = {},
-    override var maxWidth: Float = 500f
+    override var maxWidth: Float = 500f,
+    override var angle: Float = 0f
 ) : HasLabel {
 
     fun updateManual(callback: (GuiLabel) -> Unit) = callback(this)

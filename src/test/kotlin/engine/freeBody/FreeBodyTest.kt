@@ -9,6 +9,7 @@ import display.draw.TextureEnum
 import engine.gameState.GameState
 import engine.physics.Gravity
 import game.GamePlayer
+import game.GamePlayerType
 import io.mockk.mockk
 import org.jbox2d.common.Vec2
 import org.jbox2d.dynamics.World
@@ -97,7 +98,7 @@ internal class FreeBodyTest {
         Planet("pluto", planets, world, 1f, 1f, 0f, 0f, 0f, 0f, 1f, .1f, texture = TextureEnum.white_pixel)
 
         val vehicles = mutableListOf<Vehicle>()
-        val player = GamePlayer("sputnik")
+        val player = GamePlayer("sputnik", GamePlayerType.CLONE)
         Vehicle(vehicles, world, player, 1f, 0f, 0f, 0f, 0f, 0f, 1f, .1f, texture = TextureEnum.white_pixel)
 
         val particles = mutableListOf<Particle>()

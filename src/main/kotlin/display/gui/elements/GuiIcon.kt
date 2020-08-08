@@ -17,7 +17,8 @@ class GuiIcon(
     override val scale: Vec2 = vectorUnit,
     override var color: Color = Color.WHITE.setAlpha(.7f),
     texture: TextureEnum = TextureEnum.white_pixel,
-    val padding: Vec2 = Vec2()
+    val padding: Vec2 = Vec2(),
+    val angle: Float = 0f
 ) : GuiElement {
 
     override var id = GuiElementIdentifierType.DEFAULT
@@ -36,7 +37,7 @@ class GuiIcon(
         dI.renderer.drawShape(
             textureConfig.gpuBufferData,
             offset,
-            0f,
+            angle,
             outputScale,
             false,
             parentSnipRegion)

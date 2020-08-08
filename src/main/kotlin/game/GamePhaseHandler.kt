@@ -79,7 +79,6 @@ class GamePhaseHandler {
             Pair(PLAYERS_TURN_END, { handlePlayerTurnEnd() }),
             Pair(PLAYERS_TURN_JUMPED, { handlePlayerJumped() }),
             Pair(PLAYERS_TURN_AIMING, { guiController.update() }),
-            Pair(PLAYERS_TURN_POWERING, { guiController.update() }),
             Pair(PLAYERS_WATCH_DAMAGE_DEALT_INTRO, {
                 guiController.update()
                 waitOnPhase(cameraPanDuration, PLAYERS_WATCH_DAMAGE_DEALT, true)
@@ -98,13 +97,8 @@ class GamePhaseHandler {
             Pair(PLAYERS_TURN, {
                 drawWorldAndGui()
                 drawPlayerAimingGui()
-                gameState.gravityBodies.forEach { drawer.drawMotionPredictors(it) }
             }),
             Pair(PLAYERS_TURN_AIMING, {
-                drawWorldAndGui()
-                drawPlayerAimingGui()
-            }),
-            Pair(PLAYERS_TURN_POWERING, {
                 drawWorldAndGui()
                 drawPlayerAimingGui()
             }),
@@ -116,7 +110,7 @@ class GamePhaseHandler {
     }
 
     fun init() {
-        when (2) {
+        when (0) {
             0 -> setupMainMenu()
             1 -> setupMainMenuSelectPlayers()
             2 -> {

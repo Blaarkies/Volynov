@@ -71,7 +71,7 @@ class GuiCommandPanel(player: GamePlayer,
 
         return listOf(
             GuiLabel(title = "HP      $hp%", textSize = .12f),
-            GuiLabel(title = "Energy ${energy}", textSize = .12f),
+            GuiLabel(title = "Energy $energy", textSize = .12f),
             GuiLabel(title = "Cash    $cash$muCron", textSize = .12f))
             .also { labels ->
                 labels.forEach { it.updateScale(Vec2(1f, 10f)) }
@@ -83,9 +83,10 @@ class GuiCommandPanel(player: GamePlayer,
     }
 
     private fun getAimSetter(player: GamePlayer, onChangeAim: () -> Unit, onClickAim: () -> Unit): List<GuiElement> {
-        val iconScale = makeVec2(13)
-        val iconAim = GuiIcon(scale = iconScale, texture = TextureEnum.icon_aim_direction)
-        val iconPower = GuiIcon(scale = iconScale, texture = TextureEnum.icon_aim_power)
+        val iconScale = makeVec2(14)
+        val iconPadding = makeVec2(3)
+        val iconAim = GuiIcon(scale = iconScale, texture = TextureEnum.icon_aim_direction, padding = iconPadding)
+        val iconPower = GuiIcon(scale = iconScale, texture = TextureEnum.icon_aim_power, padding = iconPadding)
         val buttonTarget = GuiButton(scale = iconScale, icon = TextureEnum.icon_target, onClick = onClickAim)
 
         return listOf(
