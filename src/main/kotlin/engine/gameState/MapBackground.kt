@@ -16,7 +16,7 @@ class MapBackground {
     private var textureConfigFar: TextureConfig
 
     init {
-        scale.mulLocal(1000f)
+        scale.mulLocal(10000f)
         val (width, height) = listOf(2f, 1f)
         val tilingFactor = 50f
 
@@ -48,19 +48,15 @@ class MapBackground {
     }
 
     fun render() {
+        val farBackDropZ = -15000f
+
         dI.textures.getTexture(textureConfigFar.texture).bind()
-        dI.renderer.drawShape(
-            textureConfigFar.gpuBufferData,
-            offset.add(dI.cameraView.location.mul(.8f)),
-            0f,
-            scale)
+        dI.renderer.drawShape(textureConfigFar.gpuBufferData, offset, 0f,
+            scale, z = farBackDropZ)
 
         dI.textures.getTexture(textureConfigNear.texture).bind()
-        dI.renderer.drawShape(
-            textureConfigNear.gpuBufferData,
-            offset.add(dI.cameraView.location.mul(.6f)),
-            1f,
-            scale.mul(.91f))
+        dI.renderer.drawShape(textureConfigNear.gpuBufferData, offset, 2f,
+            scale.mul(.973f), z = farBackDropZ * .7f)
     }
 
 }

@@ -1,11 +1,16 @@
 package display.graphic
 
 import org.lwjgl.BufferUtils
+import org.lwjgl.opengl.ARBFramebufferObject.glGenerateMipmap
+import org.lwjgl.opengl.ARBTextureStorage
+import org.lwjgl.opengl.ARBTextureStorage.glTexStorage2D
 import org.lwjgl.opengl.GL11.*
 import org.lwjgl.stb.STBImage
 import org.lwjgl.system.MemoryStack
 import utility.Common.getSafePath
 import java.nio.ByteBuffer
+import kotlin.math.floor
+import kotlin.math.pow
 
 class Texture {
 
@@ -35,12 +40,10 @@ class Texture {
         return this
     }
 
-    fun uploadData(width: Int, height: Int, data: ByteBuffer) {
-        uploadData(GL_RGBA8, width, height, GL_RGBA, data)
-    }
-
-    fun uploadData(internalFormat: Int, width: Int, height: Int, format: Int, data: ByteBuffer): Texture {
-        glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, format, GL_UNSIGNED_BYTE, data)
+    fun uploadData(width: Int, height: Int, data: ByteBuffer, mipmapLevels: Int): Texture {
+        glTexStorage2D(GL_TEXTURE_2D, mipmapLevels, GL_RGBA8, width, height)
+        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, data)
+        glGenerateMipmap(GL_TEXTURE_2D)
         return this
     }
 
@@ -54,12 +57,15 @@ class Texture {
             val texture = Texture()
             texture.width = width
             texture.height = height
+            val mipmapCount = width.times(height).toFloat().pow(.1f).let { floor(it).toInt() }
+
             texture.bind()
                 .setParameter(GL_TEXTURE_WRAP_S, GL_REPEAT)
                 .setParameter(GL_TEXTURE_WRAP_T, GL_REPEAT)
-                .setParameter(GL_TEXTURE_MIN_FILTER, GL_LINEAR)
                 .setParameter(GL_TEXTURE_MAG_FILTER, GL_LINEAR)
-                .uploadData(GL_RGBA8, width, height, GL_RGBA, data)
+                .setParameter(GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR)
+                .uploadData(width, height, data, mipmapCount)
+
             return texture
         }
 

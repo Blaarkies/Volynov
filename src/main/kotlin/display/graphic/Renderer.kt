@@ -108,8 +108,9 @@ class Renderer {
         h: Float = 0f,
         scale: Vec2 = vectorUnit,
         useCamera: Boolean = true,
-        snipRegion: SnipRegion? = null
-    ) = drawEntity(data, offset, h, scale, GL_TRIANGLE_FAN, useCamera, snipRegion)
+        snipRegion: SnipRegion? = null,
+        z: Float = 0f
+    ) = drawEntity(data, offset, h, scale, GL_TRIANGLE_FAN, useCamera, snipRegion, z)
 
     fun drawStrip(
         data: FloatArray,
@@ -127,7 +128,8 @@ class Renderer {
         scale: Vec2,
         drawType: Int,
         useCamera: Boolean,
-        snipRegion: SnipRegion?
+        snipRegion: SnipRegion?,
+        z: Float = 0f
     ) {
         if (snipRegion != null && snipRegion.sizeX * snipRegion.sizeY == 0) return
 
@@ -140,7 +142,7 @@ class Renderer {
         vertices.put(data)
         numVertices += data.size / vertexDimensionCount
 
-        setUniformInputs(offset, 0f, h, scale, useCamera, snipRegion)
+        setUniformInputs(offset, z, h, scale, useCamera, snipRegion)
         end(drawType)
     }
 
@@ -158,14 +160,14 @@ class Renderer {
         vertices = MemoryUtil.memAllocFloat(4096 * 2)
         /* Upload null data to allocate storage for the VBO */
         val size = (vertices.capacity() * java.lang.Float.BYTES).toLong()
-        vbo.uploadData(GL_ARRAY_BUFFER, size, GL_DYNAMIC_DRAW)
+        vbo.uploadData(GL_ARRAY_BUFFER, size, GL_STATIC_DRAW)
 
         val vertexShader = Shader.loadShader(GL_VERTEX_SHADER, "/shaders/vertexBasicPosition.glsl")
         val fragmentShader = Shader.loadShader(GL_FRAGMENT_SHADER, "/shaders/fragmentBasicColor.glsl")
         program = ShaderProgram()
         program.attachShader(vertexShader)
         program.attachShader(fragmentShader)
-        program.bindFragmentDataLocation(0, "fragColor")
+        program.bindFragmentDataLocation(0, "fragmentColor")
         program.link()
         program.use()
         vertexShader.delete()
@@ -215,22 +217,28 @@ class Renderer {
         val projection = Matrix4f.orthographic(
             -widthSide, widthSide,
             -heightSide, heightSide,
-            -depthSide, depthSide
-        )
+            depthSide, -depthSide)
+
         val uniProjection = program.getUniformLocation("projection")
         program.setUniform(uniProjection, projection)
+
+        //        glEnable(GL_DEPTH_TEST)
+        //        if (dI.window.isResized() ) {
+        //            glViewport(0, 0, window.getWidth(), window.getHeight());
+        //            window.setResized(false);
+        //        }
     }
 
     private fun specifyVertexAttributes() {
-        val posAttribute = program.getAttributeLocation("position")
+        val posAttribute = program.getAttributeLocation("inPosition")
         program.enableVertexAttribute(posAttribute)
         program.pointVertexAttribute(posAttribute, 3, 9 * java.lang.Float.BYTES, 0)
 
-        val colAttribute = program.getAttributeLocation("color")
+        val colAttribute = program.getAttributeLocation("inColor")
         program.enableVertexAttribute(colAttribute)
         program.pointVertexAttribute(colAttribute, 4, 9 * java.lang.Float.BYTES, 3 * java.lang.Float.BYTES)
 
-        val texAttribute = program.getAttributeLocation("texcoord")
+        val texAttribute = program.getAttributeLocation("inTextureCoordinate")
         program.enableVertexAttribute(texAttribute)
         program.pointVertexAttribute(texAttribute, 2, 9 * java.lang.Float.BYTES, 7 * java.lang.Float.BYTES)
     }
