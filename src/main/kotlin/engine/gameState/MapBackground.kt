@@ -48,7 +48,7 @@ class MapBackground {
     }
 
     fun render() {
-        val farBackDropZ = -15000f
+        val farBackDropZ = -400f
 
         dI.textures.getTexture(textureConfigFar.texture).bind()
         dI.renderer.drawShape(textureConfigFar.gpuBufferData, offset, 0f,

@@ -3,18 +3,18 @@ package display.graphic
 import dI
 import display.text.Font
 import display.text.TextJustify
-import input.CameraView
 import org.jbox2d.common.Vec2
-import org.lwjgl.opengl.GL11.*
-import org.lwjgl.opengl.GL15.GL_ARRAY_BUFFER
-import org.lwjgl.opengl.GL15.GL_DYNAMIC_DRAW
+import org.joml.Matrix4f
+import org.lwjgl.opengl.GL15.*
 import org.lwjgl.opengl.GL20.GL_FRAGMENT_SHADER
 import org.lwjgl.opengl.GL20.GL_VERTEX_SHADER
 import org.lwjgl.system.MemoryUtil
-import utility.Common
+import utility.Common.Pi
+import utility.Common.Pi2
+import utility.Common.degreeToRadian
 import utility.Common.getSafePath
+import utility.Common.radianToDegree
 import utility.Common.vectorUnit
-import utility.math.Matrix4f
 import java.awt.FontFormatException
 import java.io.FileInputStream
 import java.io.IOException
@@ -36,6 +36,8 @@ class Renderer {
     private val vertexDimensionCount = 9
     private val cameraView = dI.cameraView
 
+    lateinit var projectionGameWorld: Matrix4f
+
     // Coordinate system is expected cartesian.
     // y-value increases to top of screen, x-value increases to right of screen
     fun init() {
@@ -43,6 +45,8 @@ class Renderer {
 
         glEnable(GL_BLEND)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+//        glEnable(GL_CULL_FACE)
+//        glDepthFunc(GL_LESS)
 
         font = try {
             val fontPath = getSafePath("./fonts/ALBMT___.TTF")
@@ -56,6 +60,13 @@ class Renderer {
             Logger.getLogger(Renderer::class.java.name).log(Level.CONFIG, null, ex)
             Font()
         }
+
+        val widthSide = cameraView.windowWidth * .5f
+        val heightSide = cameraView.windowHeight * .5f
+        val aspectRatio = widthSide / heightSide
+        projectionGameWorld = Matrix4f()
+            .perspective(degreeToRadian * 70f, aspectRatio, .001f, 100f)
+            .transpose()
     }
 
     fun clear() = glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
@@ -184,19 +195,27 @@ class Renderer {
         useCamera: Boolean,
         snipRegion: SnipRegion?
     ) {
-        //        val uniTex = program!!.getUniformLocation("texImage")
-        //        program!!.setUniform(uniTex, 0)
-        val model = Matrix4f.translate(offset.x, offset.y, z)
-            .multiply(Matrix4f.rotate(h * Common.radianToDegree, 0f, 0f, 1f))
-            .multiply(Matrix4f.scale(scale.x, scale.y, 1f))
+        val time = System.nanoTime().rem(10000000000f).div(10000000000f)
+
+        val model = Matrix4f()
+            .translate(offset.x, offset.y, z)
+            .rotate(h, .5f, .7f, 1f)
+            .scale(scale.x, scale.y, 1f)
+            .transpose()
         val uniModel = program.getUniformLocation("model")
         program.setUniform(uniModel, model)
 
-        val gameCamera = cameraView.getRenderCamera()
+        val gameCamera = cameraView.renderCamera
         val guiCamera = Matrix4f()
+
         glDisable(GL_SCISSOR_TEST)
+
+
         val view = when (useCamera) {
-            true -> gameCamera
+            true -> {
+                glEnable(GL_DEPTH_TEST)
+                gameCamera
+            }
             false -> {
                 if (snipRegion != null) {
                     glScissor(
@@ -205,6 +224,7 @@ class Renderer {
                         snipRegion.sizeX, snipRegion.sizeY)
                     glEnable(GL_SCISSOR_TEST)
                 }
+                glDisable(GL_DEPTH_TEST)
                 guiCamera
             }
         }
@@ -213,12 +233,14 @@ class Renderer {
 
         val widthSide = cameraView.windowWidth * .5f
         val heightSide = cameraView.windowHeight * .5f
-        val depthSide = 100f
-        val projection = Matrix4f.orthographic(
-            -widthSide, widthSide,
-            -heightSide, heightSide,
-            depthSide, -depthSide)
+        val depthSide = 10f
+        val projection = if (useCamera) projectionGameWorld
+        else Matrix4f()
+            .ortho(-widthSide, widthSide,
+                -heightSide, heightSide,
+                depthSide, -depthSide)
 
+//        val projection = Matrix4f()
         val uniProjection = program.getUniformLocation("projection")
         program.setUniform(uniProjection, projection)
 
@@ -227,6 +249,7 @@ class Renderer {
         //            glViewport(0, 0, window.getWidth(), window.getHeight());
         //            window.setResized(false);
         //        }
+
     }
 
     private fun specifyVertexAttributes() {

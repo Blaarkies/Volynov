@@ -5,12 +5,12 @@ import engine.freeBody.FreeBody
 import engine.freeBody.Vehicle
 import io.reactivex.subjects.PublishSubject
 import org.jbox2d.common.Vec2
+import org.joml.*
 import utility.PidController
 import utility.PidControllerVec2
 import utility.StopWatch
-import utility.math.Matrix4f
+import utility.math.clone
 import kotlin.math.absoluteValue
-import kotlin.math.pow
 
 class CameraView {
 
@@ -23,6 +23,8 @@ class CameraView {
         get() = dI.window.width
     val windowHeightInt: Int
         get() = dI.window.height
+
+    var renderCamera = Matrix4f()
 
     var location = Vec2()
     var z = defaultZoom
@@ -49,6 +51,12 @@ class CameraView {
             isFollowFunctionMode -> processPidInputs(lastFunctionZoom(), lastFunctionLocation())
             else -> processPidInputs(targetZ, targetLocation)
         }
+
+        val rescale = .015f //.002f
+        renderCamera = Matrix4f()
+            .scale(rescale)
+            .translate(-location.x, -location.y, z)
+            .transpose()
     }
 
     private fun processPidInputs(targetZ: Float, targetLocation: Vec2) {
@@ -94,31 +102,45 @@ class CameraView {
     }
 
     fun moveZoom(movement: Float) {
-        targetZ = (targetZ + movement * targetZ.pow(1.2f) * 50f).coerceIn(maxZoom, minZoom)
+        targetZ = (targetZ + movement * 7f).coerceIn(minZoom, maxZoom)
     }
 
     fun reset() {
         targetLocation = Vec2()
-        targetZ = .05f
+        targetZ = defaultZoom
         targetVelocity = Vec2()
         targetVelocityAverage = Vec2()
         stopWatch.reset()
         isFollowFunctionMode = false
     }
 
-    fun getRenderCamera(): Matrix4f {
-        val zoomScale = 1f / z
-        return Matrix4f.scale(zoomScale, zoomScale, 1f)
-            .multiply(Matrix4f.translate(-location.x, -location.y, 0f))
-    }
-
     fun getScreenLocation(cursorLocation: Vec2): Vec2 = cursorLocation
         .sub(Vec2(windowWidth, windowHeight).mul(.5f))
         .also { it.y *= -1f }
 
-    fun getWorldLocation(screenLocation: Vec2): Vec2 = getScreenLocation(screenLocation).mul(z).add(location)
+    fun getWorldLocation(pixelLocation: Vec2): Vec2 {
+        val view = renderCamera.clone().transpose()
+        val projection = dI.renderer.projectionGameWorld.clone().transpose()
+        val adj = pixelLocation.let { Vec2(it.x, windowHeight - it.y) }
 
-    fun getGuiLocation(worldLocation: Vec2): Vec2 = worldLocation.sub(location).mul(1f / z)
+        val getOrigin = { Vector3f(location.x, location.y, -z) }
+        val origin = getOrigin()
+        val direction = Vector3f()
+        projection.mul(view)
+            .unprojectRay(adj.x, adj.y, intArrayOf(0, 0, windowWidthInt, windowHeightInt), origin, direction)
+
+        getOrigin().also { origin.set(it.x, it.y, it.z) }
+        val ray = Rayf(origin, direction)
+        val plane = Planef(Vector3f(0f, 0f, 0f), Vector3f(0f, 0f, 1f))
+        val t = Intersectionf.intersectRayPlane(ray, plane, .01f)
+
+        val hit = Vec2(ray.oX, ray.oY).add(Vec2(ray.dX, ray.dY).mul(t))
+        return hit
+    }
+
+    fun getGuiLocation(worldLocation: Vec2): Vec2 {
+        return worldLocation.sub(location).mul(1f / z)
+    }
 
     fun checkCameraEvent() {
         val otherWarhead = dI.gameState.warheads.firstOrNull()
@@ -176,9 +198,9 @@ class CameraView {
 
         const val newPortion = .05f
         const val oldPortion = 1f - newPortion
-        const val defaultZoom = .05f
-        const val maxZoom = .01f
-        const val minZoom = .15f
+        const val defaultZoom = -75f
+        const val maxZoom = -10f
+        const val minZoom = -100f
 
     }
 

@@ -28,7 +28,9 @@ import utility.Common.vectorUnit
 import utility.StopWatch
 import java.util.concurrent.TimeUnit
 import kotlin.concurrent.thread
+import kotlin.math.absoluteValue
 import kotlin.math.ceil
+import kotlin.math.pow
 import kotlin.math.roundToInt
 
 class GamePhaseHandler {
@@ -476,7 +478,7 @@ class GamePhaseHandler {
         if (guiController.locationIsGui(screenLocation)) {
             guiController.checkScroll(event.movement, screenLocation)
         } else {
-            camera.moveZoom(event.movement.y * -.005f)
+            camera.moveZoom(event.movement.y)
             guiController.update()
         }
     }
@@ -626,7 +628,9 @@ class GamePhaseHandler {
             val distanceCalculator = DistanceCalculator()
             event.subscribe {
                 val movement = distanceCalculator.getLastDistance(it.toScreen().location)
-                camera.moveLocation(movement.mulLocal(-camera.z))
+                camera.moveLocation(
+                    movement.mulLocal(-.1f * (100f / camera.z).absoluteValue.pow(-.1f))
+                )
             }
         }
     }
