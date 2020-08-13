@@ -20,6 +20,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.3")
     implementation("io.reactivex.rxjava2:rxkotlin:2.4.0")
     implementation("org.jbox2d:jbox2d-library:2.2.1.1")
+    implementation("org.joml:joml:1.9.25")
 
     testImplementation("org.junit.jupiter:junit-jupiter:5.5.2")
     testImplementation("io.mockk:mockk:1.10.0")
