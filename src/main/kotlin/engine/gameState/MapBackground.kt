@@ -3,9 +3,8 @@ package engine.gameState
 import dI
 import display.draw.TextureConfig
 import display.draw.TextureEnum
-import display.graphic.BasicShapes
+import display.graphic.vertex.BasicShapes
 import org.jbox2d.common.Vec2
-import utility.Common.makeVec2
 import utility.Common.vectorUnit
 
 class MapBackground {

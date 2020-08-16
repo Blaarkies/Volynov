@@ -102,7 +102,7 @@ class CameraView {
     }
 
     fun moveZoom(movement: Float) {
-        targetZ = (targetZ + movement * 7f).coerceIn(minZoom, maxZoom)
+        targetZ = (targetZ + movement * 2f).coerceIn(minZoom, maxZoom)
     }
 
     fun reset() {
@@ -198,9 +198,9 @@ class CameraView {
 
         const val newPortion = .05f
         const val oldPortion = 1f - newPortion
-        const val defaultZoom = -75f
-        const val maxZoom = -10f
-        const val minZoom = -100f
+        const val defaultZoom = -15f
+        const val maxZoom = -2f
+        const val minZoom = -20f
 
     }
 

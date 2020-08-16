@@ -3,7 +3,7 @@ package display.gui.base
 import dI
 import display.draw.Drawer
 import display.draw.TextureEnum
-import display.graphic.BasicShapes
+import display.graphic.vertex.BasicShapes
 import display.graphic.Color
 import display.graphic.SnipRegion
 

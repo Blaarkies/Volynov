@@ -3,15 +3,12 @@ package engine.freeBody
 import dI
 import display.draw.TextureConfig
 import display.draw.TextureEnum
-import display.graphic.BasicShapes
+import display.graphic.vertex.BasicShapes
 import display.graphic.Color
 import engine.gameState.GameState
 import engine.motion.Director
-import engine.motion.Director.getDirection
 import game.GamePlayer
 import game.GamePlayerType
-import io.reactivex.Observable
-import io.reactivex.Observable.empty
 import io.reactivex.Observable.just
 import org.jbox2d.collision.shapes.PolygonShape
 import org.jbox2d.common.Vec2
@@ -23,7 +20,6 @@ import utility.Common.Pi
 import utility.Common.makeVec2Circle
 import utility.PidController
 import java.util.concurrent.TimeUnit
-import kotlin.math.PI
 import kotlin.math.absoluteValue
 import kotlin.math.sqrt
 

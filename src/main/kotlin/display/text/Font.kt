@@ -1,6 +1,7 @@
 package display.text
 
 import display.graphic.*
+import display.graphic.vertex.BasicShapes
 import org.jbox2d.common.Vec2
 import org.lwjgl.system.MemoryUtil
 import java.awt.Font

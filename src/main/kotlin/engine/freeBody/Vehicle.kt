@@ -4,7 +4,7 @@ import dI
 import display.draw.TextureConfig
 import display.draw.TextureEnum
 import display.events.MouseButtonEvent
-import display.graphic.BasicShapes
+import display.graphic.vertex.BasicShapes
 import display.graphic.Color
 import engine.gameState.GameState
 import engine.gameState.GameState.Companion.getContactBodies

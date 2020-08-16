@@ -5,6 +5,7 @@ import display.text.Font
 import display.text.TextJustify
 import org.jbox2d.common.Vec2
 import org.joml.Matrix4f
+import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL15.*
 import org.lwjgl.opengl.GL20.GL_FRAGMENT_SHADER
 import org.lwjgl.opengl.GL20.GL_VERTEX_SHADER
@@ -45,8 +46,8 @@ class Renderer {
 
         glEnable(GL_BLEND)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-//        glEnable(GL_CULL_FACE)
-//        glDepthFunc(GL_LESS)
+        //        glEnable(GL_CULL_FACE)
+        //        glDepthFunc(GL_LESS)
 
         font = try {
             val fontPath = getSafePath("./fonts/ALBMT___.TTF")
@@ -65,7 +66,7 @@ class Renderer {
         val heightSide = cameraView.windowHeight * .5f
         val aspectRatio = widthSide / heightSide
         projectionGameWorld = Matrix4f()
-            .perspective(degreeToRadian * 70f, aspectRatio, .001f, 100f)
+            .perspective(degreeToRadian * 140f, aspectRatio, .001f, 100f)
             .transpose()
     }
 
@@ -132,6 +133,16 @@ class Renderer {
         snipRegion: SnipRegion? = null
     ) = drawEntity(data, offset, h, scale, GL_TRIANGLE_STRIP, useCamera, snipRegion)
 
+    fun drawMesh(
+        data: FloatArray,
+        offset: Vec2 = Vec2(),
+        h: Float = 0f,
+        scale: Vec2 = vectorUnit,
+        useCamera: Boolean = true,
+        snipRegion: SnipRegion? = null,
+        z: Float = 0f
+    ) = drawEntity(data, offset, h, scale, GL_TRIANGLES, useCamera, snipRegion, z)
+
     private fun drawEntity(
         data: FloatArray,
         offset: Vec2,
@@ -168,7 +179,7 @@ class Renderer {
     private fun setupShaderProgram() {
         vao = VertexArrayObject().bind()
         vbo = VertexBufferObject().bind(GL_ARRAY_BUFFER)
-        vertices = MemoryUtil.memAllocFloat(4096 * 2)
+        vertices = MemoryUtil.memAllocFloat(4096 * 2 * 64)
         /* Upload null data to allocate storage for the VBO */
         val size = (vertices.capacity() * java.lang.Float.BYTES).toLong()
         vbo.uploadData(GL_ARRAY_BUFFER, size, GL_STATIC_DRAW)
@@ -195,11 +206,9 @@ class Renderer {
         useCamera: Boolean,
         snipRegion: SnipRegion?
     ) {
-        val time = System.nanoTime().rem(10000000000f).div(10000000000f)
-
         val model = Matrix4f()
             .translate(offset.x, offset.y, z)
-            .rotate(h, .5f, .7f, 1f)
+            .rotate(h, 0f, 0f, 1f)
             .scale(scale.x, scale.y, 1f)
             .transpose()
         val uniModel = program.getUniformLocation("model")
@@ -209,7 +218,6 @@ class Renderer {
         val guiCamera = Matrix4f()
 
         glDisable(GL_SCISSOR_TEST)
-
 
         val view = when (useCamera) {
             true -> {
@@ -235,16 +243,11 @@ class Renderer {
         val heightSide = cameraView.windowHeight * .5f
         val depthSide = 10f
         val projection = if (useCamera) projectionGameWorld
-        else Matrix4f()
-            .ortho(-widthSide, widthSide,
-                -heightSide, heightSide,
-                depthSide, -depthSide)
+        else Matrix4f().ortho(-widthSide, widthSide, -heightSide, heightSide, depthSide, -depthSide)
 
-//        val projection = Matrix4f()
         val uniProjection = program.getUniformLocation("projection")
         program.setUniform(uniProjection, projection)
 
-        //        glEnable(GL_DEPTH_TEST)
         //        if (dI.window.isResized() ) {
         //            glViewport(0, 0, window.getWidth(), window.getHeight());
         //            window.setResized(false);
