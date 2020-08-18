@@ -206,7 +206,7 @@ class CameraView {
         const val newPortion = .05f
         const val oldPortion = 1f - newPortion
         const val defaultZoom = -60f
-        const val maxZoom = -25f
+        const val maxZoom = -20f
         const val minZoom = -90f
 
     }

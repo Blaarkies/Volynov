@@ -1,6 +1,7 @@
 package display.draw
 
 import dI
+import display.graphic.CameraType
 import display.graphic.Color
 import display.graphic.vertex.BasicShapes
 import display.text.TextJustify
@@ -191,7 +192,7 @@ class Drawer {
     }
 
     fun drawWarheadTrajectory(prediction: TrajectoryPrediction) {
-        val color = Color("#A0505080")
+        val color = Color("#A05050A0")
         prediction.nearbyFreeBodies.forEach {
             it.model.gpuData = it.model.gpuData.toList().chunked(12)
                 .flatMap { it.subList(0,6) +
@@ -199,6 +200,14 @@ class Drawer {
                         it.subList(10,12) }
                 .toFloatArray()
             drawFreeBody(it)
+            textures.getTexture(it.model.texture).bind()
+            renderer.drawMesh(
+                it.model.gpuData,
+                it.worldBody.position.toVector3f(),
+                it.worldBody.angle,
+                Vector3f(it.radius),
+                CameraType.UNIVERSE_SPECTRAL
+            )
         }
 
         val data = getLineTextured(prediction.warheadPath.flatMap { it.toList() },

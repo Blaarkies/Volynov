@@ -144,9 +144,9 @@ class Renderer {
         offset: Vector3f = Vector3f(),
         h: Float = 0f,
         scale: Vector3f = Vector3f(1f),
-        useCamera: Boolean = true,
+        cameraType: CameraType = CameraType.UNIVERSE,
         snipRegion: SnipRegion? = null
-    ) = drawEntity(data, offset, h, scale, GL_TRIANGLES, CameraType.UNIVERSE, snipRegion)
+    ) = drawEntity(data, offset, h, scale, GL_TRIANGLES, cameraType, snipRegion)
 
     private fun drawEntity(
         data: FloatArray,
@@ -269,16 +269,19 @@ class Renderer {
             .let {
                 val duration = 30f * 1000f
                 val txy = it.rem(duration).div(duration)
-                val tz = it.rem(duration * 1.9f).div(duration * 1.9f)
+                val tz = it.rem(duration * .9f).div(duration * .9f)
                 makeVec2Circle(Pi2 * -txy).mul(20f)
-                    .add(dI.gameState.mapBorder!!.worldBody.position)
-                    .toVector3f(-200f * sin(Pi * tz) + 20f)
+                    .add(dI.gameState.mapBorder?.worldBody?.position ?: Vec2())
+                    .toVector3f(40f * sin(Pi * tz) - 20f)
             }
         val uniLightPosition = program.getUniformLocation("lightPosition")
         program.setUniform(uniLightPosition, lampPosition)
 
         val uniLightColor = program.getUniformLocation("lightColor")
         program.setUniform(uniLightColor, Vector3f(1f, 1f, 1f))
+
+        val uniCameraPosition = program.getUniformLocation("viewPos")
+        program.setUniform(uniCameraPosition, cameraView.location.toVector3f(cameraView.z))
     }
 
     private fun specifyVertexAttributes() {

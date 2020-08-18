@@ -11,20 +11,27 @@ out vec4 fragmentColor;
 
 uniform sampler2D textureImage;
 uniform vec3 lightColor;
+uniform vec3 viewPos;
 
 void main() {
     vec4 objectColor = out_vertexColor
     * texture(textureImage, out_textureCoordinate);
 
-    if (out_ambient.x > .99) { // Object that do not yet support diffuse light
+    if (out_ambient.x > .99) { // Object that do not yet support diffuse/specular light
         fragmentColor = objectColor;
         return;
     }
 
-    vec3 lightDir = normalize(out_fragmentPosition - out_lightPosition);
-    vec3 diffuse = max(dot(out_normal, lightDir), 0) * lightColor;
+    vec3 lightDirection = normalize(out_lightPosition - out_fragmentPosition);
+    vec3 diffuse = max(dot(out_normal, lightDirection), 0) * lightColor;
 
-    vec4 ambientDiffuse = vec4(out_ambient + diffuse, 1);
+    float specularStrength = .6;
+    vec3 viewDirection = normalize(viewPos - out_fragmentPosition);
+    vec3 reflectDirection = reflect(-lightDirection, out_normal);
+    float specularAmount = pow(max(dot(viewDirection, reflectDirection), 0), 32);
+    vec3 specularColor = specularStrength * specularAmount * lightColor;
 
-    fragmentColor = ambientDiffuse * objectColor;
+    vec4 ambientDiffuseSpecular = vec4(out_ambient + diffuse + specularColor, 1);
+
+    fragmentColor = ambientDiffuseSpecular * objectColor;
 }
