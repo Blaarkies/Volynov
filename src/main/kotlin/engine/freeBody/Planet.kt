@@ -1,8 +1,10 @@
 package engine.freeBody
 
+import display.draw.Model
 import display.draw.TextureConfig
 import display.draw.TextureEnum
-import display.graphic.BasicShapes
+import display.graphic.vertex.BasicShapes
+import display.graphic.vertex.BasicSurfaces
 import org.jbox2d.collision.shapes.CircleShape
 import org.jbox2d.common.Vec2
 import org.jbox2d.dynamics.BodyType
@@ -44,6 +46,11 @@ class Planet(
                 .updateGpuBufferData()
 
         planets.add(this)
+
+        model = Model(
+            triangles = BasicSurfaces.getHemisphere(radius),
+            texture = texture
+        )
     }
 
     fun clone(planets: MutableList<Planet>, world: World): Planet {

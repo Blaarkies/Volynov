@@ -1,7 +1,6 @@
 package game
 
 import dI
-import display.events.DistanceCalculator
 import display.events.KeyboardEvent
 import display.events.MouseButtonEvent
 import display.events.MouseScrollEvent
@@ -16,11 +15,11 @@ import engine.shields.VehicleShield
 import game.GamePhase.*
 import game.fuel.Fuel
 import game.fuel.FuelType
+import input.CameraView
 import io.reactivex.Observable
 import io.reactivex.subjects.PublishSubject
 import org.jbox2d.common.Vec2
 import org.lwjgl.glfw.GLFW
-import utility.Common
 import utility.Common.getTimingFunctionEaseIn
 import utility.Common.getTimingFunctionEaseOut
 import utility.Common.pressAndHoldAction
@@ -182,7 +181,8 @@ class GamePhaseHandler {
             vectorUnit.mul(0.1f), debugColor, TextJustify.LEFT, false)
 
         drawer.renderer.drawText(
-            "GameTime ${gameState.tickTime.div(100f).roundToInt().div(10f)}s / PhaseTime ${stopWatch.elapsedTime.div(100f)
+            "GameTime ${gameState.tickTime.div(100f).roundToInt().div(10f)}s / PhaseTime ${stopWatch.elapsedTime.div(
+                100f)
                 .roundToInt().div(10f)}s",
             Vec2(5f - camera.windowWidth * .5f, -30f + camera.windowHeight * .5f),
             vectorUnit.mul(0.1f), debugColor, TextJustify.LEFT, false)
@@ -196,12 +196,13 @@ class GamePhaseHandler {
 
     private fun handleIntro() {
         val interpolationStep = stopWatch.elapsedTime / introDuration
-        camera.setNewZoom(.05f + (.1f - .05f) * getTimingFunctionEaseOut(interpolationStep))
+        camera.setNewZoom(CameraView.defaultZoom -
+                (CameraView.defaultZoom - CameraView.minZoom) * getTimingFunctionEaseOut(interpolationStep))
 
         when {
             isTransitioning -> tickGameUnpausing()
             stopWatch.elapsedTime > introDuration -> {
-                camera.setNewZoom(.05f)
+                camera.setNewZoom(CameraView.defaultZoom)
                 playerSelectsShield()
             }
             stopWatch.elapsedTime > (introDuration - introTimeEnd) -> tickGamePausing(
@@ -218,14 +219,16 @@ class GamePhaseHandler {
         }
         when {
             isTransitioning -> tickGameUnpausing(quickTimeStart)
-            stopWatch.elapsedTime > maxTurnDuration || roundEndsEarly() -> startNewPhase(PLAYERS_TURN_FIRED_WAIT_STABILIZE)
+            stopWatch.elapsedTime > maxTurnDuration || roundEndsEarly() -> startNewPhase(
+                PLAYERS_TURN_FIRED_WAIT_STABILIZE)
             else -> tickClockNormalSpeed()
         }
     }
 
-    private fun endOfJump() = (stopWatch.elapsedTime > maxTurnDuration && gameState.playerOnTurn!!.vehicle!!.fuel!!.amount < .1f)
-            || stopWatch.elapsedTime > maxJumpDuration
-            || gameState.playerOnTurn!!.vehicle!!.hasCollided
+    private fun endOfJump() =
+        (stopWatch.elapsedTime > maxTurnDuration && gameState.playerOnTurn!!.vehicle!!.fuel!!.amount < .1f)
+                || stopWatch.elapsedTime > maxJumpDuration
+                || gameState.playerOnTurn!!.vehicle!!.hasCollided
 
     private fun handlePlayerJumped() {
         guiController.update()
@@ -476,7 +479,7 @@ class GamePhaseHandler {
         if (guiController.locationIsGui(screenLocation)) {
             guiController.checkScroll(event.movement, screenLocation)
         } else {
-            camera.moveZoom(event.movement.y * -.005f)
+            camera.moveZoom(event.movement.y)
             guiController.update()
         }
     }
@@ -623,10 +626,13 @@ class GamePhaseHandler {
         if (guiController.locationIsGui(screenLocation)) {
 
         } else {
-            val distanceCalculator = DistanceCalculator()
+            var lastLocation = startEvent.location
             event.subscribe {
-                val movement = distanceCalculator.getLastDistance(it.toScreen().location)
-                camera.moveLocation(movement.mulLocal(-camera.z))
+                val newLocation = it.location
+                val movement = camera.getWorldLocation(lastLocation)
+                    .sub(camera.getWorldLocation(newLocation))
+                camera.moveLocation(movement)
+                lastLocation = newLocation
             }
         }
     }

@@ -1,5 +1,6 @@
 package engine.freeBody
 
+import display.draw.Model
 import display.draw.TextureConfig
 import engine.motion.Motion
 import org.jbox2d.collision.shapes.Shape
@@ -14,6 +15,7 @@ open class FreeBody(val id: String, var radius: Float) {
     lateinit var worldBody: Body
     val motion = Motion()
     lateinit var textureConfig: TextureConfig
+    lateinit var model: Model
 
     fun knock(momentum: Float, direction: Float) {
         worldBody.applyLinearImpulse(makeVec2Circle(direction).mul(momentum / 9.81f), worldBody.position)

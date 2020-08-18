@@ -3,9 +3,8 @@ package engine.gameState
 import dI
 import display.draw.TextureConfig
 import display.draw.TextureEnum
-import display.graphic.BasicShapes
+import display.graphic.vertex.BasicShapes
 import org.jbox2d.common.Vec2
-import utility.Common.makeVec2
 import utility.Common.vectorUnit
 
 class MapBackground {
@@ -16,7 +15,7 @@ class MapBackground {
     private var textureConfigFar: TextureConfig
 
     init {
-        scale.mulLocal(1000f)
+        scale.mulLocal(10000f)
         val (width, height) = listOf(2f, 1f)
         val tilingFactor = 50f
 
@@ -26,6 +25,7 @@ class MapBackground {
                 it.gpuBufferData = it.chunkedVertices.flatMap { (x, y) ->
                     listOf(
                         x * width, y * height, 0f,
+                        0f, 0f, -1f,
                         it.color.red, it.color.green, it.color.blue, it.color.alpha,
                         (x * .5f - .5f) * tilingFactor,
                         (y * .5f - .5f) * tilingFactor
@@ -38,6 +38,7 @@ class MapBackground {
                 it.gpuBufferData = it.chunkedVertices.flatMap { (x, y) ->
                     listOf(
                         x * width, y * height, 0f,
+                        0f, 0f, -1f,
                         it.color.red, it.color.green, it.color.blue, it.color.alpha,
                         (x * .5f - .5f) * tilingFactor,
                         (y * .5f - .5f) * tilingFactor
@@ -48,19 +49,15 @@ class MapBackground {
     }
 
     fun render() {
+        val farBackDropZ = -400f
+
         dI.textures.getTexture(textureConfigFar.texture).bind()
-        dI.renderer.drawShape(
-            textureConfigFar.gpuBufferData,
-            offset.add(dI.cameraView.location.mul(.8f)),
-            0f,
-            scale)
+        dI.renderer.drawShape(textureConfigFar.gpuBufferData, offset, 0f,
+            scale, z = farBackDropZ)
 
         dI.textures.getTexture(textureConfigNear.texture).bind()
-        dI.renderer.drawShape(
-            textureConfigNear.gpuBufferData,
-            offset.add(dI.cameraView.location.mul(.6f)),
-            1f,
-            scale.mul(.91f))
+        dI.renderer.drawShape(textureConfigNear.gpuBufferData, offset, 2f,
+            scale.mul(.973f), z = farBackDropZ * .7f)
     }
 
 }

@@ -1,6 +1,7 @@
 package display.text
 
 import display.graphic.*
+import display.graphic.vertex.BasicShapes
 import org.jbox2d.common.Vec2
 import org.lwjgl.system.MemoryUtil
 import java.awt.Font
@@ -280,6 +281,7 @@ class Font(font: Font = Font(MONOSPACED, BOLD, 32), antiAlias: Boolean = true) {
             .flatMap { (x, y) ->
                 listOf(
                     x * glyph.width, y * glyph.height, 0f,
+                    0f, 0f, -1f,
                     color.red, color.green, color.blue, color.alpha,
                     (x * .5f - 0.5f) * glyphScale.x + glyphOffset.x * debug.x,
                     (y * .5f - 0.5f) * glyphScale.y + glyphOffset.y * debug.y

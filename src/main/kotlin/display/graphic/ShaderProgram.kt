@@ -1,9 +1,10 @@
 package display.graphic
 
+import org.joml.*
 import org.lwjgl.opengl.GL20.*
 import org.lwjgl.opengl.GL30.glBindFragDataLocation
 import org.lwjgl.system.MemoryStack
-import utility.math.*
+import utility.math.toBuffer
 
 class ShaderProgram {
 

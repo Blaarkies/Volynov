@@ -1,14 +1,15 @@
-package display.graphic
+package display.graphic.vertex
 
 import engine.motion.Director
 import org.jbox2d.common.Vec2
-import utility.Common.Pi2
-import kotlin.math.PI
+import utility.Common
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
 
 object BasicShapes {
+
+    val polygon3 = getPolygonVertices(3)
 
     val polygon4 = getPolygonVertices(4)
 
@@ -36,10 +37,10 @@ object BasicShapes {
         .let { it.subList(0, 1) + listOf(listOf(0f, 1.05f)) + it.subList(1, 4) }
         .flatten()
 
-    private fun getPolygonVertices(corners: Int, rotate: Double = 1f.div(corners).toDouble()): List<Float> =
+    private fun getPolygonVertices(corners: Int, rotate: Float = 1f.div(corners)): List<Float> =
         (0 until corners).flatMap {
-            val t = Pi2 * (it / corners.toFloat()) + PI * rotate
-            listOf(cos(t).toFloat(), sin(t).toFloat())
+            val t = Common.Pi2 * (it.toFloat() / corners.toFloat()) + Common.Pi * rotate
+            listOf(cos(t), sin(t))
         }
 
     private fun getSpikedPolygon(corners: Int, smoothness: Float = .6f): List<Float> {
@@ -163,4 +164,5 @@ object BasicShapes {
                 )
             }
     }
+
 }

@@ -2,7 +2,7 @@ package engine.freeBody
 
 import display.draw.TextureConfig
 import display.draw.TextureEnum
-import display.graphic.BasicShapes
+import display.graphic.vertex.BasicShapes
 import display.graphic.Color
 import org.jbox2d.collision.shapes.PolygonShape
 import org.jbox2d.dynamics.Body

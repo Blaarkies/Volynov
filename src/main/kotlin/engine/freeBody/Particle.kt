@@ -2,7 +2,7 @@ package engine.freeBody
 
 import display.draw.TextureConfig
 import display.draw.TextureEnum
-import display.graphic.BasicShapes
+import display.graphic.vertex.BasicShapes
 import display.graphic.Color
 import engine.motion.Director.getDirection
 import org.jbox2d.collision.shapes.CircleShape
@@ -12,8 +12,6 @@ import org.jbox2d.dynamics.BodyType
 import org.jbox2d.dynamics.World
 import utility.Common
 import utility.Common.Pi
-import utility.Common.Pi2
-import kotlin.math.PI
 
 class Particle(val id: String,
                particles: MutableList<Particle>,

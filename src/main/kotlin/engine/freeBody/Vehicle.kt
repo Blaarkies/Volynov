@@ -1,11 +1,13 @@
 package engine.freeBody
 
 import dI
+import display.draw.Model
 import display.draw.TextureConfig
 import display.draw.TextureEnum
 import display.events.MouseButtonEvent
-import display.graphic.BasicShapes
+import display.graphic.vertex.BasicShapes
 import display.graphic.Color
+import display.graphic.vertex.BasicSurfaces
 import engine.gameState.GameState
 import engine.gameState.GameState.Companion.getContactBodies
 import engine.shields.VehicleShield
@@ -78,6 +80,11 @@ class Vehicle(
 
         player.vehicle = this
         vehicles.add(this)
+
+        model = Model(
+            triangles = BasicSurfaces.getHemisphere(radius),
+            texture = texture
+        )
     }
 
     private val unsubscribe = PublishSubject.create<Boolean>()

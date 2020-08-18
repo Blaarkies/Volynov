@@ -2,10 +2,10 @@ package game
 
 import display.draw.TextureEnum
 import display.graphic.Color
-import engine.gameState.GameState
 import engine.freeBody.MapBorder
 import engine.freeBody.Planet
 import engine.freeBody.Vehicle
+import engine.gameState.GameState
 import engine.motion.Director
 import engine.physics.Gravity
 import engine.physics.LocationVelocity
@@ -17,7 +17,6 @@ import utility.Common.Pi2
 import utility.Common.getRandomMixed
 import utility.Common.getRandomSign
 import utility.Common.makeVec2Circle
-import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.pow
 import kotlin.math.sin
