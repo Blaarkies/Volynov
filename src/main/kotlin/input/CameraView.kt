@@ -139,7 +139,14 @@ class CameraView {
     }
 
     fun getGuiLocation(worldLocation: Vec2): Vec2 {
-        return worldLocation.sub(location).mul(1f / z)
+        val view = renderCamera.clone().transpose()
+        val projection = dI.renderer.projectionGameWorld.clone().transpose()
+
+        val windowLocation = projection.mul(view).project(
+            worldLocation.x, worldLocation.y, 0f,
+            intArrayOf(0, 0, windowWidthInt, windowHeightInt), Vector3f())
+
+        return getScreenLocation(Vec2(windowLocation.x, windowHeight - windowLocation.y))
     }
 
     fun checkCameraEvent() {
@@ -181,7 +188,7 @@ class CameraView {
             val maxDistance = damagedVehicles
                 .map { it.worldBody.position.sub(cameraCenter).length() }
                 .max() ?: 1f
-            maxDistance.times(.003f).coerceIn(maxZoom * .9f + minZoom * .1f, minZoom)
+            maxDistance.times(.003f).coerceIn(minZoom, maxZoom * .9f + minZoom * .1f)
         }
 
         followFunctionLocation(averageLocation, minimumZoom)
