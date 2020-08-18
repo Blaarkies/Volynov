@@ -3,24 +3,38 @@ package display.draw
 import dI
 import display.graphic.Color
 import display.graphic.vertex.BasicShapes
-import display.graphic.vertex.BasicSurfaces
 import display.text.TextJustify
-import engine.freeBody.FreeBody
-import engine.freeBody.MapBorder
-import engine.freeBody.Particle
-import engine.freeBody.Vehicle
+import engine.freeBody.*
 import engine.physics.CellLocation
 import engine.physics.GravityCell
 import game.GamePlayer
 import game.TrajectoryPrediction
 import org.jbox2d.common.Vec2
-import utility.*
+import org.joml.Vector3f
 import utility.Common.getTimingFunctionEaseIn
 import utility.Common.makeVec2
 import utility.Common.makeVec2Circle
 import utility.Common.vectorUnit
+import utility.toList
+import utility.toVector3f
 import java.util.*
-import kotlin.math.pow
+import kotlin.collections.List
+import kotlin.collections.chunked
+import kotlin.collections.component1
+import kotlin.collections.component2
+import kotlin.collections.flatMap
+import kotlin.collections.flatten
+import kotlin.collections.forEach
+import kotlin.collections.lastIndex
+import kotlin.collections.listOf
+import kotlin.collections.map
+import kotlin.collections.maxBy
+import kotlin.collections.plus
+import kotlin.collections.reversed
+import kotlin.collections.toFloatArray
+import kotlin.collections.windowed
+import kotlin.collections.withIndex
+import kotlin.collections.zip
 import kotlin.math.sqrt
 
 class Drawer {
@@ -81,46 +95,23 @@ class Drawer {
     }
 
     fun drawFreeBody(freeBody: FreeBody) {
-        textures.getTexture(freeBody.textureConfig.texture).bind()
-        //        renderer.drawShape(
-        //            freeBody.textureConfig.gpuBufferData,
-        //            freeBody.worldBody.position,
-        //            freeBody.worldBody.angle,
-        //            vectorUnit.mul(freeBody.radius)
-        //        )
-        //        freeBody.textureConfig
-
-        if (freeBody.id != "terra") {
+        if (freeBody !is Planet || freeBody.worldBody.mass < 20f) {
+            textures.getTexture(freeBody.textureConfig.texture).bind()
             renderer.drawShape(
                 freeBody.textureConfig.gpuBufferData,
                 freeBody.worldBody.position,
                 freeBody.worldBody.angle,
-                vectorUnit.mul(freeBody.radius)
+                makeVec2(freeBody.radius)
             )
-            freeBody.textureConfig
             return
         }
 
-        val data = BasicSurfaces.getHemisphere(freeBody.radius)
-            .let { list ->
-                val maxDistance = list.maxBy { it.length() }!!.length()
-                list.map { it.mulClone(1f / maxDistance) }
-            }
-            .flatMap { (x, y, z) ->
-                listOf(
-                    x, y, z,
-                    1f, 1f, 1f, 1f,
-                    (x * .5f - .5f),
-                    (y * .5f - .5f)
-                )
-            }.toFloatArray()
-
-
+        textures.getTexture(freeBody.model.texture).bind()
         renderer.drawMesh(
-            data,
-            freeBody.worldBody.position,
+            freeBody.model.gpuData,
+            freeBody.worldBody.position.toVector3f(),
             freeBody.worldBody.angle,
-            vectorUnit.mul(freeBody.radius)
+            Vector3f(freeBody.radius)
         )
     }
 
@@ -133,6 +124,7 @@ class Drawer {
                 .flatMap { (x, y) ->
                     listOf(
                         x, y, 0f,
+                        0f, 0f, -1f,
                         1f, 1f, 1f, sqrt(cell.totalMass / maxMass) * .9f,
                         (x / 2 - 0.5f), (y / 2 - 0.5f)
                     )
@@ -157,6 +149,7 @@ class Drawer {
         val data = vertices.flatMap {
             listOf(
                 it[0], it[1], 0f,
+                0f, 0f, -1f,
                 1f, 1f, 1f, 1f,
                 (it[0] / 2f - 0.5f) * textureScale.x + textureOffset.x,
                 (it[1] / 2f - 0.5f) * textureScale.y + textureOffset.y
@@ -200,8 +193,11 @@ class Drawer {
     fun drawWarheadTrajectory(prediction: TrajectoryPrediction) {
         val color = Color("#A0505080")
         prediction.nearbyFreeBodies.forEach {
-            it.textureConfig.color = color
-            it.textureConfig.updateGpuBufferData()
+            it.model.gpuData = it.model.gpuData.toList().chunked(12)
+                .flatMap { it.subList(0,6) +
+                        listOf(color.red, color.green, color.blue, color.alpha) +
+                        it.subList(10,12) }
+                .toFloatArray()
             drawFreeBody(it)
         }
 
@@ -245,6 +241,7 @@ class Drawer {
                     val color = endColor * interpolationDistance + startColor * (1f - interpolationDistance)
                     listOf(
                         chunk[0], chunk[1], 0f, /* pos*/
+                        0f, 0f, -1f, /* normal */
                         color.red, color.green, color.blue, color.alpha, /* color*/
                         0f, 0f /* texture*/
                     )
@@ -292,6 +289,7 @@ class Drawer {
 
                     listOf(
                         location[0], location[1], 0f, /* pos*/
+                        0f, 0f, -1f, /* normal */
                         color.red, color.green, color.blue, color.alpha, /* color*/
                         textureX, textureY /* texture*/
                     )

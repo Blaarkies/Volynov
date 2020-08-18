@@ -2,21 +2,40 @@ package display.graphic.vertex
 
 import org.joml.Vector3f
 import utility.*
+import utility.Common.circleArea
+import kotlin.math.absoluteValue
 import kotlin.math.pow
 
 object BasicSurfaces {
 
-    fun getHemisphere(radius: Float): List<Vector3f> {
-        return getDisc().flatMap { it.vertices }
+    fun getHemisphere(radius: Float): List<Triangle> {
+        return getDisc(radius)
+            .also { triangles -> // normalizes 2d scaling
+                val vertices = triangles.flatMap { it.vertices }
+                val maxDistance = vertices.maxBy { it.length() }!!.length()
+                vertices.distinct().forEach {
+                    it.mul(1f / maxDistance)
+                    // apply sphere shape
+                    it.z = (-it.x.pow(2f) - it.y.pow(2f) + 1f).absoluteValue.pow(.5f)
+                }
+            }
     }
 
-    fun getDisc(): List<Triangle> {
-        val baseTri = Triangle()
+    fun getDisc(radius: Float): List<Triangle> {
+        val expectedCountTriangles = circleArea(radius) * 4
+        val actionMap = HashMap<Number, () -> List<Triangle>>()
 
-        val additionalTriangles = getNLevelsOfTriangles(
-            baseTri.sides,
-            5)
-        return listOf(baseTri) + additionalTriangles
+        listOf(10, 28, 64, 136, 280, 568).withIndex()
+            .forEach { (i, count) ->
+                actionMap[count] = {
+                    val baseTri = Triangle()
+                    val additionalTriangles = getNLevelsOfTriangles(baseTri.sides, i + 1)
+                    listOf(baseTri) + additionalTriangles
+                }
+            }
+
+        return actionMap.keys.minBy { it.toFloat().minus(expectedCountTriangles).absoluteValue }
+            .let { actionMap[it]!!.invoke() }
     }
 
     private fun getNLevelsOfTriangles(sides: List<List<Vector3f>>,

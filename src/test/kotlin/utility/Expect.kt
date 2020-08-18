@@ -45,6 +45,21 @@ class Expect(private val value: Any?) {
         }
     }
 
+    fun close(expectedValue: Float, range: Float, message: () -> String = { "" }) {
+        target = expectedValue
+        val minValue = expectedValue - range
+        val maxValue = expectedValue + range
+        assert(
+            (((value as Float) > minValue)
+                    && (value < maxValue))
+                    == !isNot) {
+            "Expected $value " +
+                    "to${if (isNot) " not" else ""} be " +
+                    "in range of [$minValue] to [$maxValue]." +
+                    message()
+        }
+    }
+
     companion object {
         fun expect(value: Any) = Expect(value)
     }

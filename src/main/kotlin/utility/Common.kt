@@ -64,6 +64,8 @@ object Common {
     val vectorUnit
         get() = Vec2(1f, 1f)
 
+    fun circleArea(radius: Float) = Pi * radius.pow(2)
+
     fun makeVec2(list: List<Float>): Vec2 = Vec2(list[0], list[1])
 
     fun makeVec2(x: Number, y: Number): Vec2 = Vec2(x.toFloat(), y.toFloat())
@@ -126,13 +128,14 @@ fun Boolean.toSign(): Float = if (this) 1f else -1f
 fun <E> List<E>.padEnd(): List<E> = this + this.first()
 fun Vec2.lerp(b: Vec2, t: Float): Vec2 = add(b).mul(t)
 fun Vec2.dot(b: Vec2): Float = x * b.x + y * b.y
-
 fun Vec2.normal(b: Vec2): Vec2 {
     val normal = Vec2(-b.y + y, b.x - x)
     normal.normalize()
     return normal
 }
+fun Vec2.toVector3f(z: Float = 0f): Vector3f = Vector3f(x, y, z)
 
+fun Vector3f.toVec2(): Vec2 = Vec2(x, y)
 fun Vector3f.normal2d(b: Vector3f): Vector3f = Vector3f(-b.y + y, b.x - x, 0f).normalize()
 fun Vector3f.clone(): Vector3f = Vector3f(this)
 fun Vector3f.mulClone(factor: Float): Vector3f = this.clone().mul(factor)

@@ -1,10 +1,12 @@
 package engine.freeBody
 
 import dI
+import display.draw.Model
 import display.draw.TextureConfig
 import display.draw.TextureEnum
 import display.graphic.vertex.BasicShapes
 import display.graphic.Color
+import display.graphic.vertex.BasicSurfaces
 import engine.gameState.GameState
 import engine.motion.Director
 import game.GamePlayer
@@ -63,6 +65,11 @@ class Warhead(
 
         firedBy.warheads.add(this)
         warheads.add(this)
+
+        model = Model(
+            triangles = BasicSurfaces.getHemisphere(radius),
+            texture = TextureEnum.metal
+        )
     }
 
     val selfDestructTime = 45000f

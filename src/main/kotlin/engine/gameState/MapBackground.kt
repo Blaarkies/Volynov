@@ -25,6 +25,7 @@ class MapBackground {
                 it.gpuBufferData = it.chunkedVertices.flatMap { (x, y) ->
                     listOf(
                         x * width, y * height, 0f,
+                        0f, 0f, -1f,
                         it.color.red, it.color.green, it.color.blue, it.color.alpha,
                         (x * .5f - .5f) * tilingFactor,
                         (y * .5f - .5f) * tilingFactor
@@ -37,6 +38,7 @@ class MapBackground {
                 it.gpuBufferData = it.chunkedVertices.flatMap { (x, y) ->
                     listOf(
                         x * width, y * height, 0f,
+                        0f, 0f, -1f,
                         it.color.red, it.color.green, it.color.blue, it.color.alpha,
                         (x * .5f - .5f) * tilingFactor,
                         (y * .5f - .5f) * tilingFactor
