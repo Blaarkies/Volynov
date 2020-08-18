@@ -625,12 +625,13 @@ class GamePhaseHandler {
         if (guiController.locationIsGui(screenLocation)) {
 
         } else {
-            val distanceCalculator = DistanceCalculator()
+            var lastLocation = startEvent.location
             event.subscribe {
-                val movement = distanceCalculator.getLastDistance(it.toScreen().location)
-                camera.moveLocation(
-                    movement.mulLocal(-.1f * (100f / camera.z).absoluteValue.pow(-.1f))
-                )
+                val newLocation = it.location
+                val movement = camera.getWorldLocation(lastLocation)
+                    .sub(camera.getWorldLocation(newLocation))
+                camera.moveLocation(movement)
+                lastLocation = newLocation
             }
         }
     }
