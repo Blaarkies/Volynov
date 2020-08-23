@@ -67,6 +67,11 @@ class GamePlayer(
         vehicle?.thrustVehicle(event)
     }
 
+    fun addShield() {
+        vehicle?.addShield(playerAim)
+        playerAim.selectedShield = null
+    }
+
     fun buyItem(name: String, price: Int, gameTime: Float) {
         val floatToPadded = { float: Float -> float.toInt().toString().padStart(2, '0') }
         val minutes = gameTime / (1000 * 60)

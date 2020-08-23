@@ -11,17 +11,20 @@ import engine.freeBody.Vehicle
 import engine.freeBody.Warhead
 import engine.gameState.GameStateSimulator.getNewPrediction
 import engine.motion.Director
-import engine.shields.VehicleShield
+import game.shields.VehicleShield
 import game.GamePhase.*
 import game.fuel.Fuel
 import game.fuel.FuelType
+import game.shields.ForceField
 import input.CameraView
 import io.reactivex.Observable
 import io.reactivex.subjects.PublishSubject
 import org.jbox2d.common.Vec2
 import org.lwjgl.glfw.GLFW
+import utility.Common.getRandomDirection
 import utility.Common.getTimingFunctionEaseIn
 import utility.Common.getTimingFunctionEaseOut
+import utility.Common.makeVec2Circle
 import utility.Common.pressAndHoldAction
 import utility.Common.vectorUnit
 import utility.StopWatch
@@ -119,7 +122,7 @@ class GamePhaseHandler {
                 gameState.gamePlayers.addAll((1..3).map { GamePlayer("Player $it", cash = 1000f) })
                 MapGenerator.populateNewGameMap(gameState)
 
-                gameState.gamePlayers.forEach { it.vehicle?.shield = VehicleShield() }
+                gameState.gamePlayers.forEach { it.vehicle!!.shield = ForceField(it.vehicle!!) }
                 gameState.playerOnTurn = gameState.gamePlayers.first()
 
                 setupNextPlayersFireTurn()
@@ -326,9 +329,11 @@ class GamePhaseHandler {
     }
 
     private fun playerSelectsShield(player: GamePlayer? = null) {
-        player?.vehicle?.shield = VehicleShield()
+        player?.vehicle?.shield = ForceField(player?.vehicle!!)
 
+        // TODO: don't force player to pick a shield, allow no-shield option
         if (gameState.gamePlayers.all { it.vehicle?.shield != null }) {
+            // TODO: instantiate all selected shield
             setupNextPlayersFireTurn()
             return
         }
@@ -380,6 +385,12 @@ class GamePhaseHandler {
     private fun playerJumps(player: GamePlayer) {
         guiController.clear()
 
+        val selectedShield = player.playerAim.selectedShieldDescriptor
+        if (selectedShield != null) {
+            player.buyItem(selectedShield.name, selectedShield.price, gameState.tickTime)
+            player.addShield()
+        }
+
         val selectedFuel = Fuel.descriptor[player.playerAim.selectedFuel] ?: Fuel.descriptor[FuelType.Hydrazine]!!
         player.buyItem(selectedFuel.name, selectedFuel.price, gameState.tickTime)
 
@@ -395,6 +406,12 @@ class GamePhaseHandler {
         // check() {} player has enough funds && in stable position to fire large warheads
         recordLastVehicleHp()
 
+        val selectedShield = player.playerAim.selectedShieldDescriptor
+        if (selectedShield != null) {
+            player.buyItem(selectedShield.name, selectedShield.price, gameState.tickTime)
+            player.addShield()
+        }
+
         player.vehicle?.fireWarhead(gameState, player, "boom small") { warhead -> camera.trackFreeBody(warhead) }
 
         startNewPhase(PLAYERS_TURN_FIRED)
@@ -405,7 +422,9 @@ class GamePhaseHandler {
     }
 
     private fun setNextPlayerOnTurn() {
-        checkNotNull(gameState.playerOnTurn) { "No player is on turn" }
+        checkNotNull(gameState.playerOnTurn) { "No player was on turn" }
+        gameState.playerOnTurn?.vehicle?.shield?.setShieldEndTurn()
+
         val playerOnTurn = gameState.playerOnTurn!!
         val players = gameState.gamePlayers.filter { it.vehicle!!.hitPoints > 0 }
         gameState.playerOnTurn = players[(players.indexOf(playerOnTurn) + 1).rem(players.size)]

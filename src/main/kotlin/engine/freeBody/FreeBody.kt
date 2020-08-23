@@ -3,6 +3,7 @@ package engine.freeBody
 import display.draw.Model
 import display.draw.TextureConfig
 import engine.motion.Motion
+import engine.physics.CollisionBits
 import org.jbox2d.collision.shapes.Shape
 import org.jbox2d.common.Vec2
 import org.jbox2d.dynamics.*
@@ -34,13 +35,17 @@ open class FreeBody(val id: String, var radius: Float) {
             friction: Float,
             restitution: Float,
             world: World,
-            bodyDef: BodyDef
+            bodyDef: BodyDef,
+            categoryBits: Int,
+            maskBits: Int
         ): Body {
             val fixtureDef = FixtureDef().also {
                 it.shape = shapeBox
                 it.density = mass / (Pi * radius.pow(2f))
                 it.friction = friction
                 it.restitution = restitution
+                it.filter.categoryBits = categoryBits
+                it.filter.maskBits = maskBits or CollisionBits.border
             }
 
             return world.createBody(bodyDef)

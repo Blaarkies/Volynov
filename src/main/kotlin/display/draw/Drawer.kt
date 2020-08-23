@@ -19,23 +19,8 @@ import utility.Common.vectorUnit
 import utility.toList
 import utility.toVector3f
 import java.util.*
-import kotlin.collections.List
-import kotlin.collections.chunked
 import kotlin.collections.component1
 import kotlin.collections.component2
-import kotlin.collections.flatMap
-import kotlin.collections.flatten
-import kotlin.collections.forEach
-import kotlin.collections.lastIndex
-import kotlin.collections.listOf
-import kotlin.collections.map
-import kotlin.collections.maxBy
-import kotlin.collections.plus
-import kotlin.collections.reversed
-import kotlin.collections.toFloatArray
-import kotlin.collections.windowed
-import kotlin.collections.withIndex
-import kotlin.collections.zip
 import kotlin.math.sqrt
 
 class Drawer {
@@ -104,6 +89,18 @@ class Drawer {
                 freeBody.worldBody.angle,
                 makeVec2(freeBody.radius)
             )
+
+            if (freeBody is Vehicle && freeBody.shield?.worldBody != null) {
+                val shield = freeBody.shield!!
+                textures.getTexture(shield.textureConfig.texture).bind()
+                renderer.drawShape(
+                    shield.textureConfig.gpuBufferData,
+                    freeBody.worldBody.position,
+                    0f,
+                    makeVec2(shield.radius)
+                )
+            }
+
             return
         }
 
@@ -193,22 +190,30 @@ class Drawer {
 
     fun drawWarheadTrajectory(prediction: TrajectoryPrediction) {
         val color = Color("#A05050A0")
-        prediction.nearbyFreeBodies.forEach {
-            it.model.gpuData = it.model.gpuData.toList().chunked(12)
-                .flatMap { it.subList(0,6) +
-                        listOf(color.red, color.green, color.blue, color.alpha) +
-                        it.subList(10,12) }
-                .toFloatArray()
-            drawFreeBody(it)
-            textures.getTexture(it.model.texture).bind()
-            renderer.drawMesh(
-                it.model.gpuData,
-                it.worldBody.position.toVector3f(),
-                it.worldBody.angle,
-                Vector3f(it.radius),
-                CameraType.UNIVERSE_SPECTRAL
-            )
-        }
+        prediction.nearbyFreeBodies
+            .filter {
+                val realFreeBody = dI.gameState.gravityBodies.find { old -> old.id == it.id }
+                val distanceMoved = realFreeBody!!.worldBody.position.sub(it.worldBody.position).length()
+                distanceMoved > it.radius * .05f
+            }
+            .forEach {
+                it.model.gpuData = it.model.gpuData.toList().chunked(12)
+                    .flatMap {
+                        it.subList(0, 6) +
+                                listOf(color.red, color.green, color.blue, color.alpha) +
+                                it.subList(10, 12)
+                    }
+                    .toFloatArray()
+
+                textures.getTexture(it.model.texture).bind()
+                renderer.drawMesh(
+                    it.model.gpuData,
+                    it.worldBody.position.toVector3f(),
+                    it.worldBody.angle,
+                    Vector3f(it.radius),
+                    CameraType.UNIVERSE_SPECTRAL
+                )
+            }
 
         val data = getLineTextured(prediction.warheadPath.flatMap { it.toList() },
             Color("#02eded99"), Color.TRANSPARENT, .4f, timingFunction = { step -> getTimingFunctionEaseIn(step) })

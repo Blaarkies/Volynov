@@ -9,6 +9,7 @@ import display.graphic.Color
 import display.graphic.vertex.BasicSurfaces
 import engine.gameState.GameState
 import engine.motion.Director
+import engine.physics.CollisionBits
 import game.GamePlayer
 import game.GamePlayerType
 import io.reactivex.Observable.just
@@ -40,7 +41,7 @@ class Warhead(
     radius: Float = .6F,
     restitution: Float = .3f,
     friction: Float = .6f,
-    onCollision: (FreeBody, Body?) -> Unit,
+    onCollision: (self: FreeBody, impacted: Body?) -> Unit,
     val createdAt: Float
 ) : FreeBody(id, radius) {
 
@@ -54,7 +55,12 @@ class Warhead(
         shapeBox.set(vertices, vertices.size)
 
         val bodyDef = createBodyDef(BodyType.DYNAMIC, x, y, h, dx, dy, dh)
-        worldBody = createWorldBody(shapeBox, mass, radius, friction, restitution, world, bodyDef)
+        worldBody = createWorldBody(shapeBox, mass, radius, friction, restitution,
+            world, bodyDef,
+            CollisionBits.warhead,
+            CollisionBits.planetVehicleWarhead
+                    or CollisionBits.shield
+                    or CollisionBits.border)
         worldBody.isBullet = true
         worldBody.userData = this
 
@@ -91,7 +97,7 @@ class Warhead(
         val particle = Particle("1", particles, world, impacted ?: worldBody, worldBody.position,
             radius = 2f, duration = 1000f, createdAt = tickTime)
 
-        checkToDamageVehicles(world, tickTime, vehicles, particle)
+        checkToDamageVehicles(tickTime, vehicles, particle)
         knockFreeBodies(gravityBodies, particle)
         particle.radius = 0f
 
@@ -124,8 +130,7 @@ class Warhead(
             }
     }
 
-    private fun checkToDamageVehicles(world: World,
-                                      tickTime: Float,
+    private fun checkToDamageVehicles(tickTime: Float,
                                       vehicles: MutableList<Vehicle>,
                                       particle: Particle) {
         vehicles.toList().map {
@@ -137,7 +142,7 @@ class Warhead(
                 val damageUnit = (1f - distance / particle.radius).coerceAtLeast(0f)
                     .let { Common.getTimingFunctionEaseOut(it) }
                 val totalDamage = damageUnit * damage
-                vehicle.hitPoints -= totalDamage
+                vehicle.inflictDamage(totalDamage, firedBy)
                 firedBy.scoreDamage(this, totalDamage, vehicle, tickTime)
 
                 if (vehicle.hitPoints <= 0) {

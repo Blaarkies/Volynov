@@ -188,7 +188,7 @@ class CameraView {
             val maxDistance = damagedVehicles
                 .map { it.worldBody.position.sub(cameraCenter).length() }
                 .max() ?: 1f
-            maxDistance.times(.003f).coerceIn(minZoom, maxZoom * .9f + minZoom * .1f)
+            maxDistance.times(.003f).coerceIn(minZoom, maxZoom)
         }
 
         followFunctionLocation(averageLocation, minimumZoom)

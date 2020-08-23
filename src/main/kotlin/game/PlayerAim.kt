@@ -2,10 +2,14 @@ package game
 
 import display.gui.base.GuiElementPhase
 import display.gui.elements.GuiMerchandise
+import game.fuel.Fuel
 import game.fuel.FuelType
+import game.shields.ShieldType
+import game.shields.VehicleShield
 import utility.Common.Pi2
 import utility.Common.degreeToRadian
 import utility.Common.radianToDegree
+import java.lang.Integer.max
 import kotlin.math.pow
 
 class PlayerAim(angle: Float = 0f, power: Float = 100f) {
@@ -26,6 +30,15 @@ class PlayerAim(angle: Float = 0f, power: Float = 100f) {
         }
 
     var selectedFuel: FuelType? = null
+    var selectedShield: ShieldType? = null
+    var selectedWeapon: Boolean? = null
+
+    val selectedFuelDescriptor: Fuel.Companion.Descriptor?
+        get() = Fuel.descriptor[selectedFuel]
+    val selectedShieldDescriptor: VehicleShield.Companion.Descriptor?
+        get() = VehicleShield.descriptor[selectedShield]
+    val selectedWeaponDescriptor: Fuel.Companion.Descriptor?
+        get() = null
 
     fun getDegreesAngle() = (angle + Pi2) % Pi2 * radianToDegree
 
@@ -34,9 +47,26 @@ class PlayerAim(angle: Float = 0f, power: Float = 100f) {
     fun setSelectedFuel(selectedOption: FuelType?, elements: List<GuiMerchandise>, player: GamePlayer) {
         val newFuel = if (selectedFuel == selectedOption) null else selectedOption
         selectedFuel = newFuel
-        val fuelBudget = player.cash // (-selectedShield.price), weapons purchase does not affect jump price
+        val shieldInCartPrice = selectedShieldDescriptor?.price ?: 0
+        val fuelBudget = player.cash - shieldInCartPrice //, weapons purchase does not affect jump price
         elements.forEach {
             it.currentPhase = if (it.price > fuelBudget) GuiElementPhase.DISABLED else GuiElementPhase.IDLE
+        }
+    }
+
+    fun setSelectedShield(selectedOption: ShieldType?, elements: List<GuiMerchandise>, player: GamePlayer) {
+        val newShield = if (selectedShield == selectedOption) null else selectedOption
+        selectedShield = newShield
+        val fuelInCartPrice = selectedFuelDescriptor?.price ?: 0
+        val weaponInCartPrice = selectedWeaponDescriptor?.price ?: 0
+
+        val shieldBudget = player.cash - max(weaponInCartPrice, fuelInCartPrice)
+        val existingShield = player.vehicle?.shield
+        val existingShieldIsPristine = existingShield?.energy == VehicleShield.defaultAmount
+        elements.forEach {
+            val notAvailable = it.price > shieldBudget
+//                    || (existingShieldIsPristine && it.name == existingShield.name)
+            it.currentPhase = if (notAvailable) GuiElementPhase.DISABLED else GuiElementPhase.IDLE
         }
     }
 

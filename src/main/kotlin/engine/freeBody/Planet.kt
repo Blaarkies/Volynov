@@ -5,6 +5,7 @@ import display.draw.TextureConfig
 import display.draw.TextureEnum
 import display.graphic.vertex.BasicShapes
 import display.graphic.vertex.BasicSurfaces
+import engine.physics.CollisionBits
 import org.jbox2d.collision.shapes.CircleShape
 import org.jbox2d.common.Vec2
 import org.jbox2d.dynamics.BodyType
@@ -35,7 +36,10 @@ class Planet(
         shapeBox.radius = radius
 
         val bodyDef = createBodyDef(BodyType.DYNAMIC, x, y, h, dx, dy, dh)
-        worldBody = createWorldBody(shapeBox, mass, radius, friction, restitution, world, bodyDef)
+        worldBody = createWorldBody(shapeBox, mass, radius, friction, restitution,
+            world, bodyDef,
+            CollisionBits.planet,
+            CollisionBits.planetVehicleWarhead)
 
         textureConfig =
             when (isAsteroid) {
