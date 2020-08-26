@@ -21,6 +21,7 @@ class GuiMerchandise(
     val price: Int,
     val itemId: String,
     val description: String,
+    val key: String = "",
     override var color: Color = Color.WHITE.setAlpha(.7f),
     override val onClick: () -> Unit = {},
     override val updateCallback: (GuiElement) -> Unit = {}

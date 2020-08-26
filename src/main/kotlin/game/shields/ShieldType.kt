@@ -1,11 +1,12 @@
 package game.shields
 
 enum class ShieldType {
+    None,
     ForceField,
     Deflector,
     Diamagnetor,
     Disintegrator,
-    ActiveDefender,
+    Defender,
     Refractor,
     Distractor,
 }

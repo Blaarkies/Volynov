@@ -162,6 +162,9 @@ class Vehicle(
     }
 
     fun addShield(playerAim: PlayerAim) {
+        if (shield != null) {
+            shield?.dispose()
+        }
         shield = VehicleShield.create(playerAim.selectedShield, this)
     }
 

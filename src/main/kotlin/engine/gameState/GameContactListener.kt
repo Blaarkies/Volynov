@@ -46,6 +46,10 @@ class GameContactListener(val gameState: GameState) : ContactListener {
                     warhead.freeBodyCallback.isHandled = true
                 }
             }
+
+        if (bodies.any { (it.userData is Warhead) && (it.userData as Warhead).freeBodyCallback.isHandled }) {
+            contact.isEnabled = false
+        }
     }
 
     private fun handleVehicle(bodies: List<Body>) {

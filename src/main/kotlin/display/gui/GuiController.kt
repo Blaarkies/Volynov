@@ -11,9 +11,11 @@ import display.gui.LayoutPosition.CENTER_RIGHT
 import display.gui.base.*
 import display.gui.elements.*
 import display.gui.special.GuiCommandPanel
+import display.gui.special.MerchandiseLists
 import display.text.TextJustify
 import engine.freeBody.Vehicle
 import game.GamePlayer
+import game.shields.VehicleShield
 import input.CameraView
 import io.reactivex.Observable
 import org.jbox2d.common.Vec2
@@ -239,28 +241,37 @@ class GuiController {
         )
     }
 
-    fun createPlayersPickShields(player: GamePlayer, onClickShield: (player: GamePlayer) -> Unit) {
+    fun createPlayersPickShields(player: GamePlayer, onClickShield: () -> Unit) {
         clear()
-        val shieldPickerPanel = GuiPanel(scale = Vec2(250f, 200f),
+        val tabsContainerSize = Vec2(195f, 165f)
+        val scrollButtonScale = Vec2(tabsContainerSize.x, 22f)
+
+        val shieldPickerPanel = GuiPanel(scale = tabsContainerSize.clone().add(Vec2(5f, 20f)),
             title = "${player.name} to pick a shield",
-            draggable = true)
+            draggable = false)
             .also {
                 it.updateOffset(getOffsetForLayoutPosition(
                     BOTTOM_RIGHT, windowSize.mul(.5f), it.scale))
             }
-        val shieldsList = GuiScroll(Vec2(50f, -50f), Vec2(100f, 100f)).addKids(
-            (1..5).map {
-                GuiButton(scale = Vec2(100f, 25f), title = "Shield $it", textSize = .15f, onClick = {
-                        onClickShield(player)
-                        println("clicked [Shield $it]")
-                    })
-            }
-        )
-        shieldPickerPanel.addKid(GuiLabel(Vec2(-200f, 100f), TextJustify.LEFT,
-            "Shields not yet implemented",
-            .12f))
-        shieldPickerPanel.addKid(shieldsList)
 
+        val allMerchandise = MerchandiseLists()
+        val shieldsList = GuiScroll(scale = tabsContainerSize.clone())
+            .also { scrollBox ->
+                scrollBox.addKids(VehicleShield.descriptor.entries.sortedBy { it.value.order }
+                    .map { (key, value) ->
+                        GuiMerchandise(scale = scrollButtonScale.clone(),
+                            name = value.name, price = value.price, itemId = value.order.toString(),
+                            description = value.description, key = key.toString(),
+                            onClick = {
+                                player.playerAim.setSelectedShield(key, allMerchandise, player)
+                                onClickShield()
+                            })
+                    })
+                player.playerAim.setSelectedShield(null, allMerchandise, player)
+                scrollBox.placeOnEdge(BOTTOM_RIGHT, shieldPickerPanel.scale)
+            }
+
+        shieldPickerPanel.addKid(shieldsList)
         elements.add(shieldPickerPanel)
 
         listOf(

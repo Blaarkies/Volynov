@@ -174,7 +174,9 @@ class CameraView {
             return
         }
 
-        trackFreeBody(dI.gameState.vehicles.random())
+        if (dI.gameState.vehicles.isNotEmpty()) {
+            trackFreeBody(dI.gameState.vehicles.random())
+        }
     }
 
     private fun followManyVehicles(damagedVehicles: List<Vehicle>) {

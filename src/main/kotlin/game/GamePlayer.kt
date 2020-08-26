@@ -1,8 +1,11 @@
 package game
 
+import dI
 import display.events.MouseButtonEvent
 import engine.freeBody.Vehicle
 import engine.freeBody.Warhead
+import game.fuel.Fuel
+import game.fuel.FuelType
 import io.reactivex.Observable
 import utility.Common.getTimingFunctionEaseIn
 import kotlin.math.floor
@@ -59,6 +62,9 @@ class GamePlayer(
     fun clone(): GamePlayer = GamePlayer(name, GamePlayerType.CLONE, null, playerAim.clone(), 0f, 0f)
 
     fun startJump() {
+        val selectedFuel = playerAim.selectedFuelDescriptor
+        buyItem(selectedFuel.name, selectedFuel.price, dI.gameState.tickTime)
+
         vehicle?.startJump(playerAim)
         playerAim.selectedFuel = null
     }
@@ -68,6 +74,11 @@ class GamePlayer(
     }
 
     fun addShield() {
+        val selectedShield = playerAim.selectedShieldDescriptor
+        if (selectedShield != null) {
+            buyItem(selectedShield.name, selectedShield.price, dI.gameState.tickTime)
+        }
+
         vehicle?.addShield(playerAim)
         playerAim.selectedShield = null
     }
