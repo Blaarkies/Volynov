@@ -13,6 +13,7 @@ import engine.gameState.GameStateSimulator.getNewPrediction
 import engine.motion.Director
 import game.GamePhase.*
 import game.shields.Deflector
+import game.shields.Diamagnetor
 import input.CameraView
 import io.reactivex.Observable
 import io.reactivex.subjects.PublishSubject
@@ -131,7 +132,7 @@ class GamePhaseHandler {
                         0f)
                 }
 
-                gameState.gamePlayers.forEach { it.vehicle!!.shield = Deflector(it.vehicle!!) }
+                gameState.gamePlayers.forEach { it.vehicle!!.shield = Diamagnetor(it.vehicle!!) }
                 gameState.playerOnTurn = gameState.gamePlayers.first()
 
                 setupNextPlayersFireTurn()

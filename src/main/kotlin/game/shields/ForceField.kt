@@ -17,7 +17,7 @@ class ForceField(override val attachedTo: Vehicle) : VehicleShield {
 
     override val key = ShieldType.ForceField.toString()
     override lateinit var worldBody: Body
-    override var energy = VehicleShield.defaultAmount
+    override var energy = VehicleShield.defaultEnergyAmount
         set(value) {
             field = value
             if (field <= 0f) dispose()

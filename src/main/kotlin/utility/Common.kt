@@ -88,6 +88,8 @@ object Common {
     fun getTimingFunctionSigmoid(interpolateStep: Float, centerGradient: Float = 1f) =
         (1f / (1f + exp((-(interpolateStep - .5f) * 10f)) * centerGradient)) * 1.023f - 0.0022f
 
+    fun getEaseOutParabola(interpolateStep: Float) = interpolateStep * (2f - interpolateStep)
+
     fun getRandomDirection() = Math.random().toFloat() * Pi2
 
     fun getRandomMixed() = Math.random().toFloat() * 2f - 1f
@@ -122,6 +124,8 @@ object Common {
     }
 
 }
+
+fun Float.round(): Float = Common.roundFloat(this)
 
 fun Vec2.toList(): List<Float> = listOf(this.x, this.y)
 fun Boolean.toSign(): Float = if (this) 1f else -1f

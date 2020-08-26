@@ -82,8 +82,12 @@ interface VehicleShield {
     companion object {
 
         const val defaultUsageCost = 10f // base energy cost to power shields
-        const val defaultSize = 1.2f // + 2f
-        const val defaultAmount = 100f
+        const val defaultSize = 1.2f
+        const val defaultEnergyAmount = 100f
+        const val magnetShieldSize = defaultSize + 1.5f
+        const val magnetPower = 12f
+        const val magnetInterval = 50f
+        const val magnetEnergyFactor = .2f
 
         val descriptor = listOf(
             Pair(ShieldType.None, Descriptor(
@@ -100,7 +104,12 @@ interface VehicleShield {
                 "Deflector",
                 "Bounces direct hits away without detonating them. Does not block any damage",
                 600)
-            { a -> Deflector(a) })
+            { a -> Deflector(a) }),
+            Pair(ShieldType.Diamagnetor, Descriptor(
+                "Diamagnetor",
+                "Pushes warheads away from without detonating them. Does not block any damage",
+                900)
+            { a -> Diamagnetor(a) })
         ).withIndex()
             .map { (index, item) ->
                 val (_, descriptor) = item

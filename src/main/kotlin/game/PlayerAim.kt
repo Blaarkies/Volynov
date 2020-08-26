@@ -77,7 +77,7 @@ class PlayerAim(angle: Float = 0f, power: Float = 100f) {
 
         val shieldBudget = player.cash - max(weaponInCartPrice, fuelInCartPrice)
         val existingShield = player.vehicle?.shield
-        val existingShieldIsPristine = existingShield?.energy == VehicleShield.defaultAmount
+        val existingShieldIsPristine = existingShield?.energy == VehicleShield.defaultEnergyAmount
         merchandise.shields.forEach {
             val notAvailable = it.price > shieldBudget
                     || (existingShieldIsPristine && it.key == existingShield?.key)
