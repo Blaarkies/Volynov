@@ -3,7 +3,7 @@ package engine.gameState
 import engine.freeBody.Planet
 import engine.freeBody.Vehicle
 import engine.freeBody.Warhead
-import game.shields.VehicleShield
+import game.shield.VehicleShield
 import org.jbox2d.callbacks.ContactImpulse
 import org.jbox2d.callbacks.ContactListener
 import org.jbox2d.collision.Manifold

@@ -1,6 +1,6 @@
 package utility
 
-import display.events.ButtonPress
+import display.event.ButtonPress
 import io.reactivex.Observable
 import io.reactivex.Observable.interval
 import io.reactivex.subjects.PublishSubject

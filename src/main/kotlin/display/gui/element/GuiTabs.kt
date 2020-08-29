@@ -1,7 +1,7 @@
-package display.gui.elements
+package display.gui.element
 
-import display.events.DistanceCalculator
-import display.events.MouseButtonEvent
+import display.event.DistanceCalculator
+import display.event.MouseButtonEvent
 import display.graphic.Color
 import display.graphic.SnipRegion
 import display.gui.LayoutController
@@ -13,13 +13,9 @@ import io.reactivex.Observable
 import io.reactivex.subjects.PublishSubject
 import org.jbox2d.common.Vec2
 import utility.Common
-import utility.Common.vectorUnit
 import utility.PidController
 import java.lang.Float.min
-import java.sql.Time
-import java.util.concurrent.TimeUnit
 import kotlin.math.absoluteValue
-import kotlin.math.sin
 
 class GuiTabs(
     override val offset: Vec2 = Vec2(),

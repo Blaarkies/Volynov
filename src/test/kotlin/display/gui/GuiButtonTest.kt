@@ -1,11 +1,11 @@
 package display.gui
 
 import dI
-import display.events.MouseButtonEvent
+import display.event.MouseButtonEvent
 import display.graphic.Renderer
 import display.gui.base.GuiElement
 import display.gui.base.GuiElementPhase
-import display.gui.elements.GuiButton
+import display.gui.element.GuiButton
 import io.mockk.mockk
 import io.mockk.verify
 import io.reactivex.Observable.never

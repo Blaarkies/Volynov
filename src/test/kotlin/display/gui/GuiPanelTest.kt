@@ -3,12 +3,12 @@ package display.gui
 import dI
 import display.draw.Drawer
 import display.draw.TextureHolder
-import display.events.MouseButtonEvent
+import display.event.MouseButtonEvent
 import display.graphic.Renderer
 import display.gui.base.GuiElement
 import display.gui.base.HasDrag
 import display.gui.base.HasScroll
-import display.gui.elements.GuiPanel
+import display.gui.element.GuiPanel
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify

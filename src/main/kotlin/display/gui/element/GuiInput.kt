@@ -1,9 +1,9 @@
-package display.gui.elements
+package display.gui.element
 
 import dI
 import display.draw.Drawer
 import display.draw.TextureEnum
-import display.events.MouseButtonEvent
+import display.event.MouseButtonEvent
 import display.graphic.vertex.BasicShapes
 import display.graphic.Color
 import display.graphic.SnipRegion

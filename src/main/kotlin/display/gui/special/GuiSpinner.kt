@@ -1,19 +1,16 @@
 package display.gui.special
 
-import display.events.DistanceCalculator
-import display.events.MouseButtonEvent
+import display.event.DistanceCalculator
+import display.event.MouseButtonEvent
 import display.graphic.Color
 import display.graphic.Color.Companion.WHITE
-import display.graphic.SnipRegion
 import display.gui.base.*
 import display.gui.base.GuiElementPhase.IDLE
-import display.gui.elements.GuiButton
-import display.gui.elements.GuiLabel
+import display.gui.element.GuiLabel
 import display.text.TextJustify
 import io.reactivex.Observable
 import org.jbox2d.common.Vec2
 import utility.Common.Pi
-import utility.Common.roundFloat
 
 class GuiSpinner(override val offset: Vec2 = Vec2(),
                  override val scale: Vec2 = Vec2(61f, 16f),

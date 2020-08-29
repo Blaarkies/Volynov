@@ -7,11 +7,11 @@ import display.gui.LayoutController
 import display.gui.LayoutPosition
 import display.gui.base.GuiElement
 import display.gui.base.HasLabel
-import display.gui.elements.*
+import display.gui.element.*
 import game.GamePlayer
 import game.fuel.Fuel
-import game.shields.ShieldType
-import game.shields.VehicleShield
+import game.shield.ShieldType
+import game.shield.VehicleShield
 import org.jbox2d.common.Vec2
 import utility.Common
 import utility.Common.muCron

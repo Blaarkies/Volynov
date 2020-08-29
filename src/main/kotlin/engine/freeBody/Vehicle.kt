@@ -4,14 +4,14 @@ import dI
 import display.draw.Model
 import display.draw.TextureConfig
 import display.draw.TextureEnum
-import display.events.MouseButtonEvent
+import display.event.MouseButtonEvent
 import display.graphic.vertex.BasicShapes
 import display.graphic.Color
 import display.graphic.vertex.BasicSurfaces
 import engine.gameState.GameState
 import engine.gameState.GameState.Companion.getContactBodies
 import engine.physics.CollisionBits
-import game.shields.VehicleShield
+import game.shield.VehicleShield
 import game.GamePlayer
 import game.PlayerAim
 import game.fuel.Fuel

@@ -1,7 +1,7 @@
 package display.gui
 
 import dI
-import display.events.MouseButtonEvent
+import display.event.MouseButtonEvent
 import display.graphic.Color
 import display.gui.LayoutController.getOffsetForLayoutPosition
 import display.gui.LayoutController.setElementsInColumns
@@ -9,13 +9,13 @@ import display.gui.LayoutController.setElementsInRows
 import display.gui.LayoutPosition.BOTTOM_RIGHT
 import display.gui.LayoutPosition.CENTER_RIGHT
 import display.gui.base.*
-import display.gui.elements.*
+import display.gui.element.*
 import display.gui.special.GuiCommandPanel
 import display.gui.special.MerchandiseLists
 import display.text.TextJustify
 import engine.freeBody.Vehicle
 import game.GamePlayer
-import game.shields.VehicleShield
+import game.shield.VehicleShield
 import input.CameraView
 import io.reactivex.Observable
 import org.jbox2d.common.Vec2

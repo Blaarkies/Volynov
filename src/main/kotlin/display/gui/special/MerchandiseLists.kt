@@ -1,6 +1,6 @@
 package display.gui.special
 
-import display.gui.elements.GuiMerchandise
+import display.gui.element.GuiMerchandise
 
 class MerchandiseLists(shields: List<GuiMerchandise>? = null) {
 

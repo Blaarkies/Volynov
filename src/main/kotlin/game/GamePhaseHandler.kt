@@ -1,19 +1,18 @@
 package game
 
 import dI
-import display.events.KeyboardEvent
-import display.events.MouseButtonEvent
-import display.events.MouseScrollEvent
+import display.event.KeyboardEvent
+import display.event.MouseButtonEvent
+import display.event.MouseScrollEvent
 import display.graphic.Color
-import display.gui.elements.GuiLabel
+import display.gui.element.GuiLabel
 import display.text.TextJustify
 import engine.freeBody.Vehicle
 import engine.freeBody.Warhead
 import engine.gameState.GameStateSimulator.getNewPrediction
 import engine.motion.Director
 import game.GamePhase.*
-import game.shields.Deflector
-import game.shields.Diamagnetor
+import game.shield.ActiveDefender
 import input.CameraView
 import io.reactivex.Observable
 import io.reactivex.subjects.PublishSubject

@@ -1,8 +1,8 @@
-package display.gui.elements
+package display.gui.element
 
 import dI
 import display.draw.TextureEnum
-import display.events.MouseButtonEvent
+import display.event.MouseButtonEvent
 import display.graphic.Color
 import display.graphic.SnipRegion
 import display.gui.LayoutPosition

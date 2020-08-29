@@ -5,8 +5,8 @@ import display.gui.base.GuiElementPhase.DISABLED
 import display.gui.special.MerchandiseLists
 import game.fuel.Fuel
 import game.fuel.FuelType
-import game.shields.ShieldType
-import game.shields.VehicleShield
+import game.shield.ShieldType
+import game.shield.VehicleShield
 import utility.Common.Pi2
 import utility.Common.degreeToRadian
 import utility.Common.radianToDegree
