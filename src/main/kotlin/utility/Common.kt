@@ -125,12 +125,12 @@ object Common {
 
 }
 
-fun Float.round(): Float = Common.roundFloat(this)
+fun Float.round(decimals: Int = 2): Float = Common.roundFloat(this, decimals)
 
 fun Vec2.toList(): List<Float> = listOf(this.x, this.y)
 fun Boolean.toSign(): Float = if (this) 1f else -1f
 fun <E> List<E>.padEnd(): List<E> = this + this.first()
-fun Vec2.lerp(b: Vec2, t: Float): Vec2 = add(b).mul(t)
+fun Vec2.lerp(b: Vec2, t: Float = .5f): Vec2 = add(b).mul(t)
 fun Vec2.dot(b: Vec2): Float = x * b.x + y * b.y
 fun Vec2.normal(b: Vec2): Vec2 {
     val normal = Vec2(-b.y + y, b.x - x)

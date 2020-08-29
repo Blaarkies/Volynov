@@ -1,20 +1,22 @@
-package game.shields
+package game.shield
 
 import dI
 import display.draw.TextureConfig
+import display.draw.TextureEnum
 import display.graphic.Color
+import engine.freeBody.Particle
 import engine.freeBody.Vehicle
 import engine.freeBody.Warhead
 import org.jbox2d.collision.shapes.CircleShape
+import org.jbox2d.common.Vec2
 import org.jbox2d.dynamics.Body
 import org.jbox2d.dynamics.FixtureDef
 import org.jbox2d.dynamics.contacts.Contact
-import org.jbox2d.dynamics.joints.MouseJoint
-import org.jbox2d.dynamics.joints.MouseJointDef
+import org.jbox2d.dynamics.joints.WeldJointDef
 
-class Deflector(override val attachedTo: Vehicle) : VehicleShield {
+class Disintegrator(override val attachedTo: Vehicle) : VehicleShield {
 
-    override val key = ShieldType.Deflector.toString()
+    override val key = ShieldType.Disintegrator.toString()
     override lateinit var worldBody: Body
     override var energy = VehicleShield.defaultEnergyAmount
         set(value) {
@@ -24,14 +26,14 @@ class Deflector(override val attachedTo: Vehicle) : VehicleShield {
     override val radius = VehicleShield.defaultSize
     override lateinit var textureConfig: TextureConfig
     override val lastHits = mutableListOf<ShieldHit>()
-    override val color = Color("#2196f380")
+    override val color = Color("#7e213680")
 
     init {
         setupDefaultShield()
 
         FixtureDef().also {
             it.shape = CircleShape().also { shape -> shape.radius = radius }
-            it.density = 100f
+            it.density = .00000001f
             it.friction = 0f
             it.restitution = 1f
             worldBody.createFixture(it)
@@ -39,35 +41,32 @@ class Deflector(override val attachedTo: Vehicle) : VehicleShield {
 
         setShieldEndTurn()
 
-        MouseJointDef().also {
-            it.target.set(attachedTo.worldBody.position)
-            it.bodyA = attachedTo.worldBody
-            it.bodyB = worldBody
-            it.maxForce = worldBody.mass * 100f
-            it.dampingRatio = .5f
-            it.frequencyHz = 10f
+        WeldJointDef().also {
+            it.initialize(attachedTo.worldBody, worldBody, Vec2())
             dI.gameState.world.createJoint(it)
         }
-    }
-
-    override fun update(tickTime: Float) {
-        if (worldBody.jointList != null) {
-            (worldBody.jointList.joint as MouseJoint).target = attachedTo.worldBody.position
-        }
-
-        super.update(tickTime)
     }
 
     override fun hit(warhead: Warhead, contact: Contact) {
         super.hit(warhead, contact)
 
-        val body = warhead.worldBody
-        dI.gameState.activeCallbacks.add {
-            // Reduce spin speed on ricochets
-            body.applyAngularImpulse(-body.angularVelocity * body.inertia * .8f)
-        }
+        contact.isEnabled = false
+        // disintegrate warhead
+        disintegrate(warhead)
+        warhead.freeBodyCallback.isHandled = true
 
-        energy -= 20f // Can bounce 5 shots
+        energy -= 20f
+    }
+
+    private fun disintegrate(warhead: Warhead) {
+        dI.gameState.activeCallbacks.add {
+            Particle("warhead_dust", dI.gameState.particles, dI.gameState.world, worldBody.linearVelocity,
+                worldBody.position,
+                worldBody.linearVelocity, 1f, 1000f, TextureEnum.rcs_puff, createdAt = dI.gameState.tickTime)
+
+            warhead.dispose(dI.gameState.world, dI.gameState.warheads)
+        }
     }
 
 }
+

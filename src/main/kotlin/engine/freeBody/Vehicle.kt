@@ -129,7 +129,7 @@ class Vehicle(
 
             knock(warheadMass * warheadVelocity.length(), angle + Pi)
 
-            Particle("1", gameState.particles, gameState.world, worldBody, warheadLocation,
+            Particle("1", gameState.particles, gameState.world, worldBody.linearVelocity, warheadLocation,
                 radius = .3f, duration = 250f, createdAt = gameState.tickTime)
 
             Warhead("1", gameState.warheads,

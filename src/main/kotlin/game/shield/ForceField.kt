@@ -1,4 +1,4 @@
-package game.shields
+package game.shield
 
 import dI
 import display.draw.TextureConfig

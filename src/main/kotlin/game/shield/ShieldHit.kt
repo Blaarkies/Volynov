@@ -1,4 +1,4 @@
-package game.shields
+package game.shield
 
 import org.jbox2d.common.Vec2
 

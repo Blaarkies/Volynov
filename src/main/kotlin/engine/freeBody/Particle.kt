@@ -16,7 +16,7 @@ import utility.Common.Pi
 class Particle(val id: String,
                particles: MutableList<Particle>,
                world: World,
-               impacted: Body,
+               impactedVelocity: Vec2,
                location: Vec2,
                relativeVelocity: Vec2 = Vec2(),
                var radius: Float = 2f,
@@ -33,7 +33,7 @@ class Particle(val id: String,
         val shapeBox = CircleShape()
         shapeBox.radius = radius
 
-        val velocity = impacted.linearVelocity.add(relativeVelocity)
+        val velocity = impactedVelocity.add(relativeVelocity)
         val bodyDef = FreeBody.createBodyDef(BodyType.KINEMATIC,
             location.x, location.y, getDirection(relativeVelocity) + Pi * .5f,
             velocity.x, velocity.y, 0f)

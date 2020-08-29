@@ -91,14 +91,7 @@ class Drawer {
             )
 
             if (freeBody is Vehicle && freeBody.shield?.worldBody != null) {
-                val shield = freeBody.shield!!
-                textures.getTexture(shield.textureConfig.texture).bind()
-                renderer.drawShape(
-                    shield.textureConfig.gpuBufferData,
-                    freeBody.worldBody.position,
-                    0f,
-                    makeVec2(shield.radius)
-                )
+                freeBody.shield?.render()
             }
 
             return
@@ -194,7 +187,7 @@ class Drawer {
             .filter {
                 val realFreeBody = dI.gameState.gravityBodies.find { old -> old.id == it.id }
                 val distanceMoved = realFreeBody!!.worldBody.position.sub(it.worldBody.position).length()
-                distanceMoved > it.radius * .05f
+                distanceMoved > it.radius * .15f
             }
             .forEach {
                 it.model.gpuData = it.model.gpuData.toList().chunked(12)
@@ -251,13 +244,19 @@ class Drawer {
 
             return points.chunked(2).withIndex()
                 .flatMap { (index, chunk) ->
+                    val (x, y) = chunk
                     val interpolationDistance = index.toFloat() / pointsLastIndex
                     val color = endColor * interpolationDistance + startColor * (1f - interpolationDistance)
+
+                    val isLeftHandVertex = index.rem(2) == 0
+                    val textureX = if (isLeftHandVertex) 0f else 1f
+                    val textureY = index * .5f / pointsLastIndex
+
                     listOf(
-                        chunk[0], chunk[1], 0f, /* pos*/
+                        x, y, 0f, /* pos*/
                         0f, 0f, -1f, /* normal */
                         color.red, color.green, color.blue, color.alpha, /* color*/
-                        0f, 0f /* texture*/
+                        textureX, textureY /* texture*/
                     )
                 }
         }

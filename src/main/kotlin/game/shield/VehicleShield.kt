@@ -1,4 +1,4 @@
-package game.shields
+package game.shield
 
 import dI
 import display.draw.TextureConfig
@@ -13,6 +13,7 @@ import org.jbox2d.dynamics.Body
 import org.jbox2d.dynamics.BodyDef
 import org.jbox2d.dynamics.BodyType
 import org.jbox2d.dynamics.contacts.Contact
+import utility.Common
 
 interface VehicleShield {
 
@@ -40,6 +41,16 @@ interface VehicleShield {
         if (timeStep == 1f) {
             lastHits.remove(lastHit)
         }
+    }
+
+    fun render() {
+        dI.textures.getTexture(textureConfig.texture).bind()
+        dI.renderer.drawShape(
+            textureConfig.gpuBufferData,
+            worldBody.position,
+            0f,
+            Common.makeVec2(radius)
+        )
     }
 
     fun hit(warhead: Warhead, contact: Contact) {
@@ -88,6 +99,9 @@ interface VehicleShield {
         const val magnetPower = 12f
         const val magnetInterval = 50f
         const val magnetEnergyFactor = .2f
+        const val laserSize = 15f
+        const val laserInterval = 16f
+        const val laserPower = 200f // damage per second
 
         val descriptor = listOf(
             Pair(ShieldType.None, Descriptor(
@@ -102,14 +116,24 @@ interface VehicleShield {
             { a -> ForceField(a) }),
             Pair(ShieldType.Deflector, Descriptor(
                 "Deflector",
-                "Bounces direct hits away without detonating them. Does not block any damage",
+                "Bounces direct hits away without detonating the warhead. Does not block any damage",
                 600)
             { a -> Deflector(a) }),
             Pair(ShieldType.Diamagnetor, Descriptor(
                 "Diamagnetor",
                 "Pushes warheads away from without detonating them. Does not block any damage",
                 900)
-            { a -> Diamagnetor(a) })
+            { a -> Diamagnetor(a) }),
+            Pair(ShieldType.Disintegrator, Descriptor(
+                "Disintegrator",
+                "Shatters nearby warheads without detonating them. Does not block any damage",
+                1200)
+            { a -> Disintegrator(a) }),
+            Pair(ShieldType.Defender, Descriptor(
+                "Active Defender",
+                "Burns warheads at a distance with a laser until they detonate. Does not block any damage",
+                1500)
+            { a -> ActiveDefender(a) })
         ).withIndex()
             .map { (index, item) ->
                 val (_, descriptor) = item

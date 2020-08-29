@@ -1,4 +1,4 @@
-package game.shields
+package game.shield
 
 enum class ShieldType {
     None,

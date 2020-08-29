@@ -76,8 +76,8 @@ interface Fuel {
     }
 
     private fun onJump(footPrintLocation: Vec2, knockStrength: Float) {
-        Particle("jump_launch_${attachedTo.id}", dI.gameState.particles, dI.gameState.world, attachedTo.worldBody,
-            footPrintLocation, Vec2(), knockStrength * .01f, 150f,
+        Particle("jump_launch_${attachedTo.id}", dI.gameState.particles, dI.gameState.world,
+            attachedTo.worldBody.linearVelocity, footPrintLocation, Vec2(), knockStrength * .01f, 150f,
             TextureEnum.white_pixel, jumpColor, dI.gameState.tickTime)
     }
 

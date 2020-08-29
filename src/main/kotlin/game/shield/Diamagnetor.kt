@@ -1,4 +1,4 @@
-package game.shields
+package game.shield
 
 import dI
 import display.draw.TextureConfig
@@ -29,7 +29,6 @@ class Diamagnetor(override val attachedTo: Vehicle) : VehicleShield {
     override val color = Color("#bcc8d380")
 
     private val stopWatch = StopWatch()
-    private var missedTime = 0f
 
     init {
         setupDefaultShield()
@@ -52,11 +51,12 @@ class Diamagnetor(override val attachedTo: Vehicle) : VehicleShield {
 
     override fun hit(warhead: Warhead, contact: Contact) {
         super.hit(warhead, contact)
+
         contact.isEnabled = false
 
-        if ((stopWatch.elapsedTime + missedTime) > VehicleShield.magnetInterval) {
-            missedTime = stopWatch.elapsedTime - VehicleShield.magnetInterval
-
+        if (stopWatch.elapsedTime > VehicleShield.magnetInterval) {
+            val deltaTime = stopWatch.elapsedTime
+                .coerceAtMost((VehicleShield.magnetInterval * 1.5f).toLong())
             stopWatch.reset()
 
             val vectorToWarhead = warhead.worldBody.position.sub(worldBody.position)
@@ -66,7 +66,8 @@ class Diamagnetor(override val attachedTo: Vehicle) : VehicleShield {
                 .div(VehicleShield.magnetShieldSize)
                 .coerceAtLeast(0f)
                 .let { getTimingFunctionEaseOut(it) }
-            val impulse = distanceForce * warhead.worldBody.mass * VehicleShield.magnetPower
+            val impulse = distanceForce * warhead.worldBody.mass * VehicleShield.magnetPower *
+                    deltaTime.div(VehicleShield.magnetInterval)
 
             warhead.knock(impulse, Director.getDirection(normal))
             energy -= impulse * VehicleShield.magnetEnergyFactor

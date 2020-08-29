@@ -29,7 +29,7 @@ class Xenon(override var lastUpdatedAt: Float, override val attachedTo: FreeBody
     override fun onBurn(thrusterLocation: Vec2, throttleAmplitude: Float, exhaustDirection: Vec2) {
         val visualExhaustVelocity = exhaustDirection.mul(throttleAmplitude * engineEfficiency * 6)
         Particle("jump_thrust_${attachedTo.id}",
-            dI.gameState.particles, dI.gameState.world, attachedTo.worldBody, thrusterLocation,
+            dI.gameState.particles, dI.gameState.world, attachedTo.worldBody.linearVelocity, thrusterLocation,
             visualExhaustVelocity, throttleAmplitude * 1.5f, 100f,
             TextureEnum.rcs_puff, thrustColor, dI.gameState.tickTime)
     }

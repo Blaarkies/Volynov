@@ -27,7 +27,7 @@ class NitrogenTetroxide(override var lastUpdatedAt: Float, override val attached
     override fun onBurn(thrusterLocation: Vec2, throttleAmplitude: Float, exhaustDirection: Vec2) {
         val visualExhaustVelocity = exhaustDirection.mul(throttleAmplitude * engineEfficiency * 7f)
         Particle("jump_thrust_${attachedTo.id}",
-            dI.gameState.particles, dI.gameState.world, attachedTo.worldBody, thrusterLocation,
+            dI.gameState.particles, dI.gameState.world, attachedTo.worldBody.linearVelocity, thrusterLocation,
             visualExhaustVelocity, throttleAmplitude * .8f, 400f,
             TextureEnum.rcs_puff, thrustColor, dI.gameState.tickTime)
     }
