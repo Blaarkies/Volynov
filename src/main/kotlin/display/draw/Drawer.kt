@@ -10,6 +10,7 @@ import engine.physics.CellLocation
 import engine.physics.GravityCell
 import game.GamePlayer
 import game.TrajectoryPrediction
+import game.shield.Refractor
 import org.jbox2d.common.Vec2
 import org.joml.Vector3f
 import utility.Common.getTimingFunctionEaseIn
@@ -81,6 +82,22 @@ class Drawer {
     }
 
     fun drawFreeBody(freeBody: FreeBody) {
+        if (freeBody is Vehicle) {
+            if (freeBody.shield !is Refractor) {
+                textures.getTexture(freeBody.textureConfig.texture).bind()
+                renderer.drawShape(
+                    freeBody.textureConfig.gpuBufferData,
+                    freeBody.worldBody.position,
+                    freeBody.worldBody.angle,
+                    makeVec2(freeBody.radius)
+                )
+            }
+
+            freeBody.shield?.render()
+
+            return
+        }
+
         if (freeBody !is Planet || freeBody.worldBody.mass < 20f) {
             textures.getTexture(freeBody.textureConfig.texture).bind()
             renderer.drawShape(
@@ -89,10 +106,6 @@ class Drawer {
                 freeBody.worldBody.angle,
                 makeVec2(freeBody.radius)
             )
-
-            if (freeBody is Vehicle && freeBody.shield?.worldBody != null) {
-                freeBody.shield?.render()
-            }
 
             return
         }

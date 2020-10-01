@@ -9,9 +9,11 @@ import engine.freeBody.Warhead
 import org.jbox2d.collision.shapes.CircleShape
 import org.jbox2d.common.Vec2
 import org.jbox2d.dynamics.Body
+import org.jbox2d.dynamics.BodyType
 import org.jbox2d.dynamics.FixtureDef
 import org.jbox2d.dynamics.contacts.Contact
 import org.jbox2d.dynamics.joints.WeldJointDef
+import utility.RayCastHit
 import utility.StopWatch
 
 class ActiveDefender(override val attachedTo: Vehicle) : VehicleShield {
@@ -71,8 +73,9 @@ class ActiveDefender(override val attachedTo: Vehicle) : VehicleShield {
 
         contact.isEnabled = false
 
+        // TODO: test - does not activate at some angles?
         // laser the warhead
-        if (stopWatch.elapsedTime < VehicleShield.laserInterval) return
+        if (energy <= 0f || stopWatch.elapsedTime < VehicleShield.laserInterval) return
 
         val deltaTime = stopWatch.elapsedTime.toFloat().coerceAtMost(VehicleShield.laserInterval * 1.5f)
         stopWatch.reset()
@@ -87,13 +90,15 @@ class ActiveDefender(override val attachedTo: Vehicle) : VehicleShield {
 
         hitList.filter {
             it.fixture.body.userData !is Vehicle
-                    || it.fixture.body.userData !is VehicleShield
+                    && it.fixture.body.userData !is VehicleShield
+                    && it.fixture.body.type != BodyType.KINEMATIC
         }
             .minBy { it.fraction }!!
             .also {
                 if (it.fixture.body == warhead.worldBody) {
                     val damage = VehicleShield.laserPower * deltaTime * .001f
                     warhead.sustainDamage(damage)
+                    energy -= damage * .2f // enough energy to destroy 5 warheads
 
                     val targetVelocity = warhead.worldBody.linearVelocity
                     val beam = laserBeams[warhead]

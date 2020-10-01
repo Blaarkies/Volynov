@@ -60,6 +60,8 @@ object Common {
     const val Pi2 = 2f * Pi
     const val PiH = Pi * .5f
     const val PiQ = Pi * .25f
+    const val PiE = Pi * .125f
+    const val PiS = Pi * .0625f
 
     val vectorUnit
         get() = Vec2(1f, 1f)
@@ -93,6 +95,8 @@ object Common {
     fun getRandomDirection() = Math.random().toFloat() * Pi2
 
     fun getRandomMixed() = Math.random().toFloat() * 2f - 1f
+
+    fun getRandom() = Math.random().toFloat()
 
     fun getRandomSign() = if (Math.random() > .5) -1f else 1f
 

@@ -13,6 +13,8 @@ import engine.gameState.GameStateSimulator.getNewPrediction
 import engine.motion.Director
 import game.GamePhase.*
 import game.shield.ActiveDefender
+import game.shield.Diamagnetor
+import game.shield.Refractor
 import input.CameraView
 import io.reactivex.Observable
 import io.reactivex.subjects.PublishSubject
@@ -203,7 +205,9 @@ class GamePhaseHandler {
     private fun drawPlayerAimingGui() {
         drawer.drawPlayerAimingPointer(gameState.playerOnTurn!!)
         drawer.drawWarheadTrajectory(latestPrediction)
-        gameState.gravityBodies.forEach { drawer.drawMotionPredictors(it) }
+        gameState.gravityBodies
+            .filterNot { it is Vehicle && it.shield is Refractor}
+            .forEach { drawer.drawMotionPredictors(it) }
     }
 
     private fun handleIntro() {
@@ -339,8 +343,9 @@ class GamePhaseHandler {
 
     private fun playerSelectsShield() {
         if (gameState.gamePlayers.all { it.playerAim.selectedShield != null }) {
-            gameState.gamePlayers.forEach { it.addShield() }
+            gameState.gamePlayers.shuffle()
             setupNextPlayersFireTurn()
+            gameState.gamePlayers.forEach { it.addShield() }
             return
         }
 
@@ -385,7 +390,12 @@ class GamePhaseHandler {
     }
 
     private fun addPlayerLabels() {
-        guiController.addPlayerLabels(gameState.gamePlayers.filter { it.vehicle!!.hitPoints > 0 }, camera)
+        guiController.addPlayerLabels(gameState.gamePlayers
+            .filter {
+                it.vehicle!!.hitPoints > 0
+                        && it.vehicle?.shield !is Refractor
+            },
+            camera)
     }
 
     private fun playerJumps(player: GamePlayer) {
@@ -426,6 +436,7 @@ class GamePhaseHandler {
         val playerOnTurn = gameState.playerOnTurn!!
         val players = gameState.gamePlayers.filter { it.vehicle!!.hitPoints > 0 }
         gameState.playerOnTurn = players[(players.indexOf(playerOnTurn) + 1).rem(players.size)]
+        gameState.playerOnTurn?.updateShield()
 
         camera.unsubscribeCheckCameraEvent.onNext(true)
         camera.trackFreeBody(gameState.playerOnTurn!!.vehicle!!, false)
@@ -448,7 +459,9 @@ class GamePhaseHandler {
         drawer.drawBorder(gameState.mapBorder!!)
 
         val allFreeBodies = gameState.gravityBodies
-        allFreeBodies.forEach { drawer.drawTrail(it) }
+        allFreeBodies
+            .filter { !(it is Vehicle && it.shield is Refractor) }
+            .forEach { drawer.drawTrail(it) }
         gameState.particles.forEach { drawer.drawParticle(it) }
         allFreeBodies.forEach { drawer.drawFreeBody(it) }
         //        allFreeBodies.forEach { drawDebugForces(it) }
@@ -512,6 +525,7 @@ class GamePhaseHandler {
                 .minBy { (_, distance) -> distance }?.first
             ?: return
 
+        // TODO: if body is Vehicle->Refractor shield, cancel
         camera.trackFreeBody(clickedBody)
     }
 

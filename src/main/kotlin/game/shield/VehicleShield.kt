@@ -111,7 +111,7 @@ interface VehicleShield {
             { _ -> null }),
             Pair(ShieldType.ForceField, Descriptor(
                 "Force Field",
-                "Blocks a larger ratio of damage, the more damage is inflicted. Reduces inflicted damage by 23%-67%",
+                "Blocks more damage, the more damage is inflicted. Reduces total damage by 23%-67%",
                 400)
             { a -> ForceField(a) }),
             Pair(ShieldType.Deflector, Descriptor(
@@ -121,7 +121,7 @@ interface VehicleShield {
             { a -> Deflector(a) }),
             Pair(ShieldType.Diamagnetor, Descriptor(
                 "Diamagnetor",
-                "Pushes warheads away from without detonating them. Does not block any damage",
+                "Pushes warheads away without detonating them. Does not block any damage",
                 900)
             { a -> Diamagnetor(a) }),
             Pair(ShieldType.Disintegrator, Descriptor(
@@ -131,9 +131,15 @@ interface VehicleShield {
             { a -> Disintegrator(a) }),
             Pair(ShieldType.Defender, Descriptor(
                 "Active Defender",
-                "Burns warheads at a distance with a laser until they detonate. Does not block any damage",
+                "Burns warheads at a distance by laser until they detonate. Does not block any damage",
                 1500)
-            { a -> ActiveDefender(a) })
+            { a -> ActiveDefender(a) }),
+            Pair(ShieldType.Refractor, Descriptor(
+                "Refractor",
+                "Cloaks the vehicle to be completely invisible. Lasts until damage taken or your next turn. " +
+                        "Does not block any damage",
+                1900)
+            { a -> Refractor(a) })
         ).withIndex()
             .map { (index, item) ->
                 val (_, descriptor) = item

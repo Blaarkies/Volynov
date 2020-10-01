@@ -4,6 +4,7 @@ import dI
 import display.event.MouseButtonEvent
 import engine.freeBody.Vehicle
 import engine.freeBody.Warhead
+import game.shield.Refractor
 import io.reactivex.Observable
 import utility.Common.getTimingFunctionEaseIn
 import kotlin.math.floor
@@ -90,6 +91,12 @@ class GamePlayer(
         purchaseHistory.add("[$readableTime] item[$name] price[$price] balance[$cash]")
         cash -= price
 
+    }
+
+    fun updateShield() {
+        if (vehicle?.shield is Refractor) {
+            vehicle?.shield = null
+        }
     }
 
 }

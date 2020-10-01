@@ -11,6 +11,7 @@ import game.GamePlayer
 import input.CameraView
 import org.jbox2d.common.Vec2
 import org.jbox2d.dynamics.Body
+import org.jbox2d.dynamics.Fixture
 import org.jbox2d.dynamics.World
 import org.jbox2d.dynamics.contacts.Contact
 import org.jbox2d.dynamics.contacts.ContactEdge
@@ -131,6 +132,16 @@ class GameState {
             while (currentContact.next != null) {
                 yield(currentContact.contact)
                 currentContact = currentContact.next
+            }
+        }
+
+        fun getFixtures(fixture: Fixture): Sequence<Fixture> = sequence {
+            var currentFixture = fixture
+            yield(currentFixture)
+
+            while (currentFixture.next != null) {
+                currentFixture = currentFixture.next
+                yield(currentFixture)
             }
         }
 

@@ -15,6 +15,7 @@ import display.gui.special.MerchandiseLists
 import display.text.TextJustify
 import engine.freeBody.Vehicle
 import game.GamePlayer
+import game.shield.ShieldType
 import game.shield.VehicleShield
 import input.CameraView
 import io.reactivex.Observable
@@ -247,7 +248,7 @@ class GuiController {
         val scrollButtonScale = Vec2(tabsContainerSize.x, 22f)
 
         val shieldPickerPanel = GuiPanel(scale = tabsContainerSize.clone().add(Vec2(5f, 20f)),
-            title = "${player.name} to pick a shield",
+            title = "${player.name} select a shield",
             draggable = false)
             .also {
                 it.updateOffset(getOffsetForLayoutPosition(
@@ -257,19 +258,20 @@ class GuiController {
         val allMerchandise = MerchandiseLists()
         val shieldsList = GuiScroll(scale = tabsContainerSize.clone())
             .also { scrollBox ->
-                scrollBox.addKids(VehicleShield.descriptor.entries.sortedBy { it.value.order }
+                scrollBox.addKids(VehicleShield.descriptor.entries
+                    .sortedBy { it.value.order }
                     .map { (key, value) ->
-                        GuiMerchandise(scale = scrollButtonScale.clone(),
-                            name = value.name, price = value.price, itemId = value.order.toString(),
-                            description = value.description, key = key.toString(),
+                        GuiMerchandise(scale = scrollButtonScale.clone(), name = value.name, price = value.price,
+                            itemId = value.order.toString(), description = value.description, key = key.toString(),
                             onClick = {
                                 player.playerAim.setSelectedShield(key, allMerchandise, player)
                                 onClickShield()
                             })
                     })
-                player.playerAim.setSelectedShield(null, allMerchandise, player)
+                allMerchandise.shields = scrollBox.kidElements.filterIsInstance<GuiMerchandise>()
                 scrollBox.placeOnEdge(BOTTOM_RIGHT, shieldPickerPanel.scale)
             }
+        player.playerAim.setSelectedShield(null, allMerchandise, player)
 
         shieldPickerPanel.addKid(shieldsList)
         elements.add(shieldPickerPanel)

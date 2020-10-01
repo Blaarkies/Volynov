@@ -44,7 +44,7 @@ class GuiCommandPanel(player: GamePlayer,
 
         addKids(actionButtons + aimingInfo + playerStats + tabs + shoppingCart +
                 GuiLabel(Vec2(-90f, 130f),
-                    title = "Weapons/Shields not implemented", textSize = .11f))
+                    title = "Weapons not implemented", textSize = .11f))
     }
 
     private fun getShoppingCart(player: GamePlayer): List<GuiLabel> {
