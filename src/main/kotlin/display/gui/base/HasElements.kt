@@ -1,6 +1,6 @@
 package display.gui.base
 
-import display.events.MouseButtonEvent
+import display.event.MouseButtonEvent
 import display.graphic.SnipRegion
 import io.reactivex.Observable
 import org.jbox2d.common.Vec2

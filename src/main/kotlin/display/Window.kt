@@ -1,9 +1,9 @@
 package display
 
 import dI
-import display.events.KeyboardEvent
-import display.events.MouseButtonEvent
-import display.events.MouseScrollEvent
+import display.event.KeyboardEvent
+import display.event.MouseButtonEvent
+import display.event.MouseScrollEvent
 import io.reactivex.subjects.PublishSubject
 import org.jbox2d.common.Vec2
 import org.lwjgl.BufferUtils

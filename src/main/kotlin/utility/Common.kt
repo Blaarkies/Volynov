@@ -1,6 +1,6 @@
 package utility
 
-import display.events.ButtonPress
+import display.event.ButtonPress
 import io.reactivex.Observable
 import io.reactivex.Observable.interval
 import io.reactivex.subjects.PublishSubject
@@ -60,6 +60,8 @@ object Common {
     const val Pi2 = 2f * Pi
     const val PiH = Pi * .5f
     const val PiQ = Pi * .25f
+    const val PiE = Pi * .125f
+    const val PiS = Pi * .0625f
 
     val vectorUnit
         get() = Vec2(1f, 1f)
@@ -88,9 +90,13 @@ object Common {
     fun getTimingFunctionSigmoid(interpolateStep: Float, centerGradient: Float = 1f) =
         (1f / (1f + exp((-(interpolateStep - .5f) * 10f)) * centerGradient)) * 1.023f - 0.0022f
 
+    fun getEaseOutParabola(interpolateStep: Float) = interpolateStep * (2f - interpolateStep)
+
     fun getRandomDirection() = Math.random().toFloat() * Pi2
 
     fun getRandomMixed() = Math.random().toFloat() * 2f - 1f
+
+    fun getRandom() = Math.random().toFloat()
 
     fun getRandomSign() = if (Math.random() > .5) -1f else 1f
 
@@ -123,10 +129,12 @@ object Common {
 
 }
 
+fun Float.round(decimals: Int = 2): Float = Common.roundFloat(this, decimals)
+
 fun Vec2.toList(): List<Float> = listOf(this.x, this.y)
 fun Boolean.toSign(): Float = if (this) 1f else -1f
 fun <E> List<E>.padEnd(): List<E> = this + this.first()
-fun Vec2.lerp(b: Vec2, t: Float): Vec2 = add(b).mul(t)
+fun Vec2.lerp(b: Vec2, t: Float = .5f): Vec2 = add(b).mul(t)
 fun Vec2.dot(b: Vec2): Float = x * b.x + y * b.y
 fun Vec2.normal(b: Vec2): Vec2 {
     val normal = Vec2(-b.y + y, b.x - x)

@@ -1,8 +1,8 @@
-package display.gui.elements
+package display.gui.element
 
 import dI
 import display.draw.TextureEnum
-import display.events.MouseButtonEvent
+import display.event.MouseButtonEvent
 import display.graphic.Color
 import display.graphic.SnipRegion
 import display.gui.LayoutPosition
@@ -21,6 +21,7 @@ class GuiMerchandise(
     val price: Int,
     val itemId: String,
     val description: String,
+    val key: String = "",
     override var color: Color = Color.WHITE.setAlpha(.7f),
     override val onClick: () -> Unit = {},
     override val updateCallback: (GuiElement) -> Unit = {}

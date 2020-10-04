@@ -1,11 +1,11 @@
 package display.gui.special
 
 import display.draw.TextureEnum
-import display.events.MouseButtonEvent
+import display.event.MouseButtonEvent
 import display.graphic.Color
 import display.gui.base.GuiElement
 import display.gui.base.GuiElementPhase
-import display.gui.elements.GuiButton
+import display.gui.element.GuiButton
 import io.reactivex.Observable
 import org.jbox2d.common.Vec2
 import utility.Common.pressAndHoldAction

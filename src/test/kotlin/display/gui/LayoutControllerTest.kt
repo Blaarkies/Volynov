@@ -3,7 +3,7 @@ package display.gui
 import dI
 import display.draw.Drawer
 import display.gui.LayoutController.getOffsetForLayoutPosition
-import display.gui.elements.GuiButton
+import display.gui.element.GuiButton
 import io.mockk.mockk
 import org.jbox2d.common.Vec2
 import org.junit.jupiter.api.DynamicTest

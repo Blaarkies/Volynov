@@ -4,11 +4,12 @@ import dI
 import display.draw.Model
 import display.draw.TextureConfig
 import display.draw.TextureEnum
-import display.graphic.vertex.BasicShapes
 import display.graphic.Color
+import display.graphic.vertex.BasicShapes
 import display.graphic.vertex.BasicSurfaces
 import engine.gameState.GameState
 import engine.motion.Director
+import engine.physics.CollisionBits
 import game.GamePlayer
 import game.GamePlayerType
 import io.reactivex.Observable.just
@@ -40,7 +41,7 @@ class Warhead(
     radius: Float = .6F,
     restitution: Float = .3f,
     friction: Float = .6f,
-    onCollision: (FreeBody, Body?) -> Unit,
+    onCollision: (self: FreeBody, impacted: Body?) -> Unit,
     val createdAt: Float
 ) : FreeBody(id, radius) {
 
@@ -54,7 +55,12 @@ class Warhead(
         shapeBox.set(vertices, vertices.size)
 
         val bodyDef = createBodyDef(BodyType.DYNAMIC, x, y, h, dx, dy, dh)
-        worldBody = createWorldBody(shapeBox, mass, radius, friction, restitution, world, bodyDef)
+        worldBody = createWorldBody(shapeBox, mass, radius, friction, restitution,
+            world, bodyDef,
+            CollisionBits.warhead,
+            CollisionBits.planetVehicleWarhead
+                    or CollisionBits.shield
+                    or CollisionBits.border)
         worldBody.isBullet = true
         worldBody.userData = this
 
@@ -72,6 +78,7 @@ class Warhead(
         )
     }
 
+    var hitPoints = 100f
     val selfDestructTime = 45000f
     private var lastUpdatedAt = createdAt
     private val updateInterval = 333f
@@ -88,10 +95,10 @@ class Warhead(
                  vehicles: MutableList<Vehicle>,
                  gravityBodies: List<FreeBody>,
                  impacted: Body? = null) {
-        val particle = Particle("1", particles, world, impacted ?: worldBody, worldBody.position,
-            radius = 2f, duration = 1000f, createdAt = tickTime)
+        val particle = Particle("1", particles, world, impacted?.linearVelocity ?: worldBody.linearVelocity,
+            worldBody.position, radius = 2f, duration = 1000f, createdAt = tickTime)
 
-        checkToDamageVehicles(world, tickTime, vehicles, particle)
+        checkToDamageVehicles(tickTime, vehicles, particle)
         knockFreeBodies(gravityBodies, particle)
         particle.radius = 0f
 
@@ -105,7 +112,7 @@ class Warhead(
         }
     }
 
-    private fun dispose(world: World, warheads: MutableList<Warhead>) {
+    fun dispose(world: World, warheads: MutableList<Warhead>) {
         world.destroyBody(worldBody)
         warheads.remove(this)
     }
@@ -124,8 +131,7 @@ class Warhead(
             }
     }
 
-    private fun checkToDamageVehicles(world: World,
-                                      tickTime: Float,
+    private fun checkToDamageVehicles(tickTime: Float,
                                       vehicles: MutableList<Vehicle>,
                                       particle: Particle) {
         vehicles.toList().map {
@@ -137,12 +143,12 @@ class Warhead(
                 val damageUnit = (1f - distance / particle.radius).coerceAtLeast(0f)
                     .let { Common.getTimingFunctionEaseOut(it) }
                 val totalDamage = damageUnit * damage
-                vehicle.hitPoints -= totalDamage
+                vehicle.inflictDamage(totalDamage, firedBy)
                 firedBy.scoreDamage(this, totalDamage, vehicle, tickTime)
 
                 if (vehicle.hitPoints <= 0) {
                     firedBy.scoreKill(vehicle)
-//                    vehicle.dispose(world, vehicles)
+                    //                    vehicle.dispose(world, vehicles)
                 }
             }
     }
@@ -193,7 +199,7 @@ class Warhead(
             val location = worldBody.position.add(tailLocation)
 
             particles.add(
-                Particle("puff", particles, world, worldBody, location,
+                Particle("puff", particles, world, worldBody.linearVelocity, location,
                     exhaustDirection.mul(3f), sqrt(scaledReaction) * .7f,
                     scaledReaction * 100f + 300f, TextureEnum.rcs_puff, Color.WHITE.setAlpha(.3f), tickTime))
         }
@@ -215,6 +221,22 @@ class Warhead(
                     gameState.particles, gameState.vehicles, gameState.gravityBodies, impacted)
             },
             createdAt = createdAt)
+    }
+
+    fun sustainDamage(damage: Float) {
+        hitPoints -= damage
+
+        if (hitPoints <= 0f) {
+            val world = dI.gameState.world
+            val tickTime = dI.gameState.tickTime
+            val warheads = dI.gameState.warheads
+            val particles = dI.gameState.particles
+            val vehicles = dI.gameState.vehicles
+            val gravityBodies = dI.gameState.gravityBodies
+            dI.gameState.activeCallbacks.add {
+                detonate(world, tickTime, warheads, particles, vehicles, gravityBodies)
+            }
+        }
     }
 
 }

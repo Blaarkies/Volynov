@@ -1,4 +1,4 @@
-package display.events
+package display.event
 
 import org.lwjgl.glfw.GLFW
 

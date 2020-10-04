@@ -3,6 +3,7 @@ package input
 import dI
 import engine.freeBody.FreeBody
 import engine.freeBody.Vehicle
+import game.shield.Refractor
 import io.reactivex.subjects.PublishSubject
 import org.jbox2d.common.Vec2
 import org.joml.*
@@ -84,6 +85,8 @@ class CameraView {
     }
 
     fun trackFreeBody(newFreeBody: FreeBody, lead: Boolean = true) {
+        if (newFreeBody is Vehicle && newFreeBody.shield is Refractor) return
+
         targetLocation = newFreeBody.worldBody.position
         targetVelocity = if (lead) newFreeBody.worldBody.linearVelocity else Vec2()
         targetVelocityAverage = targetVelocity.clone()
@@ -168,13 +171,17 @@ class CameraView {
             }
         }
 
-        val floatingVehicle = dI.gameState.vehicles.firstOrNull { !it.isStable }
+        val floatingVehicle = dI.gameState.vehicles
+            .filter { it.shield !is Refractor }
+            .firstOrNull { !it.isStable }
         if (floatingVehicle != null) {
             trackFreeBody(floatingVehicle)
             return
         }
 
-        trackFreeBody(dI.gameState.vehicles.random())
+        if (dI.gameState.vehicles.isNotEmpty()) {
+            trackFreeBody(dI.gameState.vehicles.random())
+        }
     }
 
     private fun followManyVehicles(damagedVehicles: List<Vehicle>) {
@@ -188,7 +195,7 @@ class CameraView {
             val maxDistance = damagedVehicles
                 .map { it.worldBody.position.sub(cameraCenter).length() }
                 .max() ?: 1f
-            maxDistance.times(.003f).coerceIn(minZoom, maxZoom * .9f + minZoom * .1f)
+            maxDistance.times(.003f).coerceIn(minZoom, maxZoom)
         }
 
         followFunctionLocation(averageLocation, minimumZoom)

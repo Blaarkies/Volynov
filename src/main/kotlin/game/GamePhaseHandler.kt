@@ -1,27 +1,29 @@
 package game
 
 import dI
-import display.events.KeyboardEvent
-import display.events.MouseButtonEvent
-import display.events.MouseScrollEvent
+import display.event.KeyboardEvent
+import display.event.MouseButtonEvent
+import display.event.MouseScrollEvent
 import display.graphic.Color
-import display.gui.elements.GuiLabel
+import display.gui.element.GuiLabel
 import display.text.TextJustify
 import engine.freeBody.Vehicle
 import engine.freeBody.Warhead
 import engine.gameState.GameStateSimulator.getNewPrediction
 import engine.motion.Director
-import engine.shields.VehicleShield
 import game.GamePhase.*
-import game.fuel.Fuel
-import game.fuel.FuelType
+import game.shield.ActiveDefender
+import game.shield.Diamagnetor
+import game.shield.Refractor
 import input.CameraView
 import io.reactivex.Observable
 import io.reactivex.subjects.PublishSubject
 import org.jbox2d.common.Vec2
 import org.lwjgl.glfw.GLFW
+import utility.Common.getRandomDirection
 import utility.Common.getTimingFunctionEaseIn
 import utility.Common.getTimingFunctionEaseOut
+import utility.Common.makeVec2Circle
 import utility.Common.pressAndHoldAction
 import utility.Common.vectorUnit
 import utility.StopWatch
@@ -116,10 +118,22 @@ class GamePhaseHandler {
                 currentPhase = PLAYERS_PICK_SHIELDS
                 isTransitioning = false
                 gameState.reset()
-                gameState.gamePlayers.addAll((1..3).map { GamePlayer("Player $it", cash = 1000f) })
+                gameState.gamePlayers.addAll((1..2).map { GamePlayer("Player $it", cash = 1000f) })
                 MapGenerator.populateNewGameMap(gameState)
+                gameState.planets.toList().filter { it.worldBody.mass == it.worldBody.mass.coerceIn(140f, 160f) }
+                    .forEach {
+                        gameState.world.destroyBody(it.worldBody)
+                        gameState.planets.remove(it)
+                    }
 
-                gameState.gamePlayers.forEach { it.vehicle?.shield = VehicleShield() }
+                val planet = gameState.gravityBodies.maxBy { it.worldBody.mass }!!
+                gameState.vehicles.forEach {
+                    it.worldBody.setTransform(planet.worldBody.position
+                        .add(makeVec2Circle(getRandomDirection()).mul(planet.radius + 3f)),
+                        0f)
+                }
+
+                gameState.gamePlayers.forEach { it.vehicle!!.shield = Diamagnetor(it.vehicle!!) }
                 gameState.playerOnTurn = gameState.gamePlayers.first()
 
                 setupNextPlayersFireTurn()
@@ -191,7 +205,9 @@ class GamePhaseHandler {
     private fun drawPlayerAimingGui() {
         drawer.drawPlayerAimingPointer(gameState.playerOnTurn!!)
         drawer.drawWarheadTrajectory(latestPrediction)
-        gameState.gravityBodies.forEach { drawer.drawMotionPredictors(it) }
+        gameState.gravityBodies
+            .filterNot { it is Vehicle && it.shield is Refractor}
+            .forEach { drawer.drawMotionPredictors(it) }
     }
 
     private fun handleIntro() {
@@ -325,11 +341,11 @@ class GamePhaseHandler {
         }
     }
 
-    private fun playerSelectsShield(player: GamePlayer? = null) {
-        player?.vehicle?.shield = VehicleShield()
-
-        if (gameState.gamePlayers.all { it.vehicle?.shield != null }) {
+    private fun playerSelectsShield() {
+        if (gameState.gamePlayers.all { it.playerAim.selectedShield != null }) {
+            gameState.gamePlayers.shuffle()
             setupNextPlayersFireTurn()
+            gameState.gamePlayers.forEach { it.addShield() }
             return
         }
 
@@ -374,16 +390,21 @@ class GamePhaseHandler {
     }
 
     private fun addPlayerLabels() {
-        guiController.addPlayerLabels(gameState.gamePlayers.filter { it.vehicle!!.hitPoints > 0 }, camera)
+        guiController.addPlayerLabels(gameState.gamePlayers
+            .filter {
+                it.vehicle!!.hitPoints > 0
+                        && it.vehicle?.shield !is Refractor
+            },
+            camera)
     }
 
     private fun playerJumps(player: GamePlayer) {
         guiController.clear()
-
-        val selectedFuel = Fuel.descriptor[player.playerAim.selectedFuel] ?: Fuel.descriptor[FuelType.Hydrazine]!!
-        player.buyItem(selectedFuel.name, selectedFuel.price, gameState.tickTime)
-
         recordLastVehicleHp()
+
+        if (player.playerAim.selectedShield != null) {
+            player.addShield()
+        }
 
         player.startJump()
         startNewPhase(PLAYERS_TURN_JUMPED)
@@ -395,6 +416,10 @@ class GamePhaseHandler {
         // check() {} player has enough funds && in stable position to fire large warheads
         recordLastVehicleHp()
 
+        if (player.playerAim.selectedShield != null) {
+            player.addShield()
+        }
+
         player.vehicle?.fireWarhead(gameState, player, "boom small") { warhead -> camera.trackFreeBody(warhead) }
 
         startNewPhase(PLAYERS_TURN_FIRED)
@@ -405,10 +430,13 @@ class GamePhaseHandler {
     }
 
     private fun setNextPlayerOnTurn() {
-        checkNotNull(gameState.playerOnTurn) { "No player is on turn" }
+        checkNotNull(gameState.playerOnTurn) { "No player was on turn" }
+        gameState.playerOnTurn?.vehicle?.shield?.setShieldEndTurn()
+
         val playerOnTurn = gameState.playerOnTurn!!
         val players = gameState.gamePlayers.filter { it.vehicle!!.hitPoints > 0 }
         gameState.playerOnTurn = players[(players.indexOf(playerOnTurn) + 1).rem(players.size)]
+        gameState.playerOnTurn?.updateShield()
 
         camera.unsubscribeCheckCameraEvent.onNext(true)
         camera.trackFreeBody(gameState.playerOnTurn!!.vehicle!!, false)
@@ -416,7 +444,7 @@ class GamePhaseHandler {
 
     private fun setupPlayersPickShields() {
         guiController.createPlayersPickShields(
-            onClickShield = { player -> playerSelectsShield(player) },
+            onClickShield = { playerSelectsShield() },
             player = gameState.playerOnTurn!!
         )
     }
@@ -431,7 +459,9 @@ class GamePhaseHandler {
         drawer.drawBorder(gameState.mapBorder!!)
 
         val allFreeBodies = gameState.gravityBodies
-        allFreeBodies.forEach { drawer.drawTrail(it) }
+        allFreeBodies
+            .filter { !(it is Vehicle && it.shield is Refractor) }
+            .forEach { drawer.drawTrail(it) }
         gameState.particles.forEach { drawer.drawParticle(it) }
         allFreeBodies.forEach { drawer.drawFreeBody(it) }
         //        allFreeBodies.forEach { drawDebugForces(it) }
@@ -495,6 +525,7 @@ class GamePhaseHandler {
                 .minBy { (_, distance) -> distance }?.first
             ?: return
 
+        // TODO: if body is Vehicle->Refractor shield, cancel
         camera.trackFreeBody(clickedBody)
     }
 

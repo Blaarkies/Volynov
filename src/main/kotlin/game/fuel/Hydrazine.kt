@@ -24,7 +24,7 @@ class Hydrazine(override var lastUpdatedAt: Float, override val attachedTo: Free
     override fun onBurn(thrusterLocation: Vec2, throttleAmplitude: Float, exhaustDirection: Vec2) {
         val visualExhaustVelocity = exhaustDirection.mul(throttleAmplitude * engineEfficiency * 5f)
         Particle("jump_thrust_${attachedTo.id}",
-            dI.gameState.particles, dI.gameState.world, attachedTo.worldBody, thrusterLocation,
+            dI.gameState.particles, dI.gameState.world, attachedTo.worldBody.linearVelocity, thrusterLocation,
             visualExhaustVelocity, throttleAmplitude * .8f, 500f,
             TextureEnum.rcs_puff, Fuel.thrustColor, dI.gameState.tickTime)
     }

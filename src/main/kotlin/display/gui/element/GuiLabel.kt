@@ -1,4 +1,4 @@
-package display.gui.elements
+package display.gui.element
 
 import display.graphic.Color
 import display.gui.base.GuiElement

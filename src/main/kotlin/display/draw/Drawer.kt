@@ -10,6 +10,7 @@ import engine.physics.CellLocation
 import engine.physics.GravityCell
 import game.GamePlayer
 import game.TrajectoryPrediction
+import game.shield.Refractor
 import org.jbox2d.common.Vec2
 import org.joml.Vector3f
 import utility.Common.getTimingFunctionEaseIn
@@ -19,23 +20,8 @@ import utility.Common.vectorUnit
 import utility.toList
 import utility.toVector3f
 import java.util.*
-import kotlin.collections.List
-import kotlin.collections.chunked
 import kotlin.collections.component1
 import kotlin.collections.component2
-import kotlin.collections.flatMap
-import kotlin.collections.flatten
-import kotlin.collections.forEach
-import kotlin.collections.lastIndex
-import kotlin.collections.listOf
-import kotlin.collections.map
-import kotlin.collections.maxBy
-import kotlin.collections.plus
-import kotlin.collections.reversed
-import kotlin.collections.toFloatArray
-import kotlin.collections.windowed
-import kotlin.collections.withIndex
-import kotlin.collections.zip
 import kotlin.math.sqrt
 
 class Drawer {
@@ -96,6 +82,22 @@ class Drawer {
     }
 
     fun drawFreeBody(freeBody: FreeBody) {
+        if (freeBody is Vehicle) {
+            if (freeBody.shield !is Refractor) {
+                textures.getTexture(freeBody.textureConfig.texture).bind()
+                renderer.drawShape(
+                    freeBody.textureConfig.gpuBufferData,
+                    freeBody.worldBody.position,
+                    freeBody.worldBody.angle,
+                    makeVec2(freeBody.radius)
+                )
+            }
+
+            freeBody.shield?.render()
+
+            return
+        }
+
         if (freeBody !is Planet || freeBody.worldBody.mass < 20f) {
             textures.getTexture(freeBody.textureConfig.texture).bind()
             renderer.drawShape(
@@ -104,6 +106,7 @@ class Drawer {
                 freeBody.worldBody.angle,
                 makeVec2(freeBody.radius)
             )
+
             return
         }
 
@@ -193,22 +196,30 @@ class Drawer {
 
     fun drawWarheadTrajectory(prediction: TrajectoryPrediction) {
         val color = Color("#A05050A0")
-        prediction.nearbyFreeBodies.forEach {
-            it.model.gpuData = it.model.gpuData.toList().chunked(12)
-                .flatMap { it.subList(0,6) +
-                        listOf(color.red, color.green, color.blue, color.alpha) +
-                        it.subList(10,12) }
-                .toFloatArray()
-            drawFreeBody(it)
-            textures.getTexture(it.model.texture).bind()
-            renderer.drawMesh(
-                it.model.gpuData,
-                it.worldBody.position.toVector3f(),
-                it.worldBody.angle,
-                Vector3f(it.radius),
-                CameraType.UNIVERSE_SPECTRAL
-            )
-        }
+        prediction.nearbyFreeBodies
+            .filter {
+                val realFreeBody = dI.gameState.gravityBodies.find { old -> old.id == it.id }
+                val distanceMoved = realFreeBody!!.worldBody.position.sub(it.worldBody.position).length()
+                distanceMoved > it.radius * .15f
+            }
+            .forEach {
+                it.model.gpuData = it.model.gpuData.toList().chunked(12)
+                    .flatMap {
+                        it.subList(0, 6) +
+                                listOf(color.red, color.green, color.blue, color.alpha) +
+                                it.subList(10, 12)
+                    }
+                    .toFloatArray()
+
+                textures.getTexture(it.model.texture).bind()
+                renderer.drawMesh(
+                    it.model.gpuData,
+                    it.worldBody.position.toVector3f(),
+                    it.worldBody.angle,
+                    Vector3f(it.radius),
+                    CameraType.UNIVERSE_SPECTRAL
+                )
+            }
 
         val data = getLineTextured(prediction.warheadPath.flatMap { it.toList() },
             Color("#02eded99"), Color.TRANSPARENT, .4f, timingFunction = { step -> getTimingFunctionEaseIn(step) })
@@ -246,13 +257,19 @@ class Drawer {
 
             return points.chunked(2).withIndex()
                 .flatMap { (index, chunk) ->
+                    val (x, y) = chunk
                     val interpolationDistance = index.toFloat() / pointsLastIndex
                     val color = endColor * interpolationDistance + startColor * (1f - interpolationDistance)
+
+                    val isLeftHandVertex = index.rem(2) == 0
+                    val textureX = if (isLeftHandVertex) 0f else 1f
+                    val textureY = index * .5f / pointsLastIndex
+
                     listOf(
-                        chunk[0], chunk[1], 0f, /* pos*/
+                        x, y, 0f, /* pos*/
                         0f, 0f, -1f, /* normal */
                         color.red, color.green, color.blue, color.alpha, /* color*/
-                        0f, 0f /* texture*/
+                        textureX, textureY /* texture*/
                     )
                 }
         }

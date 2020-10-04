@@ -7,9 +7,11 @@ import display.gui.LayoutController
 import display.gui.LayoutPosition
 import display.gui.base.GuiElement
 import display.gui.base.HasLabel
-import display.gui.elements.*
+import display.gui.element.*
 import game.GamePlayer
 import game.fuel.Fuel
+import game.shield.ShieldType
+import game.shield.VehicleShield
 import org.jbox2d.common.Vec2
 import utility.Common
 import utility.Common.muCron
@@ -42,17 +44,20 @@ class GuiCommandPanel(player: GamePlayer,
 
         addKids(actionButtons + aimingInfo + playerStats + tabs + shoppingCart +
                 GuiLabel(Vec2(-90f, 130f),
-                    title = "Weapons/Shields not implemented", textSize = .11f))
+                    title = "Weapons not implemented", textSize = .11f))
     }
 
     private fun getShoppingCart(player: GamePlayer): List<GuiLabel> {
         return listOf(
             GuiLabel(title = "Selected Equipment", textSize = .1f),
             GuiLabel(title = "Weapon", textSize = .1f),
-            GuiLabel(title = "Shield", textSize = .1f),
+            GuiLabel(textSize = .1f, updateCallback = { e ->
+                (e as GuiLabel).title = "Shield    ${
+                player.playerAim.selectedShieldDescriptor?.name ?: ""}"
+            }),
             GuiLabel(textSize = .1f, updateCallback = { e ->
                 (e as GuiLabel).title = "Fuel      ${
-                Fuel.descriptor[player.playerAim.selectedFuel]?.name ?: ""}"
+                player.playerAim.selectedFuelDescriptor?.name ?: ""}"
             }))
             .also { labels ->
                 val first = labels.first()
@@ -66,7 +71,7 @@ class GuiCommandPanel(player: GamePlayer,
 
     private fun getPlayerStats(player: GamePlayer): List<GuiLabel> {
         val hp = ceil(player.vehicle!!.hitPoints).toInt()
-        val energy = ceil(player.vehicle!!.shield!!.energy).toInt()
+        val energy = ceil(player.vehicle!!.shield?.energy ?: 0f).toInt()
         val cash = player.cash.toInt()
 
         return listOf(
@@ -111,7 +116,7 @@ class GuiCommandPanel(player: GamePlayer,
                 },
                 labelCallback = { (it as HasLabel).title = getPlayerAimPowerDisplay(player) }),
             GuiProgressBar(scale = Vec2(61f, 10f), title = "Precision", color = Color.WHITE.setAlpha(.3f),
-                onDrag = { value: Float -> player.playerAim.setPrecisionFromBar(value)})
+                onDrag = { value: Float -> player.playerAim.setPrecisionFromBar(value) })
             { e -> (e as GuiProgressBar).progressTarget = player.playerAim.getPrecisionForBar() })
             .also { elements ->
                 val first = elements.first()
@@ -141,8 +146,6 @@ class GuiCommandPanel(player: GamePlayer,
                                  onClickFire: (player: GamePlayer) -> Unit): List<GuiButton> {
         val actionButtonScale = Vec2(50f, 25f) // dragHandleScale = Vec2(90f, 25f)
         return listOf(
-            // GuiButton(actionButtonsOffset.clone(), actionButtonScale, title = "Aim", textSize = .12f, onClick = { onClickAim(player) }),
-            // GuiButton(actionButtonsOffset.clone(), actionButtonScale, title = "Power", textSize = .12f, onClick = { onClickPower(player) }),
             GuiButton(scale = actionButtonScale, title = "Fire", textSize = .12f,
                 onClick = { onClickFire(player) }),
             GuiButton(scale = actionButtonScale, title = "Jump", textSize = .12f,
@@ -160,30 +163,38 @@ class GuiCommandPanel(player: GamePlayer,
         val tabsContainerSize = Vec2(195f, 165f)
         val scrollButtonScale = Vec2(tabsContainerSize.x, 22f)
         val scrollButtonTextSize = .13f
+        val allMerchandise = MerchandiseLists()
+
         val weaponsList = GuiScroll(scale = tabsContainerSize.clone())
             .addKids((1..15).map {
                 GuiButton(scale = scrollButtonScale.clone(), title = "Boom #$it", textSize = scrollButtonTextSize,
                     onClick = { println("clicked [Boom $it]") })
             })
         val shieldsList = GuiScroll(scale = tabsContainerSize.clone())
-            .addKids((1..5).map {
-                GuiButton(scale = scrollButtonScale.clone(), title = "Shield #$it", textSize = scrollButtonTextSize,
-                    onClick = { println("clicked [Shield $it]") })
-            })
+            .also { scrollBox ->
+                scrollBox.addKids(VehicleShield.descriptor.entries
+                    .filter { it.key != ShieldType.None }
+                    .sortedBy { it.value.order }
+                    .map { (key, value) ->
+                        GuiMerchandise(scale = scrollButtonScale.clone(), name = value.name, price = value.price,
+                            itemId = value.order.toString(), description = value.description, key = key.toString(),
+                            onClick = { player.playerAim.setSelectedShield(key, allMerchandise, player) })
+                    })
+                allMerchandise.shields = scrollBox.kidElements.filterIsInstance<GuiMerchandise>()
+            }
         val fuelsList = GuiScroll(scale = tabsContainerSize.clone())
             .also { scrollBox ->
                 scrollBox.addKids(Fuel.descriptor.entries.sortedBy { it.value.order }
                     .map { (key, value) ->
-                        GuiMerchandise(scale = scrollButtonScale.clone(),
-                            name = value.name, price = value.price, itemId = value.order.toString(),
-                            description = value.description,
-                            onClick = {
-                                player.playerAim.setSelectedFuel(
-                                    key, scrollBox.kidElements.filterIsInstance<GuiMerchandise>(), player)
-                            })
+                        GuiMerchandise(scale = scrollButtonScale.clone(), name = value.name, price = value.price,
+                            itemId = value.order.toString(), description = value.description, key = key.toString(),
+                            onClick = { player.playerAim.setSelectedFuel(key, allMerchandise, player) })
                     })
-                player.playerAim.setSelectedFuel(null, scrollBox.kidElements.filterIsInstance<GuiMerchandise>(), player)
+                allMerchandise.fuels = scrollBox.kidElements.filterIsInstance<GuiMerchandise>()
             }
+
+        player.playerAim.setSelectedShield(null, allMerchandise, player)
+        player.playerAim.setSelectedFuel(null, allMerchandise, player)
 
         return GuiTabs(scale = tabsContainerSize.clone(), tabsTitles = listOf("Weapons", "Shields", "Fuels"))
             .addKids(listOf(weaponsList, shieldsList, fuelsList))

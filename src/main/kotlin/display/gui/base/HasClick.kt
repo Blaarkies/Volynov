@@ -1,6 +1,6 @@
 package display.gui.base
 
-import display.events.MouseButtonEvent
+import display.event.MouseButtonEvent
 import display.gui.base.GuiElementPhase.*
 import io.reactivex.Observable
 

@@ -4,11 +4,11 @@ import display.draw.TextureConfig
 import display.draw.TextureEnum
 import display.graphic.vertex.BasicShapes
 import display.graphic.Color
+import engine.physics.CollisionBits
 import org.jbox2d.collision.shapes.PolygonShape
-import org.jbox2d.dynamics.Body
-import org.jbox2d.dynamics.BodyType
-import org.jbox2d.dynamics.FixtureDef
-import org.jbox2d.dynamics.World
+import org.jbox2d.dynamics.*
+import org.jbox2d.dynamics.joints.MouseJoint
+import org.jbox2d.dynamics.joints.MouseJointDef
 import utility.Common.makeVec2
 import utility.PidControllerVec2
 
@@ -16,11 +16,11 @@ class MapBorder(val mapCenterBody: FreeBody, world: World, val radius: Float) {
 
     var worldBody: Body
     var textureConfig: TextureConfig
-    private val movementController = PidControllerVec2(.3f, .001f, 2f)
 
     init {
+        val center = mapCenterBody.worldBody.position
         val bodyDef = FreeBody.createBodyDef(BodyType.DYNAMIC,
-            mapCenterBody.worldBody.position.x, mapCenterBody.worldBody.position.y, 0f, 0f, 0f, 0f)
+            center.x, center.y, 0f, 0f, 0f, 0f)
         worldBody = world.createBody(bodyDef)
         worldBody.userData = this
 
@@ -43,11 +43,25 @@ class MapBorder(val mapCenterBody: FreeBody, world: World, val radius: Float) {
             shapeBox.set(vertices, vertices.size)
             FixtureDef().also {
                 it.shape = shapeBox
-                it.density = .0001f
+                it.density = .00001f
                 it.friction = .1f
                 it.restitution = .5f
+                worldBody.angularDamping = .5f
+
+                it.filter.categoryBits = CollisionBits.border
+                it.filter.maskBits = CollisionBits.planetVehicleWarhead
                 worldBody.createFixture(it)
             }
+        }
+
+        MouseJointDef().also {
+            it.target.set(worldBody.position)
+            it.bodyA = worldBody
+            it.bodyB = worldBody
+            it.maxForce = worldBody.mass * 100f
+            it.dampingRatio = .9f
+
+            world.createJoint(it)
         }
 
         textureConfig = TextureConfig(TextureEnum.danger, makeVec2(.7f),
@@ -59,8 +73,7 @@ class MapBorder(val mapCenterBody: FreeBody, world: World, val radius: Float) {
     }
 
     fun update() {
-        movementController.getReaction(mapCenterBody.worldBody.position, worldBody.position)
-            .also { worldBody.applyLinearImpulse(it.mul(worldBody.mass), worldBody.position) }
+        (worldBody.jointList.joint as MouseJoint).target = mapCenterBody.worldBody.position
     }
 
     fun clone(mapCenterBody: FreeBody, world: World): MapBorder = MapBorder(mapCenterBody, world, radius)

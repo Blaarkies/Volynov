@@ -1,4 +1,4 @@
-package display.gui.elements
+package display.gui.element
 
 import dI
 import display.draw.TextureEnum

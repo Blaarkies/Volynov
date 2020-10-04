@@ -122,13 +122,9 @@ object BasicShapes {
         return Pair(normal, it[0].second)
     }
 
-    private fun getLeftPaddedList(it: List<Pair<Vec2, List<Float>>>) =
-        listOf(it.first()) + it
+    private fun getLeftPaddedList(it: List<Pair<Vec2, List<Float>>>) = listOf(it.first()) + it
 
-    private fun getNormalAndLocationPair(
-        b: List<Float>,
-        a: List<Float>
-    ): Pair<Vec2, List<Float>> {
+    private fun getNormalAndLocationPair(b: List<Float>, a: List<Float>): Pair<Vec2, List<Float>> {
         val normal = Vec2(-b[1] + a[1], b[0] - a[0])
         normal.normalize()
         return Pair(normal, a)

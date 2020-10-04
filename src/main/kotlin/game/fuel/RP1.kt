@@ -30,7 +30,7 @@ class RP1(override var lastUpdatedAt: Float, override val attachedTo: FreeBody) 
 
         val visualExhaustVelocity = exhaustDirection.mul(throttleAmplitude * engineEfficiency * 5f)
         Particle("jump_thrust_${attachedTo.id}",
-            dI.gameState.particles, dI.gameState.world, attachedTo.worldBody, thrusterLocation,
+            dI.gameState.particles, dI.gameState.world, attachedTo.worldBody.linearVelocity, thrusterLocation,
             visualExhaustVelocity, throttleAmplitude * 1.8f, 700f,
             TextureEnum.rcs_puff, thrustColor, dI.gameState.tickTime)
     }

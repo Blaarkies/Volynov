@@ -4,13 +4,14 @@ import dI
 import display.draw.Model
 import display.draw.TextureConfig
 import display.draw.TextureEnum
-import display.events.MouseButtonEvent
+import display.event.MouseButtonEvent
 import display.graphic.vertex.BasicShapes
 import display.graphic.Color
 import display.graphic.vertex.BasicSurfaces
 import engine.gameState.GameState
 import engine.gameState.GameState.Companion.getContactBodies
-import engine.shields.VehicleShield
+import engine.physics.CollisionBits
+import game.shield.VehicleShield
 import game.GamePlayer
 import game.PlayerAim
 import game.fuel.Fuel
@@ -18,9 +19,7 @@ import io.reactivex.Observable
 import io.reactivex.subjects.PublishSubject
 import org.jbox2d.collision.shapes.PolygonShape
 import org.jbox2d.common.Vec2
-import org.jbox2d.dynamics.BodyType
-import org.jbox2d.dynamics.FixtureDef
-import org.jbox2d.dynamics.World
+import org.jbox2d.dynamics.*
 import utility.Common
 import utility.Common.Pi
 import utility.Common.makeVec2
@@ -60,8 +59,7 @@ class Vehicle(
                     makeVec2(a),
                     makeVec2(b),
                     makeVec2(c),
-                    Vec2()
-                )
+                    Vec2())
                     .toTypedArray()
                 shapeBox.set(vertices, vertices.size)
                 FixtureDef().also {
@@ -69,6 +67,8 @@ class Vehicle(
                     it.density = mass / (Pi * radius.pow(2f) * (fullShape.size * .5f))
                     it.friction = friction
                     it.restitution = restitution
+                    it.filter.categoryBits = CollisionBits.vehicle
+                    it.filter.maskBits = CollisionBits.planetVehicleWarhead or CollisionBits.border
                 }
             }
             .forEach { worldBody.createFixture(it) }
@@ -103,6 +103,7 @@ class Vehicle(
 
     fun update(tickTime: Float) {
         fuel?.burn(tickTime)
+        shield?.update(tickTime)
     }
 
     fun fireWarhead(gameState: GameState,
@@ -124,9 +125,11 @@ class Vehicle(
         val warheadMass = 1f
 
         gameState.activeCallbacks.add {
+            shield?.setShieldOnTurn()
+
             knock(warheadMass * warheadVelocity.length(), angle + Pi)
 
-            Particle("1", gameState.particles, gameState.world, worldBody, warheadLocation,
+            Particle("1", gameState.particles, gameState.world, worldBody.linearVelocity, warheadLocation,
                 radius = .3f, duration = 250f, createdAt = gameState.tickTime)
 
             Warhead("1", gameState.warheads,
@@ -158,6 +161,13 @@ class Vehicle(
         fuel?.startJump(playerAim)
     }
 
+    fun addShield(playerAim: PlayerAim) {
+        if (shield != null) {
+            shield?.dispose()
+        }
+        shield = VehicleShield.create(playerAim.selectedShield, this)
+    }
+
     fun thrustVehicle(event: Observable<MouseButtonEvent>) {
         fuel?.startThrust()
         event.takeUntil(unsubscribe).doOnComplete { fuel?.endThrust() }.subscribe()
@@ -168,6 +178,10 @@ class Vehicle(
 
         world.destroyBody(worldBody)
         vehicles.remove(this)
+    }
+
+    fun inflictDamage(amount: Float, firedBy: GamePlayer) {
+        hitPoints -= shield?.blockDamage(amount, firedBy) ?: amount
     }
 
 }
