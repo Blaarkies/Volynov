@@ -10,16 +10,17 @@ import org.lwjgl.BufferUtils
 import org.lwjgl.glfw.GLFW
 import org.lwjgl.glfw.GLFWErrorCallback
 import org.lwjgl.opengl.GL
-import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL11.*
 import org.lwjgl.system.Callback
 import org.lwjgl.system.MemoryUtil
 import utility.Common.makeVec2
 
-class Window(private val title: String, var width: Int, var height: Int, private var vSync: Boolean) {
+class Window(private val title: String,
+             var width: Int,
+             var height: Int,
+             private var vSync: Boolean) {
 
     private var windowHandle: Long = 0
-
     private var callbacks: MutableList<Callback> = mutableListOf()
 
     val keyboardEvent = PublishSubject.create<KeyboardEvent>()
@@ -37,12 +38,12 @@ class Window(private val title: String, var width: Int, var height: Int, private
         // Initialize GLFW. Most GLFW functions will not work before doing this.
         check(GLFW.glfwInit()) { "Unable to initialize GLFW" }
         GLFW.glfwDefaultWindowHints() // optional, the current window hints are already the default
-        GLFW.glfwWindowHint(GLFW.GLFW_VISIBLE, GL11.GL_FALSE) // the window will stay hidden after creation
-        GLFW.glfwWindowHint(GLFW.GLFW_RESIZABLE, GL11.GL_TRUE) // the window will be resizable
+        GLFW.glfwWindowHint(GLFW.GLFW_VISIBLE, GL_FALSE) // the window will stay hidden after creation
+        GLFW.glfwWindowHint(GLFW.GLFW_RESIZABLE, GL_TRUE) // the window will be resizable
         GLFW.glfwWindowHint(GLFW.GLFW_CONTEXT_VERSION_MAJOR, 3)
         GLFW.glfwWindowHint(GLFW.GLFW_CONTEXT_VERSION_MINOR, 2)
         GLFW.glfwWindowHint(GLFW.GLFW_OPENGL_PROFILE, GLFW.GLFW_OPENGL_CORE_PROFILE)
-        GLFW.glfwWindowHint(GLFW.GLFW_OPENGL_FORWARD_COMPAT, GL11.GL_TRUE)
+        GLFW.glfwWindowHint(GLFW.GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE)
         GLFW.glfwWindowHint(GLFW.GLFW_SAMPLES, 4) // anti-aliasing
 
         when (dI.isDebugMode) {
@@ -110,10 +111,6 @@ class Window(private val title: String, var width: Int, var height: Int, private
             return true
         }
         return false
-    }
-
-    fun setClearColor(r: Float, g: Float, b: Float, alpha: Float) {
-        GL11.glClearColor(r, g, b, alpha)
     }
 
     fun windowShouldClose(): Boolean = GLFW.glfwWindowShouldClose(windowHandle)

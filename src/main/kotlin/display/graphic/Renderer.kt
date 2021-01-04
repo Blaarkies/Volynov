@@ -68,7 +68,7 @@ class Renderer {
         val heightSide = cameraView.windowHeight * .5f
         val aspectRatio = widthSide / heightSide
         projectionGameWorld = Matrix4f()
-            .perspective(degreeToRadian * 60f, aspectRatio, .001f, 100f)
+            .perspective(degreeToRadian * 30f, aspectRatio, .001f, 100f)
             .transpose()
     }
 
@@ -182,20 +182,19 @@ class Renderer {
 
     private fun setupShaderProgram() {
         vao = VertexArrayObject().bind()
-        vbo = VertexBufferObject().bind(GL_ARRAY_BUFFER)
-        vertices = MemoryUtil.memAllocFloat(4096 * 2 * 64)
-        /* Upload null data to allocate storage for the VBO */
-        val size = (vertices.capacity() * java.lang.Float.BYTES).toLong()
-        vbo.uploadData(GL_ARRAY_BUFFER, size, GL_STATIC_DRAW)
 
-        val vertexShader = Shader.loadShader(GL_VERTEX_SHADER, "/shaders/vertexBasicPosition.glsl")
-        val fragmentShader = Shader.loadShader(GL_FRAGMENT_SHADER, "/shaders/fragmentBasicColor.glsl")
-        program = ShaderProgram()
-        program.attachShader(vertexShader)
-        program.attachShader(fragmentShader)
-        program.bindFragmentDataLocation(0, "fragmentColor")
-        program.link()
-        program.use()
+        vertices = MemoryUtil.memAllocFloat(4096 * 2 * 64) // Upload null data to allocate storage for the VBO
+        val size = (vertices.capacity() * java.lang.Float.BYTES).toLong()
+        vbo = VertexBufferObject().bind(GL_ARRAY_BUFFER)
+            .uploadData(GL_ARRAY_BUFFER, size, GL_STATIC_DRAW)
+
+        val vertexShader = Shader(GL_VERTEX_SHADER, "/shaders/vertexBasicPosition.glsl")
+        val fragmentShader = Shader(GL_FRAGMENT_SHADER, "/shaders/fragmentBasicColor.glsl")
+        program = ShaderProgram().attachShader(vertexShader)
+            .attachShader(fragmentShader)
+            .bindFragmentDataLocation(0, "fragmentColor")
+            .link()
+            .use()
         vertexShader.delete()
         fragmentShader.delete()
 
@@ -214,8 +213,7 @@ class Renderer {
             .rotateZ(h)
             .scale(scale)
             .transpose()
-        val uniModel = program.getUniformLocation("model")
-        program.setUniform(uniModel, model)
+        program.setUniform("model", model)
 
         val gameCamera = cameraView.renderCamera
         val guiCamera = Matrix4f()
@@ -244,8 +242,7 @@ class Renderer {
             }
             else -> Matrix4f()
         }
-        val uniView = program.getUniformLocation("view")
-        program.setUniform(uniView, view)
+        program.setUniform("view", view)
 
         val widthSide = cameraView.windowWidth * .5f
         val heightSide = cameraView.windowHeight * .5f
@@ -254,16 +251,14 @@ class Renderer {
             || cameraType == CameraType.UNIVERSE_SPECTRAL) projectionGameWorld
         else Matrix4f().ortho(-widthSide, widthSide, -heightSide, heightSide, depthSide, -depthSide)
 
-        val uniProjection = program.getUniformLocation("projection")
-        program.setUniform(uniProjection, projection)
+        program.setUniform("projection", projection)
 
         //        if (dI.window.isResized() ) {
         //            glViewport(0, 0, window.getWidth(), window.getHeight());
         //            window.setResized(false);
         //        }
 
-        val uniAmbientStrength = program.getUniformLocation("ambientStrength")
-        program.setUniform(uniAmbientStrength, if (cameraType == CameraType.UNIVERSE) 10 else 100)
+        program.setUniform("ambientStrength", if (cameraType == CameraType.UNIVERSE) 10 else 100)
 
         val lampPosition = dI.gameState.tickTime
             .let {
@@ -274,14 +269,9 @@ class Renderer {
                     .add(dI.gameState.mapBorder?.worldBody?.position ?: Vec2())
                     .toVector3f(40f * sin(Pi * tz) - 20f)
             }
-        val uniLightPosition = program.getUniformLocation("lightPosition")
-        program.setUniform(uniLightPosition, lampPosition)
-
-        val uniLightColor = program.getUniformLocation("lightColor")
-        program.setUniform(uniLightColor, Vector3f(1f, 1f, 1f))
-
-        val uniCameraPosition = program.getUniformLocation("viewPos")
-        program.setUniform(uniCameraPosition, cameraView.location.toVector3f(cameraView.z))
+        program.setUniform("lightPosition", lampPosition)
+        program.setUniform("lightColor", Vector3f(1f, 1f, 1f))
+        program.setUniform("viewPos", cameraView.location.toVector3f(cameraView.z))
     }
 
     private fun specifyVertexAttributes() {

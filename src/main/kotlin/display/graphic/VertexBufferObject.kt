@@ -13,12 +13,14 @@ class VertexBufferObject {
         return this
     }
 
-    fun uploadData(target: Int, data: FloatBuffer, usage: Int) {
+    fun uploadData(target: Int, data: FloatBuffer, usage: Int): VertexBufferObject {
         glBufferData(target, data, usage)
+        return this
     }
 
-    fun uploadData(target: Int, size: Long, usage: Int) {
+    fun uploadData(target: Int, size: Long, usage: Int): VertexBufferObject {
         glBufferData(target, size, usage)
+        return this
     }
 
     fun uploadSubData(target: Int, offset: Long, data: FloatBuffer): VertexBufferObject {
@@ -26,8 +28,9 @@ class VertexBufferObject {
         return this
     }
 
-    fun uploadData(target: Int, data: IntBuffer, usage: Int) {
+    fun uploadData(target: Int, data: IntBuffer, usage: Int): VertexBufferObject {
         glBufferData(target, data, usage)
+        return this
     }
 
     fun delete() {

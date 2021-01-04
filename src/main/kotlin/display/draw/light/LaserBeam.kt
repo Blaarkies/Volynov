@@ -8,7 +8,6 @@ import engine.freeBody.Particle
 import org.jbox2d.common.Vec2
 import utility.Common
 import utility.StopWatch
-import utility.lerp
 import utility.toList
 
 class LaserBeam(a: Vec2,

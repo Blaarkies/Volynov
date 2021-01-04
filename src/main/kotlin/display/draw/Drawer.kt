@@ -137,32 +137,6 @@ class Drawer {
         }
     }
 
-    fun drawBackgroundStars(textureEnum: TextureEnum,
-                            textureScale: Vec2 = vectorUnit,
-                            textureOffset: Vec2 = Vec2(),
-                            backgroundScale: Vec2 = vectorUnit.add(Vec2(.2f, -.2f)),
-                            backgroundOffset: Vec2 = Vec2()) {
-        val texture = textures.getTexture(textureEnum).bind()
-
-        val left = -texture.width / 2f
-        val right = texture.width / 2f
-        val top = texture.height / 2f
-        val bottom = -texture.height / 2f
-
-        val vertices = listOf(left, bottom, left, top, right, top, right, bottom).chunked(2)
-        val data = vertices.flatMap {
-            listOf(
-                it[0], it[1], 0f,
-                0f, 0f, -1f,
-                1f, 1f, 1f, 1f,
-                (it[0] / 2f - 0.5f) * textureScale.x + textureOffset.x,
-                (it[1] / 2f - 0.5f) * textureScale.y + textureOffset.y
-            )
-        }.toFloatArray()
-
-        renderer.drawShape(data, backgroundOffset, scale = backgroundScale.mul(30f))
-    }
-
     fun drawPlayerAimingPointer(player: GamePlayer) {
         val playerLocation = player.vehicle!!.worldBody.position
         val angle = player.playerAim.angle
