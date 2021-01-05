@@ -45,7 +45,7 @@ class Vehicle(
 ) : FreeBody(player.name, radius) {
 
     init {
-        val fullShape = BasicShapes.polygon4Spiked.chunked(2)
+        val fullShape = BasicShapes.polygon4Spiked
         val bodyDef = createBodyDef(BodyType.DYNAMIC, x, y, h, dx, dy, dh)
         worldBody = world.createBody(bodyDef)
         worldBody.userData = this

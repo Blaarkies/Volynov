@@ -24,7 +24,7 @@ class MapBorder(val mapCenterBody: FreeBody, world: World, val radius: Float) {
         worldBody = world.createBody(bodyDef)
         worldBody.userData = this
 
-        val squareChunks = BasicShapes.polygon6.chunked(2)
+        val squareChunks = BasicShapes.polygon6
         val fixtures = (squareChunks + listOf(squareChunks.first()))
             .windowed(2)
             .map {

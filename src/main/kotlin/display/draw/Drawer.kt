@@ -124,7 +124,7 @@ class Drawer {
         val maxMass = gravityMap.maxBy { (_, cell) -> cell.totalMass }?.value?.totalMass ?: .001f
         val scale = 0.707106781f * resolution
         gravityMap.forEach { (key, cell) ->
-            val data = BasicShapes.polygon4.chunked(2)
+            val data = BasicShapes.polygon4
                 .flatMap { (x, y) ->
                     listOf(
                         x, y, 0f,

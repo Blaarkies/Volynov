@@ -15,7 +15,7 @@ class Triangle(vararg points: Vector3f) {
     init {
         vertices = when {
             points.isNotEmpty() -> points.toList()
-            else -> BasicShapes.polygon3.chunked(2)
+            else -> BasicShapes.polygon3
                 .map { (x, y) -> Vector3f(x, y, 0f) }
         }
     }

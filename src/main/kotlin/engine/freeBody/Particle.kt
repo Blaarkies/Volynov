@@ -39,7 +39,7 @@ class Particle(val id: String,
             velocity.x, velocity.y, 0f)
         worldBody = world.createBody(bodyDef)
 
-        textureConfig = TextureConfig(texture, chunkedVertices = BasicShapes.polygon30.chunked(2), color = color)
+        textureConfig = TextureConfig(texture, chunkedVertices = BasicShapes.polygon30, color = color)
             .updateGpuBufferData()
 
         particles.add(this)

@@ -44,8 +44,8 @@ class Planet(
         textureConfig =
             when (isAsteroid) {
                 true -> TextureConfig(texture, makeVec2(.3f), Vec2(random().toFloat(), random().toFloat()),
-                    BasicShapes.polygon15.chunked(2))
-                false -> TextureConfig(texture, chunkedVertices = BasicShapes.polygon30.chunked(2))
+                    BasicShapes.polygon15)
+                false -> TextureConfig(texture, chunkedVertices = BasicShapes.polygon30)
             }
                 .updateGpuBufferData()
 

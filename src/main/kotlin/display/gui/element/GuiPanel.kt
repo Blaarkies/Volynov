@@ -45,12 +45,13 @@ open class GuiPanel(
 
     init {
         background = BasicShapes.square
+            .flatten()
             .let { Drawer.getColoredData(it, color) }
             .toFloatArray()
 
         dragHandleScale = Vec2(90f, 25f)
         dragHandleRelativeOffset = Vec2(0f, scale.y - dragHandleScale.y)
-        val linePoints = BasicShapes.square.chunked(2)
+        val linePoints = BasicShapes.square
             .flatMap { (x, y) -> listOf(x * dragHandleScale.x, y * dragHandleScale.y) }
         draggableOutline = Drawer.getLine(linePoints, Color.WHITE.setAlpha(.3f), startWidth = .5f, wrapAround = true)
 

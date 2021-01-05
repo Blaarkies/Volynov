@@ -65,7 +65,7 @@ class GuiScroll(
     }
 
     private fun init() {
-        val outlinePoints = BasicShapes.square.chunked(2)
+        val outlinePoints = BasicShapes.square
             .flatMap { (x, y) -> listOf(x * scale.x, y * scale.y) }
         outline = Drawer.getLine(outlinePoints, color, startWidth = 1f, wrapAround = true)
 

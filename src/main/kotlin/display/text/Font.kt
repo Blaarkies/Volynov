@@ -277,7 +277,7 @@ class Font(font: Font = Font(MONOSPACED, BOLD, 32), antiAlias: Boolean = true) {
         val glyphOffset = Vec2((glyph.x + glyph.width) / textureWidth, glyph.y / textureHeight)
         val debug = renderer.debugOffset
 
-        val data = BasicShapes.square.chunked(2)
+        val data = BasicShapes.square
             .flatMap { (x, y) ->
                 listOf(
                     x * glyph.width, y * glyph.height, 0f,

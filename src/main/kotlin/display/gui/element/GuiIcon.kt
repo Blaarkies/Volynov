@@ -27,7 +27,7 @@ class GuiIcon(
 
     private var outputScale = scale.sub(padding)
     val textureConfig: TextureConfig = TextureConfig(texture,
-        chunkedVertices = BasicShapes.square.chunked(2), color = color)
+        chunkedVertices = BasicShapes.square, color = color)
         .updateGpuBufferData()
 
     override fun render(parentSnipRegion: SnipRegion?) {

@@ -45,7 +45,7 @@ class GuiInput(
     private val paddedScale = Vec2(scale.x - 8f, 20f)
 
     init {
-        val verticalCursorLinePoint = BasicShapes.verticalLine.chunked(2)
+        val verticalCursorLinePoint = BasicShapes.verticalLine
             .flatMap { (x, y) ->
                 val location = makeVec2(x * paddedScale.x, y * paddedScale.y)
                     .also { vec -> vec.x -= paddedScale.x }
@@ -53,7 +53,7 @@ class GuiInput(
             }
         cursorLine = Drawer.getLine(verticalCursorLinePoint, color, startWidth = 1.2f)
 
-        val linePoints = BasicShapes.square.chunked(2)
+        val linePoints = BasicShapes.square
             .flatMap { (x, y) -> listOf(x * scale.x, y * scale.y) }
         buttonOutline = Drawer.getLine(linePoints, color, startWidth = 1f, wrapAround = true)
         buttonBackground = Drawer.getColoredData(linePoints, backgroundColor).toFloatArray()

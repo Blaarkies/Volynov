@@ -83,7 +83,7 @@ interface VehicleShield {
         worldBody.userData = this
 
         textureConfig = TextureConfig(TextureEnum.white_pixel,
-            chunkedVertices = BasicShapes.polygon15.chunked(2),
+            chunkedVertices = BasicShapes.polygon15,
             color = Color.TRANSPARENT)
             .also { it.updateGpuBufferData() }
     }

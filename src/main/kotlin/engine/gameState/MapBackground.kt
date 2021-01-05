@@ -20,7 +20,7 @@ class MapBackground {
         val tilingFactor = 50f
 
         textureConfigNear = TextureConfig(TextureEnum.stars_2k_transparent,
-            chunkedVertices = BasicShapes.square.chunked(2))
+            chunkedVertices = BasicShapes.square)
             .also {
                 it.gpuBufferData = it.chunkedVertices.flatMap { (x, y) ->
                     listOf(
@@ -33,7 +33,7 @@ class MapBackground {
                 }.toFloatArray()
             }
 
-        textureConfigFar = TextureConfig(TextureEnum.stars_2k, chunkedVertices = BasicShapes.square.chunked(2))
+        textureConfigFar = TextureConfig(TextureEnum.stars_2k, chunkedVertices = BasicShapes.square)
             .also {
                 it.gpuBufferData = it.chunkedVertices.flatMap { (x, y) ->
                     listOf(

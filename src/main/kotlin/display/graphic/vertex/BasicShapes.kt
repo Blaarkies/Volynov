@@ -27,29 +27,29 @@ object BasicShapes {
 
     val polygon30 = getPolygonVertices(30)
 
-    val square = polygon4.map { it * sqrt(2f) }
+    val square = polygon4.flatten().map { it * sqrt(2f) }.chunked(2)
 
     val polygon4Spiked = getSpikedPolygon(8)
 
-    val verticalLine = listOf(0f, 1f, 0f, -1f)
+    val verticalLine = listOf(0f, 1f, 0f, -1f).chunked(2)
 
-    val squareHouse = polygon4.chunked(2)
+    val squareHouse = polygon4
         .let { it.subList(0, 1) + listOf(listOf(0f, 1.05f)) + it.subList(1, 4) }
         .flatten()
 
-    private fun getPolygonVertices(corners: Int, rotate: Float = 1f.div(corners)): List<Float> =
+    private fun getPolygonVertices(corners: Int, rotate: Float = 1f.div(corners)): List<List<Float>> =
         (0 until corners).flatMap {
             val t = Common.Pi2 * (it.toFloat() / corners.toFloat()) + Common.Pi * rotate
             listOf(cos(t), sin(t))
-        }
+        }.chunked(2)
 
-    private fun getSpikedPolygon(corners: Int, smoothness: Float = .6f): List<Float> {
-        return getPolygonVertices(corners).chunked(2)
+    private fun getSpikedPolygon(corners: Int, smoothness: Float = .6f): List<List<Float>> {
+        return getPolygonVertices(corners)
             .withIndex()
             .flatMap { (index, vertex) ->
                 val scale = (if (index.rem(2) == 0) 1f else smoothness)
                 listOf(vertex[0] * scale, vertex[1] * scale)
-            }
+            }.chunked(2)
     }
 
     fun getArrowHeadPoints(linePoints: List<Float>, headSize: Float = 1f): List<Float> {
