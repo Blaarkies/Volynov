@@ -5,6 +5,7 @@ import display.draw.TextureConfig
 import display.draw.TextureEnum
 import display.graphic.vertex.BasicShapes
 import display.graphic.vertex.BasicSurfaces
+import display.graphic.vertex.Triangle
 import engine.physics.CollisionBits
 import org.jbox2d.collision.shapes.CircleShape
 import org.jbox2d.common.Vec2
@@ -50,10 +51,18 @@ class Planet(
                 .updateGpuBufferData()
 
         planets.add(this)
+        
 
         model = Model(
-            triangles = BasicSurfaces.getHemisphere(radius),
-            texture = texture
+                triangles = BasicSurfaces.icosahedron.let {
+                    BasicSurfaces.subdivide(it,
+                            when {
+                                radius > 5 -> 2
+                                radius > .3 -> 1
+                                else -> 0
+                            })
+                },
+                texture = texture
         )
     }
 

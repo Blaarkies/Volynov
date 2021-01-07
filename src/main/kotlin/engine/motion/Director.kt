@@ -9,20 +9,23 @@ import kotlin.math.hypot
 object Director {
 
     fun getDistance(serverX: Float, serverY: Float, clientX: Float = 0f, clientY: Float = 0f): Float =
-        hypot(clientX - serverX, clientY - serverY)
+            hypot(clientX - serverX, clientY - serverY)
 
     fun getDistance(server: Body, client: Body): Float = getDistance(server.position, client.position)
 
     fun getDistance(server: Vec2, client: Vec2): Float = hypot(client.x - server.x, client.y - server.y)
 
+    fun getDistance(server: List<Float>, client: List<Float>): Float =
+            hypot(client[0] - server[0], client[1] - server[1])
+
     fun getDistance(server: CellLocation, client: CellLocation): Float =
-        getDistance(server.x.toFloat(), server.y.toFloat(), client.x.toFloat(), client.y.toFloat())
+            getDistance(server.x.toFloat(), server.y.toFloat(), client.x.toFloat(), client.y.toFloat())
 
     /**
      * Computes the angle from [client] to [server] in the range from `-PI` to `PI` radians`
      */
     fun getDirection(serverX: Float, serverY: Float, clientX: Float = 0f, clientY: Float = 0f): Float =
-        atan2(serverY - clientY, serverX - clientX)
+            atan2(serverY - clientY, serverX - clientX)
 
     fun getDirection(server: Body, client: Body): Float = getDirection(server.position, client.position)
 

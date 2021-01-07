@@ -29,32 +29,6 @@ class Drawer {
     val textures = dI.textures
     val renderer = dI.renderer
 
-    fun drawDebugForces(freeBody: FreeBody) {
-        val x = freeBody.worldBody.position.x
-        val y = freeBody.worldBody.position.y
-        val accelerationX = freeBody.worldBody.m_force.x
-        val accelerationY = freeBody.worldBody.m_force.y
-
-        val multiplier = 2000f
-        val linePoints = listOf(
-            x,
-            y,
-            x + accelerationX * multiplier,
-            y + accelerationY * multiplier
-        )
-        val triangleStripPoints = BasicShapes.getLineTriangleStrip(linePoints, .2f)
-        val arrowHeadPoints = BasicShapes.getArrowHeadPoints(linePoints)
-        val data = getColoredData(
-            triangleStripPoints + arrowHeadPoints,
-            Color(0f, 1f, 1f, 1f), Color(0f, 1f, 1f, 0.0f)
-        ).toFloatArray()
-
-        textures.getTexture(TextureEnum.white_pixel).bind()
-        renderer.drawStrip(data)
-
-        renderer.drawText(freeBody.id, freeBody.worldBody.position, vectorUnit, Color.WHITE, TextJustify.LEFT)
-    }
-
     fun drawBorder(mapBorder: MapBorder) {
         textures.getTexture(mapBorder.textureConfig.texture).bind()
         renderer.drawStrip(
@@ -98,7 +72,8 @@ class Drawer {
             return
         }
 
-        if (freeBody !is Planet || freeBody.worldBody.mass < 20f) {
+        // paint vehicles and other non-models until all freebodies are fix to be 3d
+        if (freeBody !is Planet) {
             textures.getTexture(freeBody.textureConfig.texture).bind()
             renderer.drawShape(
                 freeBody.textureConfig.gpuBufferData,
@@ -219,6 +194,32 @@ class Drawer {
 
         textures.getTexture(TextureEnum.white_line_200).bind()
         renderer.drawStrip(data)
+    }
+
+    fun drawDebugForces(freeBody: FreeBody) {
+        val x = freeBody.worldBody.position.x
+        val y = freeBody.worldBody.position.y
+        val accelerationX = freeBody.worldBody.m_force.x
+        val accelerationY = freeBody.worldBody.m_force.y
+
+        val multiplier = 2000f
+        val linePoints = listOf(
+                x,
+                y,
+                x + accelerationX * multiplier,
+                y + accelerationY * multiplier
+        )
+        val triangleStripPoints = BasicShapes.getLineTriangleStrip(linePoints, .2f)
+        val arrowHeadPoints = BasicShapes.getArrowHeadPoints(linePoints)
+        val data = getColoredData(
+                triangleStripPoints + arrowHeadPoints,
+                Color(0f, 1f, 1f, 1f), Color(0f, 1f, 1f, 0.0f)
+        ).toFloatArray()
+
+        textures.getTexture(TextureEnum.white_pixel).bind()
+        renderer.drawStrip(data)
+
+        renderer.drawText(freeBody.id, freeBody.worldBody.position, vectorUnit, Color.WHITE, TextJustify.LEFT)
     }
 
     companion object {
