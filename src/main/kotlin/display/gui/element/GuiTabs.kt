@@ -119,7 +119,7 @@ class GuiTabs(
             movementEvent.lastElement()
                 .subscribe {
                     pagesOffsetTarget = kidElementOffsets.map { Pair(it, it.value.x + pagesOffsetTarget) }
-                        .minBy { (_, distance) -> distance.absoluteValue }!!
+                        .minByOrNull { (_, distance) -> distance.absoluteValue }!!
                         .let { (kv, _) -> -kv.value.x }
                 }
 

@@ -24,7 +24,7 @@ class GameContactListener(val gameState: GameState) : ContactListener {
         when {
             bodies.any { it.userData is Warhead } -> handleWarhead(bodies, contact)
             bodies.any { it.userData is Vehicle } -> handleVehicle(bodies)
-            bodies.any { it.userData is Planet } -> handlePlanet(bodies)
+            bodies.any { it.userData is Planet } -> handlePlanet()
         }
 
     }
@@ -57,7 +57,7 @@ class GameContactListener(val gameState: GameState) : ContactListener {
             .forEach { (it.userData as Vehicle).hasCollided = true }
     }
 
-    private fun handlePlanet(bodies: List<Body>) {
+    private fun handlePlanet() {
         println("when worlds collide!!!")
     }
 

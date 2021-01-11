@@ -106,10 +106,11 @@ class Vehicle(
         shield?.update(tickTime)
     }
 
-    fun fireWarhead(gameState: GameState,
-                    player: GamePlayer,
-                    warheadType: String = "will make this some class later",
-                    callback: (Warhead) -> Unit) {
+    fun fireWarhead(
+        gameState: GameState,
+        player: GamePlayer,
+        callback: (Warhead) -> Unit
+    ) {
         val angle = player.playerAim.angle
         val power = player.playerAim.power * .15f
         val originLocation = worldBody.position

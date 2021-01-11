@@ -1,7 +1,7 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm") version "1.3.72"
+    kotlin("jvm") version "1.4.21"
 }
 
 group = "blaarkies"
@@ -11,7 +11,6 @@ repositories {
     mavenCentral()
 }
 
-val kotlinVersion = "1.3.72"
 val lwjglVersion = "3.2.3"
 val lwjglNatives = "natives-windows"
 
@@ -27,49 +26,49 @@ dependencies {
 
     implementation(platform("org.lwjgl:lwjgl-bom:$lwjglVersion"))
     listOf(
-        "lwjgl", "1",
-        //        "lwjgl-assimp", "1",
-        //        "lwjgl-bgfx", "1",
-        //        "lwjgl-cuda", "0",
-        //        "lwjgl-egl", "0",
-        "lwjgl-glfw", "1",
-        "lwjgl-jawt", "0",
-        "lwjgl-jemalloc", "1",
-        //        "lwjgl-libdivide", "1",
-        //        "lwjgl-llvm", "1",
-        //        "lwjgl-lmdb", "1",
-        //        "lwjgl-lz4", "1",
-        //        "lwjgl-meow", "1",
-        //        "lwjgl-nanovg", "1",
-        //        "lwjgl-nfd", "1",
-        //        "lwjgl-nuklear", "1",
-        //        "lwjgl-odbc", "0",
-        //        "lwjgl-openal", "1",
-        //        "lwjgl-opencl", "0",
-        "lwjgl-opengl", "1",
-        //        "lwjgl-opengles", "1",
-        //        "lwjgl-openvr", "1",
-        //        "lwjgl-opus", "1",
-        //        "lwjgl-ovr", "1",
-        //        "lwjgl-par", "1",
-        //        "lwjgl-remotery", "1",
-        //        "lwjgl-rpmalloc", "1",
-        //        "lwjgl-shaderc", "1",
-        //        "lwjgl-sse", "1",
-        "lwjgl-stb", "1"
-        //        "lwjgl-tinyexr", "1",
-        //        "lwjgl-tinyfd", "1",
-        //        "lwjgl-tootle", "1",
-        //        "lwjgl-vma", "1",
-        //        "lwjgl-vulkan", "0",
-        //        "lwjgl-xxhash", "1",
-        //        "lwjgl-yoga", "1",
+        "lwjgl", "runtime",
+        //        "lwjgl-assimp", "runtime",
+        //        "lwjgl-bgfx", "runtime",
+        //        "lwjgl-cuda", "",
+        //        "lwjgl-egl", "",
+        "lwjgl-glfw", "runtime",
+        "lwjgl-jawt", "",
+        "lwjgl-jemalloc", "runtime",
+        //        "lwjgl-libdivide", "runtime",
+        //        "lwjgl-llvm", "runtime",
+        //        "lwjgl-lmdb", "runtime",
+        //        "lwjgl-lz4", "runtime",
+        //        "lwjgl-meow", "runtime",
+        //        "lwjgl-nanovg", "runtime",
+        //        "lwjgl-nfd", "runtime",
+        //        "lwjgl-nuklear", "runtime",
+        //        "lwjgl-odbc", "",
+        //        "lwjgl-openal", "runtime",
+        //        "lwjgl-opencl", "",
+        "lwjgl-opengl", "runtime",
+        //        "lwjgl-opengles", "runtime",
+        //        "lwjgl-openvr", "runtime",
+        //        "lwjgl-opus", "runtime",
+        //        "lwjgl-ovr", "runtime",
+        //        "lwjgl-par", "runtime",
+        //        "lwjgl-remotery", "runtime",
+        //        "lwjgl-rpmalloc", "runtime",
+        //        "lwjgl-shaderc", "runtime",
+        //        "lwjgl-sse", "runtime",
+        "lwjgl-stb", "runtime"
+        //        "lwjgl-tinyexr", "runtime",
+        //        "lwjgl-tinyfd", "runtime",
+        //        "lwjgl-tootle", "runtime",
+        //        "lwjgl-vma", "runtime",
+        //        "lwjgl-vulkan", "",
+        //        "lwjgl-xxhash", "runtime",
+        //        "lwjgl-yoga", "runtime",
         //        "lwjgl-zstd", "1)
     )
         .chunked(2)
         .forEach {
             implementation("org.lwjgl", it[0])
-            if (it[1] == "1") {
+            if (it[1] == "runtime") {
                 runtimeOnly("org.lwjgl", it[0], classifier = lwjglNatives)
             }
         }
@@ -98,7 +97,7 @@ tasks {
     task("renameFolder") {
         mustRunAfter("createBat")
         doLast {
-            file("$buildDir/libs").renameTo(file("$buildDir/Volynov"))
+            File("$buildDir/libs").renameTo(File("$buildDir/Volynov"))
         }
     }
 

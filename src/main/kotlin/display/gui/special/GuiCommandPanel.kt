@@ -56,8 +56,7 @@ class GuiCommandPanel(player: GamePlayer,
                 player.playerAim.selectedShieldDescriptor?.name ?: ""}"
             }),
             GuiLabel(textSize = .1f, updateCallback = { e ->
-                (e as GuiLabel).title = "Fuel      ${
-                player.playerAim.selectedFuelDescriptor?.name ?: ""}"
+                (e as GuiLabel).title = "Fuel      ${player.playerAim.selectedFuelDescriptor.name}"
             }))
             .also { labels ->
                 val first = labels.first()

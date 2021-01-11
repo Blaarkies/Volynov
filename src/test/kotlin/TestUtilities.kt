@@ -8,21 +8,21 @@ object TestUtilities {
         val visualGraph = HashMap<Pair<Float, Float>, String>()
 
         val xBuckets = 1.let {
-            val min = values.minBy { (x, _) -> x }!!.first
-            val max = values.maxBy { (x, _) -> x }!!.first
+            val min = values.minByOrNull { (x, _) -> x }!!.first
+            val max = values.maxByOrNull { (x, _) -> x }!!.first
             val bucketSize = (max - min) * .1f
             (0..9).map { min + bucketSize * it }
         }
         val yBuckets = 1.let {
-            val min = values.minBy { (_, y) -> y }!!.second
-            val max = values.maxBy { (_, y) -> y }!!.second
+            val min = values.minByOrNull { (_, y) -> y }!!.second
+            val max = values.maxByOrNull { (_, y) -> y }!!.second
             val bucketSize = (max - min) * .1f
             (0..9).map { min + bucketSize * it }
         }
 
         values.forEach { (x, y) ->
-            val xStep = xBuckets.minBy { (x - it).absoluteValue }!!
-            val yStep = xBuckets.minBy { (x - it).absoluteValue }!!
+            val xStep = xBuckets.minByOrNull { (x - it).absoluteValue }!!
+            val yStep = xBuckets.minByOrNull { (x - it).absoluteValue }!!
             visualGraph[Pair(xStep, yStep)] = "x"
         }
 
@@ -31,8 +31,8 @@ object TestUtilities {
 //            .joinToString()
 
         val result = joinLists(yBuckets, xBuckets)
-            .sortedBy { (x, y) -> -y }
-            .sortedBy { (x, y) -> x }
+            .sortedBy { (_, y) -> -y }
+            .sortedBy { (x, _) -> x }
             .map { (x, y) -> visualGraph[Pair(y, x)] }
             .map { if (it != null) "x" else "." }
             .chunked(10)
@@ -53,8 +53,8 @@ object TestUtilities {
 
         val intRange = (0 until resolution).toList()
         val result = joinLists(intRange, intRange)
-            .sortedBy { (x, y) -> -y }
-            .sortedBy { (x, y) -> x }
+            .sortedBy { (_, y) -> -y }
+            .sortedBy { (x, _) -> x }
             .map { (x, y) -> visualGraph[Pair(y, x)] }
             .map { if (it != null) "█" else "`" }
             .chunked(resolution)

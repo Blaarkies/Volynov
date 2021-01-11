@@ -57,7 +57,7 @@ object MapGenerator {
         createAsteroids(gameState.planets, gameState.world, 20, planet)
 
         val largestOrbitRadius =
-            gameState.planets.map { Director.getDistance(planet.worldBody, it.worldBody) }.max() ?: planet.radius
+            gameState.planets.map { Director.getDistance(planet.worldBody, it.worldBody) }.maxOrNull() ?: planet.radius
         gameState.mapBorder = MapBorder(planet, gameState.world, largestOrbitRadius)
     }
 

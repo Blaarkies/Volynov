@@ -102,8 +102,8 @@ object LayoutController {
             || intersectBottomLeft.y > intersectTopRight.y
             || intersectBottomLeft.sub(intersectTopRight).length() == 0f) {
             val falseCorner = listOf(intersectBottomLeft, intersectTopRight)
-                .maxBy { it.length() }!!
-            val validCorner = parentCorners.minBy { it.sub(falseCorner).length() }!!
+                .maxByOrNull { it.length() }!!
+            val validCorner = parentCorners.minByOrNull { it.sub(falseCorner).length() }!!
             intersectCorners = listOf(validCorner)
         } else {
             intersectCorners = listOf(
@@ -122,7 +122,7 @@ object LayoutController {
             .let { matches ->
                 when (matches.size) {
                     0 -> { // Kid is out of bounds, match via furthest corners
-                        val falseCorner = kidCorners.maxBy { it.length() }!!
+                        val falseCorner = kidCorners.maxByOrNull { it.length() }!!
                         val validCorner = intersectCorners[0]
 
                         validCorner.sub(falseCorner)

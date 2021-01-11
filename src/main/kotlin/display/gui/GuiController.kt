@@ -15,7 +15,6 @@ import display.gui.special.MerchandiseLists
 import display.text.TextJustify
 import engine.freeBody.Vehicle
 import game.GamePlayer
-import game.shield.ShieldType
 import game.shield.VehicleShield
 import input.CameraView
 import io.reactivex.Observable

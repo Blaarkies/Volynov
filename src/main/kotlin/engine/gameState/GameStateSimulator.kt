@@ -17,7 +17,7 @@ object GameStateSimulator {
         val timeStamp = System.currentTimeMillis()
         val clonedState = parentGameState.clone()
         val player = clonedState.playerOnTurn!!
-        player.vehicle?.fireWarhead(clonedState, player, "") {}
+        player.vehicle?.fireWarhead(clonedState, player) {}
 
         val errorScale = 1f / accuracy
         val predictionVelocityIterations = parentVelocityIterations.times(accuracy).toInt().coerceAtLeast(1)

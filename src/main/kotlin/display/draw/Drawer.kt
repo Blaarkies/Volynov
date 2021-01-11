@@ -96,7 +96,7 @@ class Drawer {
 
     fun drawGravityCells(gravityMap: HashMap<CellLocation, GravityCell>, resolution: Float) {
         textures.getTexture(TextureEnum.white_pixel).bind()
-        val maxMass = gravityMap.maxBy { (_, cell) -> cell.totalMass }?.value?.totalMass ?: .001f
+        val maxMass = gravityMap.maxByOrNull { (_, cell) -> cell.totalMass }?.value?.totalMass ?: .001f
         val scale = 0.707106781f * resolution
         gravityMap.forEach { (key, cell) ->
             val data = BasicShapes.polygon4

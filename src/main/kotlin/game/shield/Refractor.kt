@@ -48,7 +48,7 @@ class Refractor(override val attachedTo: Vehicle) : VehicleShield {
                             .sub(body.position)
                             .let { difference -> difference.mul(it.worldBody.mass / difference.length().pow(2f)) }
                     }
-                    .let { list -> list.maxBy { it.length() } }
+                    .let { list -> list.maxByOrNull { it.length() } }
                     ?: makeVec2Circle(Common.getRandomDirection())
 
                 attachedTo.knock(

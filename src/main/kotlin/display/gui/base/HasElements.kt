@@ -52,11 +52,11 @@ interface HasElements : HasHover {
     fun calculateNewScale() {
         val bottomLeft = localElements
             .map { it.offset.sub(it.scale) }
-            .let { bl -> Vec2(bl.minBy { it.x }!!.x, bl.minBy { it.y }!!.y) }
+            .let { bl -> Vec2(bl.minByOrNull { it.x }!!.x, bl.minByOrNull { it.y }!!.y) }
 
         val topRight = localElements
             .map { it.offset.add(it.scale) }
-            .let { tr -> Vec2(tr.maxBy { it.x }!!.x, tr.maxBy { it.y }!!.y) }
+            .let { tr -> Vec2(tr.maxByOrNull { it.x }!!.x, tr.maxByOrNull { it.y }!!.y) }
 
         val newScale = topRight.sub(bottomLeft).mul(.5f)
         if (newScale.sub(scale).length() == 0f) return

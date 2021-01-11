@@ -2,7 +2,7 @@ package display.gui.special
 
 import display.gui.element.GuiMerchandise
 
-class MerchandiseLists(shields: List<GuiMerchandise>? = null) {
+class MerchandiseLists {
 
     var weapons = emptyList<GuiMerchandise>()
     var shields = emptyList<GuiMerchandise>()

@@ -75,6 +75,7 @@ class GuiMerchandise(
             HOVER, ACTIVE ->
                 dI.renderer.drawShape(activeBackground, offset, useCamera = false, snipRegion = parentSnipRegion)
             DISABLED -> localElements[0].render(parentSnipRegion)
+            else -> Unit
         }
 
         when (currentPhase) {

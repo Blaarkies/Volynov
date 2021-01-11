@@ -73,6 +73,7 @@ class GuiInput(
                     dI.renderer.drawStrip(cursorLine, offset, useCamera = false, snipRegion = parentSnipRegion)
                 }
             }
+            else -> Unit
         }
 
         dI.renderer.drawStrip(buttonOutline, offset, useCamera = false)

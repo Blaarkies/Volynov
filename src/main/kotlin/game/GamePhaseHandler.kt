@@ -12,7 +12,6 @@ import engine.freeBody.Warhead
 import engine.gameState.GameStateSimulator.getNewPrediction
 import engine.motion.Director
 import game.GamePhase.*
-import game.shield.ActiveDefender
 import game.shield.Diamagnetor
 import game.shield.Refractor
 import input.CameraView
@@ -126,7 +125,7 @@ class GamePhaseHandler {
                         gameState.planets.remove(it)
                     }
 
-                val planet = gameState.gravityBodies.maxBy { it.worldBody.mass }!!
+                val planet = gameState.gravityBodies.maxByOrNull { it.worldBody.mass }!!
                 gameState.vehicles.forEach {
                     it.worldBody.setTransform(planet.worldBody.position
                         .add(makeVec2Circle(getRandomDirection()).mul(planet.radius + 3f)),
@@ -420,7 +419,7 @@ class GamePhaseHandler {
             player.addShield()
         }
 
-        player.vehicle?.fireWarhead(gameState, player, "boom small") { warhead -> camera.trackFreeBody(warhead) }
+        player.vehicle?.fireWarhead(gameState, player) { warhead -> camera.trackFreeBody(warhead) }
 
         startNewPhase(PLAYERS_TURN_FIRED)
     }
@@ -522,7 +521,7 @@ class GamePhaseHandler {
             ?: gameState.gravityBodies
                 .map { Pair(it, it.worldBody.position.add(transformedLocation.mul(-1f)).length()) }
                 .filter { (body, distance) -> distance <= body.radius + 5f }
-                .minBy { (_, distance) -> distance }?.first
+                .minByOrNull { (_, distance) -> distance }?.first
             ?: return
 
         // TODO: if body is Vehicle->Refractor shield, cancel

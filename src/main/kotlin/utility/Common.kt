@@ -16,7 +16,7 @@ object Common {
 
     @Throws(Exception::class)
     fun loadResource(fileName: String): String {
-        var result = ""
+        var result: String
         Class.forName(Common::class.java.name)
             .getResourceAsStream(fileName)
             .use {

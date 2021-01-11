@@ -87,8 +87,8 @@ class Color {
             }
         }
 
-        private fun hueToRgb(p: Float, q: Float, t: Float): Float {
-            var t = t
+        private fun hueToRgb(p: Float, q: Float, cycle: Float): Float {
+            var t = cycle
             if (t < 0f) t += 1f
             if (t > 1f) t -= 1f
             if (t < 1f / 6f) return p + (q - p) * 6f * t

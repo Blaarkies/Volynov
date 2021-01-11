@@ -93,7 +93,7 @@ class ActiveDefender(override val attachedTo: Vehicle) : VehicleShield {
                     && it.fixture.body.userData !is VehicleShield
                     && it.fixture.body.type != BodyType.KINEMATIC
         }
-            .minBy { it.fraction }!!
+            .minByOrNull { it.fraction }!!
             .also {
                 if (it.fixture.body == warhead.worldBody) {
                     val damage = VehicleShield.laserPower * deltaTime * .001f

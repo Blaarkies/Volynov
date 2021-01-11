@@ -38,7 +38,7 @@ class Font(font: Font = Font(MONOSPACED, BOLD, 32), antiAlias: Boolean = true) {
         fontBitMap = texture
         fontBitMapShadow = shadowTexture
 
-        fontWidth = glyphs.map { it.value.width }.max()!!
+        fontWidth = glyphs.map { it.value.width }.maxOrNull()!!
     }
 
     private fun createFontTexture(font: Font, antiAlias: Boolean): List<Texture> {
@@ -172,7 +172,7 @@ class Font(font: Font = Font(MONOSPACED, BOLD, 32), antiAlias: Boolean = true) {
     }
 
     private fun getHeight(text: CharSequence): Int = text.split('\n')
-        .map { sentence -> sentence.map { letter -> glyphs[letter]!!.height }.max() ?: 0 }
+        .map { sentence -> sentence.map { letter -> glyphs[letter]!!.height }.maxOrNull() ?: 0 }
         .sumBy { it }
 
     private fun getTextTotalWidth(glyphs: List<Glyph>, scale: Vec2) = glyphs.map { it.width * scale.x }.sum()
@@ -243,7 +243,7 @@ class Font(font: Font = Font(MONOSPACED, BOLD, 32), antiAlias: Boolean = true) {
             TextJustify.RIGHT -> Vec2(-getTextTotalWidth(glyphsList, scale) * 2, 0f)
         }
 
-        val lineHeight = glyphsList.maxBy { it.height }!!.height * 2
+        val lineHeight = glyphsList.maxByOrNull { it.height }!!.height * 2
         var x = 0f
         var y = 0f
         glyphsList.withIndex().forEach { (index, it) ->

@@ -15,7 +15,7 @@ object BasicSurfaces {
         return getDisc(radius)
                 .also { triangles -> // normalizes 2d scaling
                     val vertices = triangles.flatMap { it.vertices }
-                    val maxDistance = vertices.maxBy { it.length() }!!.length()
+                    val maxDistance = vertices.maxByOrNull { it.length() }!!.length()
                     vertices.distinct().forEach {
                         it.mul(1f / maxDistance)
                         // apply sphere shape

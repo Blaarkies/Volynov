@@ -176,7 +176,7 @@ class GuiScroll(
     override fun updateScrollBarRange() {
         super.updateScrollBarRange()
         scrollBarMax = 0f
-        scrollBarMin = kidElements.minBy { it.offset.y }
+        scrollBarMin = kidElements.minByOrNull { it.offset.y }
             .let { kidElementOffsets[it]!!.y + 2 * (scale.y - it!!.scale.y) }
             .coerceAtMost(0f)
     }
