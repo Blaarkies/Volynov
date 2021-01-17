@@ -13,9 +13,9 @@ class Model(var triangles: List<Triangle>, val texture: TextureEnum) {
         updateGpuData()
     }
 
-    private fun updateGpuData() {
+    fun updateGpuData() {
         gpuData = triangles.flatMap {
-            val vertices = it.vertices
+            val vertices = it.oldVertices
             val (nx, ny, nz) = it.normal
 
             vertices.flatMap { (x, y, z) ->

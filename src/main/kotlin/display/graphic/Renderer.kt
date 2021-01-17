@@ -258,7 +258,7 @@ class Renderer {
         //            window.setResized(false);
         //        }
 
-        program.setUniform("ambientStrength", if (cameraType == CameraType.UNIVERSE) 10 else 100)
+        program.setUniform("ambientStrength", if (cameraType == CameraType.UNIVERSE) 15 else 100)
 
         val lampPosition = dI.gameState.tickTime
             .let {

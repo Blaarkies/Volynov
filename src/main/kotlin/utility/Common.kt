@@ -14,7 +14,8 @@ import kotlin.math.*
 
 object Common {
 
-    @Throws(Exception::class)
+    private const val pathResources = "src/main/resources"
+
     fun loadResource(fileName: String): String {
         var result: String
         Class.forName(Common::class.java.name)
@@ -26,7 +27,7 @@ object Common {
     }
 
     fun getSafePath(resourcePath: String): String {
-        val alternativePath = "src/main/resources/${resourcePath.substring(1)}"
+        val alternativePath = "$pathResources/${resourcePath.substring(1)}"
         return when {
             File(alternativePath).exists() -> alternativePath
             else -> resourcePath

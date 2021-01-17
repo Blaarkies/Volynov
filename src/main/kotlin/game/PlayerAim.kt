@@ -45,7 +45,7 @@ class PlayerAim(angle: Float = 0f, power: Float = 100f) {
 
     fun clone(): PlayerAim = PlayerAim(angle, power)
 
-    fun setSelectedWeapon(selectedOption: FuelType?, merchandise: MerchandiseLists, player: GamePlayer) {
+    fun setSelectedWeapon(merchandise: MerchandiseLists, player: GamePlayer) {
 
 
         updateAvailableMerchandise(merchandise, player)

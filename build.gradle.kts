@@ -77,15 +77,17 @@ dependencies {
 sourceSets {
     main {
         resources {
-            exclude("textures", "fonts")
+            exclude("textures", "fonts", "models")
         }
     }
 }
 
 tasks {
 
+    val javaVersion = "11" // "1.8"
+
     withType<KotlinCompile> {
-        kotlinOptions.jvmTarget = "1.8"
+        kotlinOptions.jvmTarget = javaVersion
     }
 
     register<Zip>("zipFolder") {

@@ -78,7 +78,7 @@ class Window(private val title: String,
 
     private fun setupInputCallbacks() {
         GLFW.glfwSetKeyCallback(windowHandle) { _, key, scancode, action, mods ->
-            if (!handleDebugKeys(key, scancode, action, mods)) {
+            if (!handleDebugKeys(key)) {
                 keyboardEvent.onNext(KeyboardEvent(key, scancode, action, mods))
             }
         }?.let { callbacks.add(it) }
@@ -101,7 +101,7 @@ class Window(private val title: String,
         //        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     }
 
-    private fun handleDebugKeys(key: Int, scancode: Int, action: Int, mods: Int): Boolean {
+    private fun handleDebugKeys(key: Int): Boolean {
         if (key == GLFW.GLFW_KEY_F12) {
             when (glGetInteger(GL_POLYGON_MODE)) {
                 GL_LINE -> glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)

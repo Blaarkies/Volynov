@@ -1,13 +1,11 @@
 package engine.freeBody
 
 import dI
-import display.draw.Model
 import display.draw.TextureConfig
 import display.draw.TextureEnum
 import display.event.MouseButtonEvent
 import display.graphic.vertex.BasicShapes
 import display.graphic.Color
-import display.graphic.vertex.BasicSurfaces
 import engine.gameState.GameState
 import engine.gameState.GameState.Companion.getContactBodies
 import engine.physics.CollisionBits
@@ -24,6 +22,7 @@ import utility.Common
 import utility.Common.Pi
 import utility.Common.makeVec2
 import utility.Common.makeVec2Circle
+import utility.WavefrontObject
 import kotlin.math.pow
 
 class Vehicle(
@@ -81,10 +80,7 @@ class Vehicle(
         player.vehicle = this
         vehicles.add(this)
 
-        model = Model(
-            triangles = BasicSurfaces.getHemisphere(radius),
-            texture = texture
-        )
+        model = WavefrontObject.import("tank_cube")
     }
 
     private val unsubscribe = PublishSubject.create<Boolean>()

@@ -1,12 +1,10 @@
 package engine.freeBody
 
 import dI
-import display.draw.Model
 import display.draw.TextureConfig
 import display.draw.TextureEnum
 import display.graphic.Color
 import display.graphic.vertex.BasicShapes
-import display.graphic.vertex.BasicSurfaces
 import engine.gameState.GameState
 import engine.motion.Director
 import engine.physics.CollisionBits
@@ -22,6 +20,7 @@ import utility.Common
 import utility.Common.Pi
 import utility.Common.makeVec2Circle
 import utility.PidController
+import utility.WavefrontObject
 import java.util.concurrent.TimeUnit
 import kotlin.math.absoluteValue
 import kotlin.math.sqrt
@@ -72,10 +71,7 @@ class Warhead(
         firedBy.warheads.add(this)
         warheads.add(this)
 
-        model = Model(
-            triangles = BasicSurfaces.getHemisphere(radius),
-            texture = TextureEnum.metal
-        )
+        model = WavefrontObject.import("missile_basic")
     }
 
     var hitPoints = 100f

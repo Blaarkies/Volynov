@@ -58,29 +58,16 @@ class Drawer {
     fun drawFreeBody(freeBody: FreeBody) {
         if (freeBody is Vehicle) {
             if (freeBody.shield !is Refractor) {
-                textures.getTexture(freeBody.textureConfig.texture).bind()
-                renderer.drawShape(
-                    freeBody.textureConfig.gpuBufferData,
-                    freeBody.worldBody.position,
+                textures.getTexture(freeBody.model.texture).bind()
+                renderer.drawMesh(
+                    freeBody.model.gpuData,
+                    freeBody.worldBody.position.toVector3f(),
                     freeBody.worldBody.angle,
-                    makeVec2(freeBody.radius)
+                    Vector3f(freeBody.radius)
                 )
             }
 
             freeBody.shield?.render()
-
-            return
-        }
-
-        // paint vehicles and other non-models until all freebodies are fix to be 3d
-        if (freeBody !is Planet) {
-            textures.getTexture(freeBody.textureConfig.texture).bind()
-            renderer.drawShape(
-                freeBody.textureConfig.gpuBufferData,
-                freeBody.worldBody.position,
-                freeBody.worldBody.angle,
-                makeVec2(freeBody.radius)
-            )
 
             return
         }
