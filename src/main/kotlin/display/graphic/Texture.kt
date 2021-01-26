@@ -2,7 +2,6 @@ package display.graphic
 
 import org.lwjgl.BufferUtils
 import org.lwjgl.opengl.ARBFramebufferObject.glGenerateMipmap
-import org.lwjgl.opengl.ARBTextureStorage
 import org.lwjgl.opengl.ARBTextureStorage.glTexStorage2D
 import org.lwjgl.opengl.GL11.*
 import org.lwjgl.stb.STBImage
@@ -69,27 +68,32 @@ class Texture {
             return texture
         }
 
-        fun loadTexture(resourcePath: String): Texture {
+        fun load(name: String): Texture {
+            val resourcePath = "./textures/$name.png"
             val safePath = getSafePath(resourcePath)
 
-            var image = BufferUtils.createByteBuffer(0)
-            var width = 0
-            var height = 0
             MemoryStack.stackPush().use { stack ->
                 val w = stack.mallocInt(1)
                 val h = stack.mallocInt(1)
-                val comp = stack.mallocInt(1)
+                val channelCount = stack.mallocInt(1)
 
                 STBImage.stbi_set_flip_vertically_on_load(true)
-                image = STBImage.stbi_load(safePath, w, h, comp, 0)
-                    ?: throw RuntimeException("""
+                val imageByteBuffer = STBImage.stbi_load(safePath, w, h, channelCount, 4)
+                    ?: throw RuntimeException(
+                        """
                         |Cannot load texture file at [$safePath] 
-                        |${STBImage.stbi_failure_reason()}""".trimMargin())
+                        |${STBImage.stbi_failure_reason()}""".trimMargin()
+                    )
+                val imageChannels = channelCount.get()
+                if (imageChannels != 4) {
+                    throw Exception(
+                        "Texture [$name] tried to load a $imageChannels-channel image format. " +
+                                "Only 4-channel, 32-bit PNG images are supported"
+                    )
+                }
 
-                width = w.get()
-                height = h.get()
+                return createTexture(w.get(), h.get(), imageByteBuffer)
             }
-            return createTexture(width, height, image)
         }
 
     }

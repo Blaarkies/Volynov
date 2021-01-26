@@ -1,10 +1,13 @@
 package engine.freeBody
 
+import dI
 import display.draw.Model
+import display.draw.ModelEnum
 import display.draw.TextureConfig
 import display.draw.TextureEnum
 import display.graphic.vertex.BasicShapes
 import display.graphic.vertex.BasicSurfaces
+import display.graphic.vertex.MapProjectionType
 import engine.physics.CollisionBits
 import org.jbox2d.collision.shapes.CircleShape
 import org.jbox2d.common.Vec2
@@ -67,6 +70,7 @@ class Planet(
                         else -> 0
                     }
                 )
+                    .also { BasicSurfaces.setVertexTexture(it.flatMap { it.vertices }, MapProjectionType.Mercator) }
             },
             texture
         )

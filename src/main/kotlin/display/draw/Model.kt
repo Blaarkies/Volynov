@@ -1,9 +1,7 @@
 package display.draw
 
 import display.graphic.vertex.Triangle
-import utility.component1
-import utility.component2
-import utility.component3
+import utility.*
 
 class Model(var triangles: List<Triangle>, val texture: TextureEnum) {
 
@@ -15,19 +13,29 @@ class Model(var triangles: List<Triangle>, val texture: TextureEnum) {
 
     fun updateGpuData() {
         gpuData = triangles.flatMap {
-            val vertices = it.oldVertices
-            val (nx, ny, nz) = it.normal
-
-            vertices.flatMap { (x, y, z) ->
+            it.vertices.flatMap { (location, texture, normal) ->
                 listOf(
-                    x, y, z,
-                    nx, ny, nz,
+                    location.x, location.y, location.z,
+                    normal.x, normal.y, normal.z,
                     1f, 1f, 1f, 1f,
-                    (x * .5f - .5f),
-                    (y * .5f - .5f)
+                    texture.x, texture.y,
                 )
             }
         }.toFloatArray()
+    }
+
+    fun clone() = Model(
+        triangles.map { it.clone() },
+        texture
+    )
+
+    companion object {
+
+        fun load(name: String): Model {
+            val safePath = Common.getSafePath("/models/$name")
+            return WavefrontObject.import(safePath)
+        }
+
     }
 
 }

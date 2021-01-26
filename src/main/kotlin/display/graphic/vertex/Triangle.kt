@@ -2,21 +2,12 @@ package display.graphic.vertex
 
 import org.joml.Vector3f
 import utility.padEnd
-import utility.subClone
 
-class Triangle(vararg points: Vector3f) {
+class Triangle(vararg vertices: Vertex) {
 
-    constructor(points: List<Vector3f>) : this(points[0], points[1], points[2])
+    constructor(vertices: List<Vertex>) : this(vertices[0], vertices[1], vertices[2])
 
-    constructor(isNew: Boolean, vertices: List<Vertex>) : this(
-        vertices[0].location,
-        vertices[1].location,
-        vertices[2].location
-    )
-
-    val vertices: List<Vertex> = emptyList()
-
-    val oldVertices: List<Vector3f>
+    val vertices: List<Vertex> = vertices.toList()
     private val _connectedByVertexTriangles = mutableSetOf<Triangle>()
     private val _connectedByEdgeTriangles = mutableSetOf<Triangle>()
 
@@ -39,7 +30,7 @@ class Triangle(vararg points: Vector3f) {
         _connectedByEdgeTriangles.clear()
         val trianglesBorderingByEdge = edges.flatMap { (a, b) ->
             _connectedByVertexTriangles.filter { triangle ->
-                triangle.oldVertices.count { it == a || it == b } == 2
+                triangle.vertices.count { it == a || it == b } == 2
             }
         }
         _connectedByEdgeTriangles.addAll(trianglesBorderingByEdge)
@@ -49,19 +40,14 @@ class Triangle(vararg points: Vector3f) {
      * Normal is calculated to point towards the camera when `vertices` are ordered in an anticlockwise direction
      */
     val normal: Vector3f
-        get() = oldVertices[1].subClone(oldVertices[2])
-            .cross(oldVertices[0].subClone(oldVertices[1]))
+        get() = vertices.map { it.normal }
+            .fold(Vector3f()) { sum, v -> sum.add(v) }
+            .div(3f)
             .normalize()
 
-    init {
-        oldVertices = when {
-            points.isNotEmpty() -> points.toList()
-            else -> BasicShapes.polygon3
-                .map { (x, y) -> Vector3f(x, y, 0f) }
-        }
-    }
-
     val edges
-        get() = oldVertices.padEnd().windowed(2)
+        get() = vertices.padEnd().windowed(2)
+
+    fun clone() = Triangle(vertices.map { it.clone() })
 
 }

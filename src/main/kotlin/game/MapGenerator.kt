@@ -25,7 +25,7 @@ object MapGenerator {
 
     fun populateNewGameMap(gameState: GameState) {
         val planet = Planet("terra", gameState.planets, gameState.world, 0f, 0f, 0f, 0f, 0f, .05f * getRandomSign(),
-            3000f, 9f, texture = TextureEnum.marble_earth)
+            3000f, 9f, texture = TextureEnum.mercator_color)
 
         val orbitalLevels = (1..gameState.gamePlayers.size).map { OrbitalLevel(it, it) }
         val moons = (1..ceil(gameState.gamePlayers.size * .7f)).map {

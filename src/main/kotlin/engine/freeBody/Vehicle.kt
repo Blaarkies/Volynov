@@ -1,6 +1,7 @@
 package engine.freeBody
 
 import dI
+import display.draw.ModelEnum
 import display.draw.TextureConfig
 import display.draw.TextureEnum
 import display.event.MouseButtonEvent
@@ -80,7 +81,7 @@ class Vehicle(
         player.vehicle = this
         vehicles.add(this)
 
-        model = WavefrontObject.import("tank_cube")
+        model = dI.models.getModel(ModelEnum.tank_cube)
     }
 
     private val unsubscribe = PublishSubject.create<Boolean>()

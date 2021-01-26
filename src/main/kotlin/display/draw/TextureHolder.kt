@@ -4,14 +4,14 @@ import display.graphic.Texture
 
 class TextureHolder {
 
-    private val textureHashMap = HashMap<TextureEnum, Texture>()
+    private val hashMap = HashMap<TextureEnum, Texture>()
 
     fun init() {
         TextureEnum.values()
-            .forEach { textureHashMap[it] = Texture.loadTexture("./textures/${it.name}.png") }
+            .forEach { hashMap[it] = Texture.load(it.name) }
     }
 
-    fun getTexture(texture: TextureEnum): Texture = textureHashMap[texture].let {
+    fun getTexture(texture: TextureEnum): Texture = hashMap[texture].let {
         checkNotNull(it) { "Cannot find texture $texture" }
         it
     }

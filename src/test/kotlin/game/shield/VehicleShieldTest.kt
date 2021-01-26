@@ -1,10 +1,24 @@
 package game.shield
 
+import display.draw.Model
+import display.draw.TextureEnum
+import display.graphic.vertex.BasicSurfaces
 import org.junit.jupiter.api.Test
+import utility.WavefrontObject
 
 import kotlin.math.pow
 
 internal class VehicleShieldTest {
+
+    @Test
+    fun import() {
+        WavefrontObject.import("missile_basic")
+    }
+
+    @Test
+    fun export() {
+        WavefrontObject.export(Model(BasicSurfaces.icosahedron, TextureEnum.metal))
+    }
 
     @Test
     fun blockDamage() {

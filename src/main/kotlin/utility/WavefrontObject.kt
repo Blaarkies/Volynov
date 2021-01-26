@@ -17,8 +17,8 @@ object WavefrontObject {
     private const val fileNameObject = "object.obj"
     private const val fileNameMaterial = "material.mtl"
 
-    fun import(modelName: String): Model {
-        val safePath = getSafePath("/models/$modelName/$fileNameObject")
+    fun import(resourcePath: String): Model {
+        val safePath = getSafePath("$resourcePath/$fileNameObject")
         val file = File(safePath)
         val a = parseContents(file.readLines())
 
@@ -28,30 +28,28 @@ object WavefrontObject {
     fun export(model: Model, path: String = "models") {
         val nameObject = "MyModel"
         val nameMaterial = "${nameObject}_material"
-        val vertexIndices = model.triangles.flatMap { it.oldVertices }.distinct().withIndex().toList()
+        val vertexIndices = model.triangles.flatMap { it.vertices }.distinct().withIndex().toList()
 
         val result = """
         # Blaarkies Volynov Object Exporter - OBJ File
         # https://github.com/Blaarkies/Volynov
         mtllib ${nameMaterial}.mtl
         o $nameObject
-        ${vertexIndices.joinToString(System.lineSeparator()) { (_, it) -> "v ${it.x} ${it.y} ${it.z}" }}
-        vt 0 0 0
-        ${
-            model.triangles
+        ${vertexIndices.joinToString(System.lineSeparator()) { (_, it) -> 
+            "v ${it.location.x} ${it.location.y} ${it.location.z}" }}
+        ${vertexIndices.joinToString(System.lineSeparator()) { (_, it) ->
+            "vt ${it.texture.x} ${it.texture.y}" }}
+        ${model.triangles
                 .map { "vn ${it.normal.x} ${it.normal.y} ${it.normal.z}" }
-                .joinToString(System.lineSeparator())
-        }
+                .joinToString(System.lineSeparator())}
         usemtl $nameMaterial
         s off
-        ${
-            model.triangles.withIndex().joinToString(System.lineSeparator()) { (triangleIndex, triangle) ->
+        ${model.triangles.withIndex().joinToString(System.lineSeparator()) { (triangleIndex, triangle) ->
                 "f " +
-                        triangle.oldVertices
-                            .map { vertex -> vertexIndices.find { it.value == vertex }!!.index }
-                            .joinToString(" ") { "${it + 1}/1/${triangleIndex + 1}" }
-            }
-        }
+                triangle.vertices
+                    .map { vertex -> vertexIndices.find { it.value == vertex }!!.index }
+                    .joinToString(" ") { "${it + 1}/1/${triangleIndex + 1}" }
+            }}
         """.trimIndent()
 
         val safePath = getSafePath(path)
@@ -84,7 +82,7 @@ object WavefrontObject {
                     indexNormalMap[normal] ?: throw VectorIndexNotFoundException(indexNormalMap, normal),
                 )
             }
-            Triangle(true, vertices)
+            Triangle(vertices)
         }
 
         return triangles

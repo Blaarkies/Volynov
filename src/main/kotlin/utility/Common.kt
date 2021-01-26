@@ -5,6 +5,7 @@ import io.reactivex.Observable
 import io.reactivex.Observable.interval
 import io.reactivex.subjects.PublishSubject
 import org.jbox2d.common.Vec2
+import org.joml.Vector2f
 import org.joml.Vector3f
 import java.io.File
 import java.nio.DoubleBuffer
@@ -146,10 +147,12 @@ fun Vec2.toVector3f(z: Float = 0f): Vector3f = Vector3f(x, y, z)
 
 fun Vector3f.toVec2(): Vec2 = Vec2(x, y)
 fun Vector3f.normal2d(b: Vector3f): Vector3f = Vector3f(-b.y + y, b.x - x, 0f).normalize()
+fun Vector2f.clone(): Vector2f = Vector2f(this)
 fun Vector3f.clone(): Vector3f = Vector3f(this)
 fun Vector3f.mulClone(factor: Float): Vector3f = this.clone().mul(factor)
 fun Vector3f.addClone(b: Vector3f): Vector3f = this.clone().add(b)
 fun Vector3f.subClone(b: Vector3f): Vector3f = this.clone().sub(b)
+fun Vector2f.lerpClone(b: Vector2f, t: Float): Vector2f = this.clone().lerp(b, t)
 fun Vector3f.lerpClone(b: Vector3f, t: Float): Vector3f = this.clone().lerp(b, t)
 
 operator fun Vector3f.component1(): Float = x

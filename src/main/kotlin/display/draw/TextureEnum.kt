@@ -1,5 +1,7 @@
 package display.draw
 
+// Must be exact names of images in texture folder
+// Images must be 32-bit PNG
 enum class TextureEnum {
     marble_earth,
     full_moon,
@@ -20,5 +22,10 @@ enum class TextureEnum {
     white_dot_100_pad,
     white_line_100,
     white_line_200,
-    debug_square
+    debug_square,
+    mercator_color,
+    mercator_error,
+    mercator_error_2,
+    old_time,
+    steel_plate,
 }

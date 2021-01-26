@@ -8,6 +8,7 @@ class AppLogic : IGameLogic {
     override fun init() {
         dI.renderer.init()
         dI.textures.init()
+        dI.models.init()
         dI.gamePhaseHandler.init()
     }
 

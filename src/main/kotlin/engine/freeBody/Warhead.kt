@@ -1,6 +1,7 @@
 package engine.freeBody
 
 import dI
+import display.draw.ModelEnum
 import display.draw.TextureConfig
 import display.draw.TextureEnum
 import display.graphic.Color
@@ -71,7 +72,7 @@ class Warhead(
         firedBy.warheads.add(this)
         warheads.add(this)
 
-        model = WavefrontObject.import("missile_basic")
+        model = dI.models.getModel(ModelEnum.missile_basic)
     }
 
     var hitPoints = 100f
