@@ -77,7 +77,8 @@ class Drawer {
             freeBody.model.gpuData,
             freeBody.worldBody.position.toVector3f(),
             freeBody.worldBody.angle,
-            Vector3f(freeBody.radius)
+            Vector3f(freeBody.radius),
+            rotateY = if (freeBody is Warhead) freeBody.rotation.y else 0f
         )
     }
 
@@ -153,7 +154,8 @@ class Drawer {
                     it.worldBody.position.toVector3f(),
                     it.worldBody.angle,
                     Vector3f(it.radius),
-                    CameraType.UNIVERSE_SPECTRAL
+                    CameraType.UNIVERSE_SPECTRAL,
+                    rotateY = 0f
                 )
             }
 

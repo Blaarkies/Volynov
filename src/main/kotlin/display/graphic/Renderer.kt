@@ -7,12 +7,10 @@ import org.jbox2d.common.MathUtils.sin
 import org.jbox2d.common.Vec2
 import org.joml.Matrix4f
 import org.joml.Vector3f
-import org.lwjgl.opengl.GL15.*
 import org.lwjgl.opengl.GL20.*
 import org.lwjgl.system.MemoryUtil
 import utility.Common.Pi
 import utility.Common.Pi2
-import utility.Common.PiH
 import utility.Common.degreeToRadian
 import utility.Common.getSafePath
 import utility.Common.makeVec2Circle
@@ -124,9 +122,12 @@ class Renderer {
         useCamera: Boolean = true,
         snipRegion: SnipRegion? = null,
         z: Float = 0f
-    ) = drawEntity(data, offset.toVector3f(z), h, scale.toVector3f(), GL_TRIANGLE_FAN,
+    ) = drawEntity(
+        data, offset.toVector3f(z), h, scale.toVector3f(), GL_TRIANGLE_FAN,
         if (useCamera) CameraType.UNIVERSE_SPECTRAL else CameraType.GUI,
-        snipRegion)
+        snipRegion,
+        0f
+    )
 
     fun drawStrip(
         data: FloatArray,
@@ -135,9 +136,12 @@ class Renderer {
         scale: Vec2 = vectorUnit,
         useCamera: Boolean = true,
         snipRegion: SnipRegion? = null
-    ) = drawEntity(data, offset.toVector3f(), h, scale.toVector3f(), GL_TRIANGLE_STRIP,
+    ) = drawEntity(
+        data, offset.toVector3f(), h, scale.toVector3f(), GL_TRIANGLE_STRIP,
         if (useCamera) CameraType.UNIVERSE_SPECTRAL else CameraType.GUI,
-        snipRegion)
+        snipRegion,
+        0f
+    )
 
     fun drawMesh(
         data: FloatArray,
@@ -145,8 +149,9 @@ class Renderer {
         h: Float = 0f,
         scale: Vector3f = Vector3f(1f),
         cameraType: CameraType = CameraType.UNIVERSE,
-        snipRegion: SnipRegion? = null
-    ) = drawEntity(data, offset, h, scale, GL_TRIANGLES, cameraType, snipRegion)
+        snipRegion: SnipRegion? = null,
+        rotateY: Float = 0f
+    ) = drawEntity(data, offset, h, scale, GL_TRIANGLES, cameraType, snipRegion, rotateY)
 
     private fun drawEntity(
         data: FloatArray,
@@ -155,7 +160,8 @@ class Renderer {
         scale: Vector3f,
         drawType: Int,
         cameraType: CameraType,
-        snipRegion: SnipRegion?
+        snipRegion: SnipRegion?,
+        rotateY: Float
     ) {
         if (snipRegion != null && snipRegion.sizeX * snipRegion.sizeY == 0) return
 
@@ -168,7 +174,7 @@ class Renderer {
         vertices.put(data)
         numVertices += data.size / vertexDimensionCount
 
-        setUniformInputs(offset, h, scale, cameraType, snipRegion)
+        setUniformInputs(offset, h, scale, cameraType, snipRegion, rotateY)
         end(drawType)
     }
 
@@ -184,13 +190,14 @@ class Renderer {
         vao = VertexArrayObject().bind()
 
         vertices = MemoryUtil.memAllocFloat(4096 * 2 * 64) // Upload null data to allocate storage for the VBO
-        val size = (vertices.capacity() * java.lang.Float.BYTES).toLong()
+        val size = vertices.capacity() * java.lang.Float.BYTES
         vbo = VertexBufferObject().bind(GL_ARRAY_BUFFER)
-            .uploadData(GL_ARRAY_BUFFER, size, GL_STATIC_DRAW)
+            .uploadData(GL_ARRAY_BUFFER, size.toLong(), GL_STATIC_DRAW)
 
         val vertexShader = Shader(GL_VERTEX_SHADER, "/shaders/vertexBasicPosition.glsl")
         val fragmentShader = Shader(GL_FRAGMENT_SHADER, "/shaders/fragmentBasicColor.glsl")
-        program = ShaderProgram().attachShader(vertexShader)
+        program = ShaderProgram()
+            .attachShader(vertexShader)
             .attachShader(fragmentShader)
             .bindFragmentDataLocation(0, "fragmentColor")
             .link()
@@ -203,14 +210,16 @@ class Renderer {
 
     private fun setUniformInputs(
         offset: Vector3f = Vector3f(),
-        h: Float = 0f,
+        h: Float,
         scale: Vector3f = Vector3f(1f),
         cameraType: CameraType,
-        snipRegion: SnipRegion?
+        snipRegion: SnipRegion?,
+        rotateY: Float = 0f
     ) {
         val model = Matrix4f()
             .translate(offset)
             .rotateZ(h)
+            .rotateY(rotateY)
             .scale(scale)
             .transpose()
         program.setUniform("model", model)
