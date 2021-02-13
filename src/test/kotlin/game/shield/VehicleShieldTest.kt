@@ -2,6 +2,7 @@ package game.shield
 
 import display.draw.Model
 import display.draw.TextureEnum
+import display.graphic.CameraType
 import display.graphic.vertex.BasicSurfaces
 import org.junit.jupiter.api.Test
 import utility.WavefrontObject
@@ -17,7 +18,7 @@ internal class VehicleShieldTest {
 
     @Test
     fun export() {
-        WavefrontObject.export(Model(BasicSurfaces.icosahedron, TextureEnum.metal))
+        WavefrontObject.export(Model(BasicSurfaces.icosahedron, listOf(TextureEnum.metal), 1f, CameraType.UNIVERSE))
     }
 
     @Test

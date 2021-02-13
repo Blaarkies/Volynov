@@ -2,9 +2,9 @@ package engine.freeBody
 
 import dI
 import display.draw.Model
-import display.draw.ModelEnum
 import display.draw.TextureConfig
 import display.draw.TextureEnum
+import display.graphic.CameraType
 import display.graphic.vertex.BasicShapes
 import display.graphic.vertex.BasicSurfaces
 import display.graphic.vertex.MapProjectionType
@@ -14,7 +14,6 @@ import org.jbox2d.common.Vec2
 import org.jbox2d.dynamics.BodyType
 import org.jbox2d.dynamics.World
 import utility.Common.makeVec2
-import utility.WavefrontObject
 import java.lang.Math.random
 
 class Planet(
@@ -72,7 +71,13 @@ class Planet(
                 )
                     .also { BasicSurfaces.setVertexTexture(it.flatMap { it.vertices }, MapProjectionType.Mercator) }
             },
-            texture
+            listOf(
+                TextureEnum.mercator_color,
+                TextureEnum.metal,
+                TextureEnum.danger,
+            ),
+            radius,
+            CameraType.UNIVERSE,
         )
     }
 
@@ -82,7 +87,7 @@ class Planet(
             id, planets, world,
             body.position.x, body.position.y, body.angle,
             body.linearVelocity.x, body.linearVelocity.y, body.angularVelocity,
-            body.mass, radius,
+            body.mass, model.scale,
             body.fixtureList.restitution, body.fixtureList.friction,
             textureConfig.texture
         )

@@ -123,7 +123,7 @@ class CameraView {
 
     fun getWorldLocation(pixelLocation: Vec2): Vec2 {
         val view = renderCamera.clone().transpose()
-        val projection = dI.renderer.projectionGameWorld.clone().transpose()
+        val projection = dI.newRenderer.projectionGameWorld.clone().transpose()
         val adj = pixelLocation.let { Vec2(it.x, windowHeight - it.y) }
 
         val getOrigin = { Vector3f(location.x, location.y, -z) }
@@ -143,7 +143,7 @@ class CameraView {
 
     fun getGuiLocation(worldLocation: Vec2): Vec2 {
         val view = renderCamera.clone().transpose()
-        val projection = dI.renderer.projectionGameWorld.clone().transpose()
+        val projection = dI.newRenderer.projectionGameWorld.clone().transpose()
 
         val windowLocation = projection.mul(view).project(
             worldLocation.x, worldLocation.y, 0f,

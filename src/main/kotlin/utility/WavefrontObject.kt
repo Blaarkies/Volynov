@@ -4,6 +4,7 @@ package utility
 
 import display.draw.Model
 import display.draw.TextureEnum
+import display.graphic.CameraType
 import display.graphic.vertex.Triangle
 import display.graphic.vertex.Vertex
 import exceptions.*
@@ -22,7 +23,7 @@ object WavefrontObject {
         val file = File(safePath)
         val a = parseContents(file.readLines())
 
-        return Model(a, TextureEnum.metal)
+        return Model(a, listOf(TextureEnum.metal), 1f, CameraType.UNIVERSE)
     }
 
     fun export(model: Model, path: String = "models") {

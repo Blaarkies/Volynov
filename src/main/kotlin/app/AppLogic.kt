@@ -4,9 +4,9 @@ import dI
 
 class AppLogic : IGameLogic {
 
-    @Throws(Exception::class)
     override fun init() {
-        dI.renderer.init()
+//        dI.renderer.init()
+        dI.newRenderer.init()
         dI.textures.init()
         dI.models.init()
         dI.gamePhaseHandler.init()
@@ -17,12 +17,14 @@ class AppLogic : IGameLogic {
     }
 
     override fun render() {
-        dI.renderer.clear()
+//        dI.renderer.clear()
+        dI.newRenderer.clear()
         dI.gamePhaseHandler.render()
     }
 
     override fun cleanup() {
-        dI.renderer.dispose()
+//        dI.renderer.dispose()
+        dI.newRenderer.dispose()
         dI.inputHandler.dispose()
         dI.gamePhaseHandler.dispose()
     }

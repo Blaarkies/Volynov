@@ -1,9 +1,10 @@
 #version 330
 
-layout (location = 0) in vec3 in_position;
-layout (location = 1) in vec3 in_normal;
-layout (location = 2) in vec4 in_color;
-layout (location = 3) in vec2 in_textureCoordinate;
+layout (location = 0) in vec3 in_location;
+layout (location = 1) in vec2 in_textureCoordinate;
+layout (location = 2) in vec3 in_normal;
+layout (location = 3) in vec4 in_color;
+layout (location = 4) in float in_textureDepth;
 
 out vec4 out_vertexColor;
 out vec2 out_textureCoordinate;
@@ -29,6 +30,6 @@ void main() {
     vec3 ambientColor = vec3(1, 1, 1);
     out_ambient = ambientStrength * .01 * ambientColor;
 
-    gl_Position = mvp * vec4(in_position, 1);
+    gl_Position = mvp * vec4(in_location, 1);
     out_fragmentPosition = gl_Position.xyz;
 }

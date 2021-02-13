@@ -2,6 +2,7 @@ import display.Window
 import display.draw.Drawer
 import display.draw.ModelHolder
 import display.draw.TextureHolder
+import display.graphic.NewRenderer
 import display.graphic.Renderer
 import display.gui.GuiController
 import engine.gameState.GameState
@@ -18,6 +19,7 @@ class DependencyInjectionContainer {
 
     lateinit var cameraView: CameraView
     lateinit var renderer: Renderer
+    lateinit var newRenderer: NewRenderer
     lateinit var textures: TextureHolder
     lateinit var models: ModelHolder
     lateinit var drawer: Drawer
@@ -33,6 +35,7 @@ class DependencyInjectionContainer {
     fun init() {
         cameraView = CameraView()
         renderer = Renderer()
+        newRenderer = NewRenderer()
         textures = TextureHolder()
         models = ModelHolder()
         drawer = Drawer()
