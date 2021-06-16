@@ -70,13 +70,13 @@ open class GuiPanel(
 
     override fun render(parentSnipRegion: SnipRegion?) {
         dI.textures.getTexture(TextureEnum.white_pixel).bind()
-        dI.renderer.drawShape(background, offset, 0f, scale, useCamera = false, snipRegion = parentSnipRegion)
+        dI.oldRenderer.drawShape(background, offset, 0f, scale, useCamera = false, snipRegion = parentSnipRegion)
 
         if (draggable) {
-            dI.renderer.drawStrip(draggableOutline, dragHandleOffset, useCamera = false, snipRegion = parentSnipRegion)
+            dI.oldRenderer.drawStrip(draggableOutline, dragHandleOffset, useCamera = false, snipRegion = parentSnipRegion)
         }
 
-        dI.renderer.drawText(
+        dI.oldRenderer.drawText(
             title,
             offset.add(Vec2(0f, scale.y - 25f)),
             vectorUnit.mul(.15f),

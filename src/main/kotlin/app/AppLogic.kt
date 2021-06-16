@@ -5,7 +5,7 @@ import dI
 class AppLogic : IGameLogic {
 
     override fun init() {
-//        dI.renderer.init()
+        dI.oldRenderer.init()
         dI.newRenderer.init()
         dI.textures.init()
         dI.models.init()
@@ -17,13 +17,13 @@ class AppLogic : IGameLogic {
     }
 
     override fun render() {
-//        dI.renderer.clear()
+        dI.oldRenderer.clear()
         dI.newRenderer.clear()
         dI.gamePhaseHandler.render()
     }
 
     override fun cleanup() {
-//        dI.renderer.dispose()
+        dI.oldRenderer.dispose()
         dI.newRenderer.dispose()
         dI.inputHandler.dispose()
         dI.gamePhaseHandler.dispose()

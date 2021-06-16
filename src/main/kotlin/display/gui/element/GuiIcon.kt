@@ -34,7 +34,7 @@ class GuiIcon(
         super.render(parentSnipRegion)
 
         dI.textures.getTexture(textureConfig.texture).bind()
-        dI.renderer.drawShape(
+        dI.oldRenderer.drawShape(
             textureConfig.gpuBufferData,
             offset,
             angle,

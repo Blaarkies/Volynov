@@ -60,27 +60,27 @@ class GuiMerchandise(
     }
 
     override fun render(parentSnipRegion: SnipRegion?) {
-        dI.renderer.drawText(name, offset.sub(Vec2(scale.x - 4f, 0f)), makeVec2(.13),
+        dI.oldRenderer.drawText(name, offset.sub(Vec2(scale.x - 4f, 0f)), makeVec2(.13),
             color, useCamera = false, snipRegion = parentSnipRegion)
 
         val tooltipIcon = localElements[1]
         tooltipIcon.render(parentSnipRegion)
 
-        dI.renderer.drawText("$price$muCron",
+        dI.oldRenderer.drawText("$price$muCron",
             offset.add(Vec2(scale.x - tooltipIcon.scale.x * 2, 0f)), makeVec2(.13),
             color, justify = TextJustify.RIGHT, useCamera = false, snipRegion = parentSnipRegion)
 
         dI.textures.getTexture(TextureEnum.white_pixel).bind()
         when (currentPhase) {
             HOVER, ACTIVE ->
-                dI.renderer.drawShape(activeBackground, offset, useCamera = false, snipRegion = parentSnipRegion)
+                dI.oldRenderer.drawShape(activeBackground, offset, useCamera = false, snipRegion = parentSnipRegion)
             DISABLED -> localElements[0].render(parentSnipRegion)
             else -> Unit
         }
 
         when (currentPhase) {
             ACTIVE -> {
-                dI.renderer.drawStrip(outline, offset,
+                dI.oldRenderer.drawStrip(outline, offset,
                     scale = Vec2((scale.x - 2f) / scale.x, (scale.y - 2f) / scale.y),
                     useCamera = false, snipRegion = parentSnipRegion)
             }

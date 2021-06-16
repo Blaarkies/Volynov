@@ -110,7 +110,7 @@ class GamePhaseHandler {
     }
 
     fun init() {
-        when (0) {
+        when (2) {
             0 -> setupMainMenu()
             1 -> setupMainMenuSelectPlayers()
             2 -> {
@@ -128,7 +128,7 @@ class GamePhaseHandler {
                 val planet = gameState.gravityBodies.maxByOrNull { it.worldBody.mass }!!
                 gameState.vehicles.forEach {
                     it.worldBody.setTransform(planet.worldBody.position
-                        .add(makeVec2Circle(getRandomDirection()).mul(planet.radius + 3f)),
+                        .add(makeVec2Circle(getRandomDirection()).mul(planet.radius + 23f)),
                         0f)
                 }
 

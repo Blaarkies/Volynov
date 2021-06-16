@@ -9,16 +9,22 @@ import kotlin.math.absoluteValue
 
 internal class BasicShapesTest {
 
+//    @Test
+//    fun `getHemisphere should have all vertices at length 1`() {
+//        BasicSurfaces.icosahedron
+//            .flatMap { it.vertices }
+//            .map { it.length() }
+//            .forEach {
+//                expect(it).close(1f, .001f)
+//            }
+//
+//    }
     @Test
-    fun `getHemisphere should have all vertices at length 1`() {
-        BasicSurfaces.getHemisphere(9f)
-            .flatMap { it.vertices }
-            .map { it.length() }
-            .forEach {
-                expect(it).close(1f, .001f)
-            }
+    fun makeRun() {
+
 
     }
+
 
 }
 

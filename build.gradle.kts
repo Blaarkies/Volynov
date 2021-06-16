@@ -21,8 +21,8 @@ dependencies {
     implementation("org.jbox2d:jbox2d-library:2.2.1.1")
     implementation("org.joml:joml:1.9.25")
 
-    testImplementation("org.junit.jupiter:junit-jupiter:5.5.2")
-    testImplementation("io.mockk:mockk:1.10.0")
+//    testImplementation("org.junit.jupiter:junit-jupiter:5.5.2")
+//    testImplementation("io.mockk:mockk:1.10.0")
 
     implementation(platform("org.lwjgl:lwjgl-bom:$lwjglVersion"))
     listOf(
@@ -63,7 +63,7 @@ dependencies {
         //        "lwjgl-vulkan", "",
         //        "lwjgl-xxhash", "runtime",
         //        "lwjgl-yoga", "runtime",
-        //        "lwjgl-zstd", "1)
+        //        "lwjgl-zstd", "")
     )
         .chunked(2)
         .forEach {

@@ -1,6 +1,5 @@
 package engine.freeBody
 
-import dI
 import display.draw.Model
 import display.draw.TextureConfig
 import display.draw.TextureEnum
@@ -13,6 +12,11 @@ import org.jbox2d.collision.shapes.CircleShape
 import org.jbox2d.common.Vec2
 import org.jbox2d.dynamics.BodyType
 import org.jbox2d.dynamics.World
+import org.joml.Vector3f
+import utility.Common.PiH
+import utility.Common.getTimingFunctionEaseIn
+import utility.Common.getTimingFunctionEaseOut
+import utility.Common.getTimingFunctionFullSine
 import utility.Common.makeVec2
 import java.lang.Math.random
 
@@ -69,7 +73,26 @@ class Planet(
                         else -> 0
                     }
                 )
-                    .also { BasicSurfaces.setVertexTexture(it.flatMap { it.vertices }, MapProjectionType.Mercator) }
+                    .also {
+                        BasicSurfaces.setVertexTexture(it.flatMap { it.vertices },
+                            MapProjectionType.Mercator)
+                    }
+                    .also {
+                        // todo: don't deform planets
+                        val centerVertex = it.flatMap { it.vertices }
+                            .distinct()
+                            .minByOrNull { it.location.distance(5f, -2f, 3f) }!!
+
+                        it.flatMap { it.vertices }
+                            .map { Pair(it, it.location.distance(centerVertex.location)) }
+                            .forEach { (vertex, distance) ->
+                                val ratio = (distance / 2f)
+                                vertex.location.mul(
+                                    getTimingFunctionEaseOut(ratio).coerceIn(.3f, 1f)
+                                )
+                                vertex.textureDepth = vertex.location.length()
+                            }
+                    }
             },
             listOf(
                 TextureEnum.mercator_color,

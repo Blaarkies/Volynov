@@ -23,7 +23,7 @@ import java.nio.FloatBuffer
 import java.util.logging.Level
 import java.util.logging.Logger
 
-class Renderer {
+class OldRenderer {
 
     var debugOffset: Vec2 = vectorUnit
 
@@ -42,62 +42,65 @@ class Renderer {
     // Coordinate system is expected cartesian.
     // y-value increases to top of screen, x-value increases to right of screen
     fun init() {
-        setupShaderProgram()
-
-        glEnable(GL_BLEND)
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-        //        glEnable(GL_CULL_FACE)
-        //        glDepthFunc(GL_LESS)
-
-        font = try {
-            val fontPath = getSafePath("./fonts/ALBMT___.TTF")
-            Font(FileInputStream(fontPath), 80)
-        } catch (ex: FontFormatException) {
-            ex.printStackTrace()
-            Logger.getLogger(Renderer::class.java.name).log(Level.CONFIG, null, ex)
-            Font()
-        } catch (ex: IOException) {
-            ex.printStackTrace()
-            Logger.getLogger(Renderer::class.java.name).log(Level.CONFIG, null, ex)
-            Font()
-        }
-
-        val widthSide = cameraView.windowWidth * .5f
-        val heightSide = cameraView.windowHeight * .5f
-        val aspectRatio = widthSide / heightSide
-        projectionGameWorld = Matrix4f()
-            .perspective(degreeToRadian * 30f, aspectRatio, .001f, 100f)
-            .transpose()
+        return
+//        setupShaderProgram()
+//
+//        glEnable(GL_BLEND)
+//        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+//        //        glEnable(GL_CULL_FACE)
+//        //        glDepthFunc(GL_LESS)
+//
+//        font = try {
+//            val fontPath = getSafePath("./fonts/ALBMT___.TTF")
+//            Font(FileInputStream(fontPath), 80)
+//        } catch (ex: FontFormatException) {
+//            ex.printStackTrace()
+//            Logger.getLogger(Renderer::class.java.name).log(Level.CONFIG, null, ex)
+//            Font()
+//        } catch (ex: IOException) {
+//            ex.printStackTrace()
+//            Logger.getLogger(Renderer::class.java.name).log(Level.CONFIG, null, ex)
+//            Font()
+//        }
+//
+//        val widthSide = cameraView.windowWidth * .5f
+//        val heightSide = cameraView.windowHeight * .5f
+//        val aspectRatio = widthSide / heightSide
+//        projectionGameWorld = Matrix4f()
+//            .perspective(degreeToRadian * 30f, aspectRatio, .001f, 100f)
+//            .transpose()
     }
 
-    fun clear() = glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
+    fun clear() {
+//        glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
+    }
 
     fun begin() {
-        check(!isDrawing) { "Renderer is already drawing!" }
-        isDrawing = true
-        numVertices = 0
+//        check(!isDrawing) { "Renderer is already drawing!" }
+//        isDrawing = true
+//        numVertices = 0
     }
 
     fun end(drawType: Int = GL_TRIANGLES) {
-        check(isDrawing) { "Renderer isn't drawing!" }
-        isDrawing = false
-        flush(drawType)
+//        check(isDrawing) { "Renderer isn't drawing!" }
+//        isDrawing = false
+//        flush(drawType)
     }
 
     private fun flush(drawType: Int) {
-        if (numVertices <= 0) return
-
-        vertices.flip()
-        vao.bind()
-        program.use()
-
-        vbo.bind(GL_ARRAY_BUFFER) // TODO: not needed?
-            .uploadSubData(GL_ARRAY_BUFFER, 0, vertices)
-
-        glDrawArrays(drawType, 0, numVertices)
-
-        vertices.clear()
-        numVertices = 0
+//        if (numVertices <= 0) return
+//
+//        vertices.flip()
+//        vao.bind()
+//        program.use()
+//
+//        vbo.bind(GL_ARRAY_BUFFER) // TODO: not needed?
+//            .uploadSubData(GL_ARRAY_BUFFER, 0, vertices)
+//
+//        glDrawArrays(drawType, 0, numVertices)
+//
+//        vertices.clear()
+//        numVertices = 0
     }
 
     fun drawText(text: CharSequence,
@@ -110,8 +113,8 @@ class Renderer {
                  maxWidth: Float = 0f,
                  angle: Float = 0f
     ) {
-        if (text.isEmpty()) return
-        font.drawText(this, text, offset, scale, color, justify, useCamera, snipRegion, maxWidth, angle)
+//        if (text.isEmpty()) return
+//        font.drawText(this, text, offset, scale, color, justify, useCamera, snipRegion, maxWidth, angle)
     }
 
     fun drawShape(
@@ -122,12 +125,14 @@ class Renderer {
         useCamera: Boolean = true,
         snipRegion: SnipRegion? = null,
         z: Float = 0f
-    ) = drawEntity(
-        data, offset.toVector3f(z), h, scale.toVector3f(), GL_TRIANGLE_FAN,
-        if (useCamera) CameraType.UNIVERSE_SPECTRAL else CameraType.GUI,
-        snipRegion,
-        0f
-    )
+    ) {
+//        drawEntity(
+//            data, offset.toVector3f(z), h, scale.toVector3f(), GL_TRIANGLE_FAN,
+//            if (useCamera) CameraType.UNIVERSE_SPECTRAL else CameraType.GUI,
+//            snipRegion,
+//            0f
+//        )
+    }
 
     fun drawStrip(
         data: FloatArray,
@@ -136,12 +141,14 @@ class Renderer {
         scale: Vec2 = vectorUnit,
         useCamera: Boolean = true,
         snipRegion: SnipRegion? = null
-    ) = drawEntity(
-        data, offset.toVector3f(), h, scale.toVector3f(), GL_TRIANGLE_STRIP,
-        if (useCamera) CameraType.UNIVERSE_SPECTRAL else CameraType.GUI,
-        snipRegion,
-        0f
-    )
+    ) {
+//        drawEntity(
+//            data, offset.toVector3f(), h, scale.toVector3f(), GL_TRIANGLE_STRIP,
+//            if (useCamera) CameraType.UNIVERSE_SPECTRAL else CameraType.GUI,
+//            snipRegion,
+//            0f
+//        )
+    }
 
     fun drawMesh(
         data: FloatArray,
@@ -151,7 +158,9 @@ class Renderer {
         cameraType: CameraType = CameraType.UNIVERSE,
         snipRegion: SnipRegion? = null,
         rotateY: Float = 0f
-    ) = drawEntity(data, offset, h, scale, GL_TRIANGLES, cameraType, snipRegion, rotateY)
+    ) {
+//        drawEntity(data, offset, h, scale, GL_TRIANGLES, cameraType, snipRegion, rotateY)
+    }
 
     private fun drawEntity(
         data: FloatArray,
@@ -163,6 +172,7 @@ class Renderer {
         snipRegion: SnipRegion?,
         rotateY: Float
     ) {
+        return
         if (snipRegion != null && snipRegion.sizeX * snipRegion.sizeY == 0) return
 
         begin()
@@ -179,11 +189,12 @@ class Renderer {
     }
 
     fun dispose() {
-        MemoryUtil.memFree(vertices)
-        vao.delete()
-        vbo.delete()
-        program.delete()
-        font.dispose()
+//        return
+//        MemoryUtil.memFree(vertices)
+//        vao.delete()
+//        vbo.delete()
+//        program.delete()
+//        font.dispose()
     }
 
     private fun setupShaderProgram() {
@@ -220,6 +231,12 @@ class Renderer {
             .translate(offset)
             .rotateZ(h)
             .rotateY(rotateY)
+//            .also {
+//                if (cameraType == CameraType.UNIVERSE) {
+//                    it.rotateY(System.nanoTime().div(10000000000f))
+//                        .rotateX(System.nanoTime().div(10000000000f)*.6f)
+//                }
+//            }
             .scale(scale)
             .transpose()
         program.setUniform("model", model)
@@ -276,7 +293,7 @@ class Renderer {
                 val tz = it.rem(duration * .9f).div(duration * .9f)
                 makeVec2Circle(Pi2 * -txy).mul(20f)
                     .add(dI.gameState.mapBorder?.worldBody?.position ?: Vec2())
-                    .toVector3f(40f * sin(Pi * tz) - 20f)
+                    .toVector3f(40f * sin(Pi * tz) - 40f)
             }
         program.setUniform("lightPosition", lampPosition)
         program.setUniform("lightColor", Vector3f(1f, 1f, 1f))
@@ -302,5 +319,6 @@ class Renderer {
         // in_textureCoordinate attribute
         glVertexAttribPointer(3, 2, GL_FLOAT, false, strideSize, 10 * bytesInt)
         glEnableVertexAttribArray(3)
+
     }
 }

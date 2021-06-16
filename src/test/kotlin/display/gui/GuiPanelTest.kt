@@ -4,7 +4,7 @@ import dI
 import display.draw.Drawer
 import display.draw.TextureHolder
 import display.event.MouseButtonEvent
-import display.graphic.Renderer
+import display.graphic.OldRenderer
 import display.gui.base.GuiElement
 import display.gui.base.HasDrag
 import display.gui.base.HasScroll
@@ -26,8 +26,8 @@ internal class GuiPanelTest {
     init {
         val drawer: Drawer = mockk(relaxed = true)
         dI.drawer = drawer
-        val renderer: Renderer = mockk(relaxed = true)
-        dI.renderer = renderer
+        val oldRenderer: OldRenderer = mockk(relaxed = true)
+        dI.oldRenderer = oldRenderer
         val textures: TextureHolder = mockk(relaxed = true)
         dI.textures = textures
     }
@@ -47,7 +47,7 @@ internal class GuiPanelTest {
         val panel = makePanel()
         panel.render(null)
 
-        verify(inverse = true) { dI.renderer.drawStrip(any(), any(), any(), any(), any(), any()) }
+        verify(inverse = true) { dI.oldRenderer.drawStrip(any(), any(), any(), any(), any(), any()) }
     }
 
     @Test
@@ -55,7 +55,7 @@ internal class GuiPanelTest {
         val panel = makePanel(true)
         panel.render(null)
 
-        verify { dI.renderer.drawStrip(any(), any(), any(), any(), any(), any()) }
+        verify { dI.oldRenderer.drawStrip(any(), any(), any(), any(), any(), any()) }
     }
 
     @Test

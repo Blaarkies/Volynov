@@ -92,7 +92,7 @@ class GuiScroll(
         val unionSnipRegion = snipRegion.intersect(parentSnipRegion)!!
 
         dI.textures.getTexture(TextureEnum.white_pixel).bind()
-        dI.renderer.drawStrip(outline, offset, useCamera = false, snipRegion = unionSnipRegion)
+        dI.oldRenderer.drawStrip(outline, offset, useCamera = false, snipRegion = unionSnipRegion)
 
         super<HasKids>.render(unionSnipRegion)
         thumb.render(unionSnipRegion)

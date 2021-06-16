@@ -21,7 +21,7 @@ class Model(var triangles: List<Triangle>,
                 listOf(
                     location.x, location.y, location.z,
                     texture.x, texture.y,
-                    normal.x, normal.y, normal.z,
+                    it.normal.x, it.normal.y, it.normal.z,// normal.x, normal.y, normal.z,
                     1f, 1f, 1f, 1f,
                     textureDepth,
                 )

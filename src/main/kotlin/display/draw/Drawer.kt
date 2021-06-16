@@ -19,7 +19,6 @@ import utility.Common.makeVec2Circle
 import utility.Common.vectorUnit
 import utility.toList
 import utility.toVector3f
-import java.util.*
 import kotlin.collections.component1
 import kotlin.collections.component2
 import kotlin.math.sqrt
@@ -27,7 +26,7 @@ import kotlin.math.sqrt
 class Drawer {
 
     val textures = dI.textures
-    val renderer = dI.renderer
+    val renderer = dI.oldRenderer
 
     fun drawBorder(mapBorder: MapBorder) {
         textures.getTexture(mapBorder.textureConfig.texture).bind()
@@ -56,9 +55,9 @@ class Drawer {
     }
 
     fun drawFreeBody(freeBody: FreeBody) {
-        if (freeBody is Vehicle) {
+        /*if (freeBody is Vehicle) {
             if (freeBody.shield !is Refractor) {
-                textures.getTexture(freeBody.model.texture).bind()
+                textures.getTexture(freeBody.textureConfig.texture).bind()
                 renderer.drawMesh(
                     freeBody.model.gpuData,
                     freeBody.worldBody.position.toVector3f(),
@@ -69,22 +68,27 @@ class Drawer {
 
             freeBody.shield?.render()
 
+            textures.getTexture(freeBody.textureConfig.texture).bind()
+            renderer.drawMesh(
+                freeBody.model.gpuData,
+                freeBody.worldBody.position.toVector3f(),
+                freeBody.worldBody.angle,
+                Vector3f(freeBody.radius),
+                rotateY = if (freeBody is Warhead) freeBody.rotation.y else 0f
+            )
+        }*/
+
+        if (freeBody is Planet) {
+            dI.newRenderer.drawModel(freeBody.model, freeBody.worldBody, 0f)
+
             return
         }
-
-        textures.getTexture(freeBody.model.texture).bind()
-        renderer.drawMesh(
-            freeBody.model.gpuData,
-            freeBody.worldBody.position.toVector3f(),
-            freeBody.worldBody.angle,
-            Vector3f(freeBody.radius),
-            rotateY = if (freeBody is Warhead) freeBody.rotation.y else 0f
-        )
     }
 
     fun drawGravityCells(gravityMap: HashMap<CellLocation, GravityCell>, resolution: Float) {
         textures.getTexture(TextureEnum.white_pixel).bind()
-        val maxMass = gravityMap.maxByOrNull { (_, cell) -> cell.totalMass }?.value?.totalMass ?: .001f
+        val maxMass =
+            gravityMap.maxByOrNull { (_, cell) -> cell.totalMass }?.value?.totalMass ?: .001f
         val scale = 0.707106781f * resolution
         gravityMap.forEach { (key, cell) ->
             val data = BasicShapes.polygon4
@@ -136,7 +140,8 @@ class Drawer {
         prediction.nearbyFreeBodies
             .filter {
                 val realFreeBody = dI.gameState.gravityBodies.find { old -> old.id == it.id }
-                val distanceMoved = realFreeBody!!.worldBody.position.sub(it.worldBody.position).length()
+                val distanceMoved =
+                    realFreeBody!!.worldBody.position.sub(it.worldBody.position).length()
                 distanceMoved > it.radius * .15f
             }
             .forEach {
@@ -148,7 +153,7 @@ class Drawer {
                     }
                     .toFloatArray()
 
-                textures.getTexture(it.model.texture).bind()
+                textures.getTexture(it.textureConfig.texture).bind()
                 renderer.drawMesh(
                     it.model.gpuData,
                     it.worldBody.position.toVector3f(),
@@ -160,7 +165,8 @@ class Drawer {
             }
 
         val data = getLineTextured(prediction.warheadPath.flatMap { it.toList() },
-            Color("#02eded99"), Color.TRANSPARENT, .4f, timingFunction = { step -> getTimingFunctionEaseIn(step) })
+            Color("#02eded99"), Color.TRANSPARENT, .4f,
+            timingFunction = { step -> getTimingFunctionEaseIn(step) })
 
         textures.getTexture(TextureEnum.white_dot_100_pad).bind()
         renderer.drawStrip(data)
@@ -193,37 +199,37 @@ class Drawer {
 
         val multiplier = 2000f
         val linePoints = listOf(
-                x,
-                y,
-                x + accelerationX * multiplier,
-                y + accelerationY * multiplier
+            x,
+            y,
+            x + accelerationX * multiplier,
+            y + accelerationY * multiplier
         )
         val triangleStripPoints = BasicShapes.getLineTriangleStrip(linePoints, .2f)
         val arrowHeadPoints = BasicShapes.getArrowHeadPoints(linePoints)
-        val data = getColoredData(
-                triangleStripPoints + arrowHeadPoints,
-                Color(0f, 1f, 1f, 1f), Color(0f, 1f, 1f, 0.0f)
+        val data = getColoredData(triangleStripPoints + arrowHeadPoints, Color(0f, 1f, 1f, 1f),
+            Color(0f, 1f, 1f, 0.0f)
         ).toFloatArray()
 
         textures.getTexture(TextureEnum.white_pixel).bind()
         renderer.drawStrip(data)
 
-        renderer.drawText(freeBody.id, freeBody.worldBody.position, vectorUnit, Color.WHITE, TextJustify.LEFT)
+        renderer.drawText(freeBody.id, freeBody.worldBody.position, vectorUnit, Color.WHITE,
+            TextJustify.LEFT)
     }
 
     companion object {
 
         fun getColoredData(points: List<Float>,
                            startColor: Color = Color.WHITE,
-                           endColor: Color = startColor
-        ): List<Float> {
+                           endColor: Color = startColor): List<Float> {
             val pointsLastIndex = points.lastIndex.toFloat() / 2f
 
             return points.chunked(2).withIndex()
                 .flatMap { (index, chunk) ->
                     val (x, y) = chunk
                     val interpolationDistance = index.toFloat() / pointsLastIndex
-                    val color = endColor * interpolationDistance + startColor * (1f - interpolationDistance)
+                    val color =
+                        endColor * interpolationDistance + startColor * (1f - interpolationDistance)
 
                     val isLeftHandVertex = index.rem(2) == 0
                     val textureX = if (isLeftHandVertex) 0f else 1f
@@ -270,7 +276,8 @@ class Drawer {
                     val textureX = if (isLeftHandVertex) 0f else 1f
 
                     val scale = .5f
-                    val distanceScale = (scale / endWidth) * progress + (scale / startWidth) * inverseProgress
+                    val distanceScale =
+                        (scale / endWidth) * progress + (scale / startWidth) * inverseProgress
 
                     if (isLeftHandVertex) {
                         lastDistance += distance
@@ -291,9 +298,9 @@ class Drawer {
                     endColor: Color = startColor,
                     startWidth: Float = 1f,
                     endWidth: Float = startWidth,
-                    wrapAround: Boolean = false
-        ): FloatArray {
-            val triangleStripPoints = BasicShapes.getLineTriangleStrip(points, startWidth, endWidth, wrapAround)
+                    wrapAround: Boolean = false): FloatArray {
+            val triangleStripPoints =
+                BasicShapes.getLineTriangleStrip(points, startWidth, endWidth, wrapAround)
             return getColoredData(triangleStripPoints, startColor, endColor).toFloatArray()
         }
 
@@ -308,8 +315,10 @@ class Drawer {
             if (points.size < 3) {
                 return floatArrayOf()
             }
-            val triangleStripPoints = BasicShapes.getLineTriangleStrip(points, startWidth, endWidth, wrapAround)
-            return getTexturedData(triangleStripPoints, points, startColor, endColor, startWidth, endWidth,
+            val triangleStripPoints =
+                BasicShapes.getLineTriangleStrip(points, startWidth, endWidth, wrapAround)
+            return getTexturedData(triangleStripPoints, points, startColor, endColor, startWidth,
+                endWidth,
                 timingFunction = timingFunction, textureScale = scale)
                 .toFloatArray()
         }

@@ -45,7 +45,7 @@ interface VehicleShield {
 
     fun render() {
         dI.textures.getTexture(textureConfig.texture).bind()
-        dI.renderer.drawShape(
+        dI.oldRenderer.drawShape(
             textureConfig.gpuBufferData,
             worldBody.position,
             0f,

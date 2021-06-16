@@ -2,7 +2,7 @@ package display.gui
 
 import dI
 import display.event.MouseButtonEvent
-import display.graphic.Renderer
+import display.graphic.OldRenderer
 import display.gui.base.GuiElement
 import display.gui.base.GuiElementPhase
 import display.gui.element.GuiButton
@@ -22,8 +22,8 @@ import utility.Expect.Companion.expect
 internal class GuiButtonTest {
 
     init {
-        val renderer: Renderer = mockk(relaxed = true)
-        dI.renderer = renderer
+        val oldRenderer: OldRenderer = mockk(relaxed = true)
+        dI.oldRenderer = oldRenderer
     }
 
     val baseOffset = { Vec2() }
@@ -40,9 +40,9 @@ internal class GuiButtonTest {
         val button = GuiButton(baseOffset(), baseScale())
         verifyIdlePhase(button)
         verify(inverse = true) {
-            dI.renderer.drawShape(any())
-            dI.renderer.drawStrip(any())
-            dI.renderer.drawText(any(), any(), any(), any())
+            dI.oldRenderer.drawShape(any())
+            dI.oldRenderer.drawStrip(any())
+            dI.oldRenderer.drawText(any(), any(), any(), any())
         }
     }
 

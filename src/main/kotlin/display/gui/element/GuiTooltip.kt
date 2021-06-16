@@ -51,7 +51,7 @@ class GuiTooltip(
         if (localElements.size == 0) return
 
         dI.textures.getTexture(TextureEnum.white_pixel).bind()
-        dI.renderer.drawShape(activeBackground, offset, useCamera = false, snipRegion = snipRegion)
+        dI.oldRenderer.drawShape(activeBackground, offset, useCamera = false, snipRegion = snipRegion)
 
         localElements.forEach { it.render(snipRegion) }
         super.render(snipRegion)

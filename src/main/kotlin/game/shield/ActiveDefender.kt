@@ -64,7 +64,7 @@ class ActiveDefender(override val attachedTo: Vehicle) : VehicleShield {
     override fun render() {
         laserBeams.values.forEach {
             dI.textures.getTexture(it.texture).bind()
-            dI.renderer.drawStrip(it.gpuData)
+            dI.oldRenderer.drawStrip(it.gpuData)
         }
     }
 

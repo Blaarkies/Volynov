@@ -15,8 +15,10 @@ open class FreeBody(val id: String, var radius: Float) {
 
     lateinit var worldBody: Body
     val motion = Motion()
-    lateinit var textureConfig: TextureConfig
     lateinit var model: Model
+
+    @Deprecated("Replaced by Model")
+    lateinit var textureConfig: TextureConfig
 
     fun knock(momentum: Float, direction: Float) {
         worldBody.applyLinearImpulse(makeVec2Circle(direction).mul(momentum / 9.81f), worldBody.position)

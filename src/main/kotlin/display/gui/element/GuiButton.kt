@@ -47,12 +47,12 @@ open class GuiButton(
         dI.textures.getTexture(TextureEnum.white_pixel).bind()
 
         if (currentPhase == HOVER || currentPhase == ACTIVE) {
-            dI.renderer.drawShape(activeBackground, offset, useCamera = false, snipRegion = parentSnipRegion)
+            dI.oldRenderer.drawShape(activeBackground, offset, useCamera = false, snipRegion = parentSnipRegion)
         }
 
         when (currentPhase) {
             ACTIVE -> {
-                dI.renderer.drawStrip(outline, offset,
+                dI.oldRenderer.drawStrip(outline, offset,
                     scale = Vec2((scale.x - 2f) / scale.x, (scale.y - 2f) / scale.y),
                     useCamera = false, snipRegion = parentSnipRegion)
             }

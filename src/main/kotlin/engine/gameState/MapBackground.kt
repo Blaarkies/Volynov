@@ -52,11 +52,11 @@ class MapBackground {
         val farBackDropZ = -400f
 
         dI.textures.getTexture(textureConfigFar.texture).bind()
-        dI.renderer.drawShape(textureConfigFar.gpuBufferData, offset, 0f,
+        dI.oldRenderer.drawShape(textureConfigFar.gpuBufferData, offset, 0f,
             scale, z = farBackDropZ)
 
         dI.textures.getTexture(textureConfigNear.texture).bind()
-        dI.renderer.drawShape(textureConfigNear.gpuBufferData, offset, 2f,
+        dI.oldRenderer.drawShape(textureConfigNear.gpuBufferData, offset, 2f,
             scale.mul(.973f), z = farBackDropZ * .7f)
     }
 

@@ -127,7 +127,7 @@ class ShaderProgram {
     }
 
     fun checkStatus() {
-        val status: Int = glGetProgrami(id, GL_LINK_STATUS)
+        val status = glGetProgrami(id, GL_LINK_STATUS)
         if (status != GL_TRUE) {
             throw RuntimeException(glGetProgramInfoLog(id))
         }

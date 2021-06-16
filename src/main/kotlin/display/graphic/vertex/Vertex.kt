@@ -9,7 +9,7 @@ data class Vertex(
     val location: Vector3f = Vector3f(0f, 0f, 0f),
     val texture: Vector2f = Vector2f(0f, 0f),
     val normal: Vector3f = location.clone().normalize(),
-    val textureDepth: Float = 0f,
+    var textureDepth: Float = 0f,
 ) {
 
     constructor(vararg locations: Float) : this(Vector3f(locations))

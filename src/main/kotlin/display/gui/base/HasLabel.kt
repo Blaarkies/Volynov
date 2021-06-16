@@ -2,7 +2,6 @@ package display.gui.base
 
 import dI
 import display.graphic.SnipRegion
-import display.gui.base.GuiElement
 import display.text.TextJustify
 import utility.Common.vectorUnit
 
@@ -17,7 +16,7 @@ interface HasLabel : GuiElement {
     override fun render(parentSnipRegion: SnipRegion?) {
         super.render(parentSnipRegion)
 
-        dI.renderer.drawText(title,
+        dI.oldRenderer.drawText(title,
             offset, vectorUnit.mul(textSize),
             color, justify,
             false, parentSnipRegion,

@@ -3,14 +3,13 @@ import display.draw.Drawer
 import display.draw.ModelHolder
 import display.draw.TextureHolder
 import display.graphic.NewRenderer
-import display.graphic.Renderer
+import display.graphic.OldRenderer
 import display.gui.GuiController
 import engine.gameState.GameState
 import game.GamePhaseHandler
 import input.CameraView
 import input.InputHandler
 import io.reactivex.Observable
-import io.reactivex.subjects.BehaviorSubject
 import io.reactivex.subjects.PublishSubject
 
 class DependencyInjectionContainer {
@@ -18,7 +17,7 @@ class DependencyInjectionContainer {
     lateinit var window: Window
 
     lateinit var cameraView: CameraView
-    lateinit var renderer: Renderer
+    lateinit var oldRenderer: OldRenderer
     lateinit var newRenderer: NewRenderer
     lateinit var textures: TextureHolder
     lateinit var models: ModelHolder
@@ -34,7 +33,7 @@ class DependencyInjectionContainer {
 
     fun init() {
         cameraView = CameraView()
-        renderer = Renderer()
+        oldRenderer = OldRenderer()
         newRenderer = NewRenderer()
         textures = TextureHolder()
         models = ModelHolder()

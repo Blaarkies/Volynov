@@ -16,7 +16,7 @@ class Shader(type: Int, path: String) {
     }
 
     private fun checkStatus() {
-        val status: Int = glGetShaderi(id, GL_COMPILE_STATUS)
+        val status = glGetShaderi(id, GL_COMPILE_STATUS)
         if (status != GL_TRUE) {
             throw RuntimeException(glGetShaderInfoLog(id))
         }

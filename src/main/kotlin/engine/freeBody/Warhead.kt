@@ -48,7 +48,7 @@ class Warhead(
     val createdAt: Float
 ) : FreeBody(id, radius) {
 
-    val rotation = Rotation(0f, .07f * .1f.coerceAtLeast(.2f) * getRandomMixed())
+    val rotation = Rotation(0f, .15f * .1f.coerceAtLeast(.2f) * getRandomMixed())
     val freeBodyCallback = FreeBodyCallback(this, onCollision)
 
     init {

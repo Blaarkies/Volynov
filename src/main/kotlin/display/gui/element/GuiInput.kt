@@ -65,24 +65,24 @@ class GuiInput(
         dI.textures.getTexture(TextureEnum.white_pixel).bind()
 
         when (currentPhase) {
-            HOVER -> dI.renderer.drawShape(buttonBackground, offset, useCamera = false, snipRegion = parentSnipRegion)
+            HOVER -> dI.oldRenderer.drawShape(buttonBackground, offset, useCamera = false, snipRegion = parentSnipRegion)
             ACTIVE -> {
-                dI.renderer.drawShape(buttonBackground, offset, useCamera = false, snipRegion = parentSnipRegion)
+                dI.oldRenderer.drawShape(buttonBackground, offset, useCamera = false, snipRegion = parentSnipRegion)
 
                 if (System.currentTimeMillis().rem(blinkRate * 2) < blinkRate) {
-                    dI.renderer.drawStrip(cursorLine, offset, useCamera = false, snipRegion = parentSnipRegion)
+                    dI.oldRenderer.drawStrip(cursorLine, offset, useCamera = false, snipRegion = parentSnipRegion)
                 }
             }
             else -> Unit
         }
 
-        dI.renderer.drawStrip(buttonOutline, offset, useCamera = false)
+        dI.oldRenderer.drawStrip(buttonOutline, offset, useCamera = false)
 
         val paddedOffset = offset.clone().also { it.x -= paddedScale.x }
         when (inputText.length) {
-            0 -> dI.renderer.drawText(placeholder, paddedOffset, vectorUnit.mul(textSize),
+            0 -> dI.oldRenderer.drawText(placeholder, paddedOffset, vectorUnit.mul(textSize),
                 color.setAlpha(.4f), TextJustify.LEFT, false, parentSnipRegion)
-            else -> dI.renderer.drawText(inputText, paddedOffset, vectorUnit.mul(textSize),
+            else -> dI.oldRenderer.drawText(inputText, paddedOffset, vectorUnit.mul(textSize),
                 color, TextJustify.LEFT, false, parentSnipRegion)
         }
         super.render(parentSnipRegion)

@@ -9,13 +9,14 @@ in vec3 out_lightPosition;
 
 out vec4 fragmentColor;
 
-uniform sampler2D textureImage;
+uniform sampler3D textureImage;
 uniform vec3 lightColor;
 uniform vec3 viewPos;
 
 void main() {
     vec4 objectColor = out_vertexColor
-    * texture(textureImage, out_textureCoordinate);
+    + texture(textureImage, vec3(out_textureCoordinate, out_normal.z))
+    + vec4(0, 0, 0, 1);
 
     if (out_ambient.x > .99) { // Object that do not yet support diffuse/specular light
         fragmentColor = objectColor;

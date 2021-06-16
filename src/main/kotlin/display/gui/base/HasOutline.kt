@@ -22,7 +22,7 @@ interface HasOutline : GuiElement {
 
     override fun render(parentSnipRegion: SnipRegion?) {
         dI.textures.getTexture(TextureEnum.white_pixel).bind()
-        dI.renderer.drawStrip(outline, offset, useCamera = false, snipRegion = parentSnipRegion)
+        dI.oldRenderer.drawStrip(outline, offset, useCamera = false, snipRegion = parentSnipRegion)
 
         super.render(parentSnipRegion)
     }

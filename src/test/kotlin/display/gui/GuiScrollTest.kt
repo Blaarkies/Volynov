@@ -4,7 +4,7 @@ import dI
 import display.draw.Drawer
 import display.draw.TextureHolder
 import display.event.MouseButtonEvent
-import display.graphic.Renderer
+import display.graphic.OldRenderer
 import display.gui.base.HasDrag
 import display.gui.element.GuiButton
 import display.gui.element.GuiScroll
@@ -24,8 +24,8 @@ internal class GuiScrollTest {
     init {
         val drawer: Drawer = mockk(relaxed = true)
         dI.drawer = drawer
-        val renderer: Renderer = mockk(relaxed = true)
-        dI.renderer = renderer
+        val oldRenderer: OldRenderer = mockk(relaxed = true)
+        dI.oldRenderer = oldRenderer
         val textures: TextureHolder = mockk(relaxed = true)
         dI.textures = textures
     }
@@ -45,7 +45,7 @@ internal class GuiScrollTest {
         val scroll = makeScroll()
         scroll.render(null)
 
-        verify { dI.renderer.drawStrip(any(), any(), any(), any(), any(), any()) }
+        verify { dI.oldRenderer.drawStrip(any(), any(), any(), any(), any(), any()) }
     }
 
     @Test

@@ -8,7 +8,7 @@ class TextureHolder {
 
     fun init() {
         TextureEnum.values()
-            .forEach { hashMap[it] = Texture.load(it.name) }
+            .forEach { hashMap[it] = Texture(it) }
     }
 
     fun getTexture(texture: TextureEnum): Texture = hashMap[texture].let {

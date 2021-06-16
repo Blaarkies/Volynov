@@ -53,7 +53,7 @@ class GuiProgressBar(override val offset: Vec2 = Vec2(),
 
     override fun render(parentSnipRegion: SnipRegion?) {
         dI.textures.getTexture(TextureEnum.white_pixel).bind()
-        dI.renderer.drawStrip(outline, offset, angle, useCamera = false, snipRegion = parentSnipRegion)
+        dI.oldRenderer.drawStrip(outline, offset, angle, useCamera = false, snipRegion = parentSnipRegion)
 
         if (progress > .005f) {
             val progressOffset = Vec2(-scale.x + scale.x * progress, 0f)
@@ -61,11 +61,11 @@ class GuiProgressBar(override val offset: Vec2 = Vec2(),
                 .add(offset)
 
             val progressScale = Vec2(progress, 1f)
-            dI.renderer.drawShape(activeBackground, progressOffset, angle, progressScale, useCamera = false,
+            dI.oldRenderer.drawShape(activeBackground, progressOffset, angle, progressScale, useCamera = false,
                 snipRegion = parentSnipRegion)
         }
 
-        dI.renderer.drawText(title, offset, makeVec2(.12f), useCamera = false, snipRegion = parentSnipRegion,
+        dI.oldRenderer.drawText(title, offset, makeVec2(.12f), useCamera = false, snipRegion = parentSnipRegion,
             color = color.setAlpha(.9f), justify = TextJustify.CENTER)
     }
 

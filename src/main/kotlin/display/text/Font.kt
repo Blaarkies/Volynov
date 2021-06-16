@@ -178,7 +178,7 @@ class Font(font: Font = Font(MONOSPACED, BOLD, 32), antiAlias: Boolean = true) {
     private fun getTextTotalWidth(glyphs: List<Glyph>, scale: Vec2) = glyphs.map { it.width * scale.x }.sum()
 
     fun drawText(
-        renderer: Renderer,
+        oldRenderer: OldRenderer,
         text: CharSequence,
         offset: Vec2,
         scale: Vec2,
@@ -189,16 +189,16 @@ class Font(font: Font = Font(MONOSPACED, BOLD, 32), antiAlias: Boolean = true) {
         maxWidth: Float,
         angle: Float
     ) {
-        drawLetters(fontBitMapShadow, offset, scale, renderer, text, Color.BLACK, justify, useCamera, snipRegion,
+        drawLetters(fontBitMapShadow, offset, scale, oldRenderer, text, Color.BLACK, justify, useCamera, snipRegion,
             maxWidth, angle)
-        drawLetters(fontBitMap, offset, scale, renderer, text, color, justify, useCamera, snipRegion, maxWidth, angle)
+        drawLetters(fontBitMap, offset, scale, oldRenderer, text, color, justify, useCamera, snipRegion, maxWidth, angle)
     }
 
     private fun drawLetters(
         texture: Texture,
         offset: Vec2,
         scale: Vec2,
-        renderer: Renderer,
+        oldRenderer: OldRenderer,
         text: CharSequence,
         color: Color,
         justify: TextJustify,
@@ -249,7 +249,7 @@ class Font(font: Font = Font(MONOSPACED, BOLD, 32), antiAlias: Boolean = true) {
         glyphsList.withIndex().forEach { (index, it) ->
             x += it.width * scale.x
 
-            drawTextPosition(texture, renderer, Vec2(x, y).add(offset).add(justifyment),
+            drawTextPosition(texture, oldRenderer, Vec2(x, y).add(offset).add(justifyment),
                 scale, it, color, useCamera, snipRegion, angle)
             x += it.width * scale.x
 
@@ -262,7 +262,7 @@ class Font(font: Font = Font(MONOSPACED, BOLD, 32), antiAlias: Boolean = true) {
 
     private fun drawTextPosition(
         texture: Texture,
-        renderer: Renderer,
+        oldRenderer: OldRenderer,
         offset: Vec2,
         scale: Vec2,
         glyph: Glyph,
@@ -275,7 +275,7 @@ class Font(font: Font = Font(MONOSPACED, BOLD, 32), antiAlias: Boolean = true) {
         val textureHeight = texture.height.toFloat()
         val glyphScale = Vec2(glyph.width / textureWidth, glyph.height / textureHeight)
         val glyphOffset = Vec2((glyph.x + glyph.width) / textureWidth, glyph.y / textureHeight)
-        val debug = renderer.debugOffset
+        val debug = oldRenderer.debugOffset
 
         val data = BasicShapes.square
             .flatMap { (x, y) ->
@@ -289,7 +289,7 @@ class Font(font: Font = Font(MONOSPACED, BOLD, 32), antiAlias: Boolean = true) {
             }.toFloatArray()
 
         texture.bind()
-        renderer.drawShape(data, offset, angle, scale, useCamera, snipRegion)
+        oldRenderer.drawShape(data, offset, angle, scale, useCamera, snipRegion)
 
         //        textures.white_pixel.bind()
         //        renderer.drawShape(data, offset, 0f, scale, useCamera)
