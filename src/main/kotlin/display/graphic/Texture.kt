@@ -2,11 +2,8 @@ package display.graphic
 
 import display.draw.TextureEnum
 import org.lwjgl.opengl.ARBFramebufferObject.glGenerateMipmap
-import org.lwjgl.opengl.ARBShaderImageLoadStore.glBindImageTexture
 import org.lwjgl.opengl.ARBTextureStorage.glTexStorage2D
 import org.lwjgl.opengl.ARBTextureStorage.glTexStorage3D
-import org.lwjgl.opengl.GL11
-import org.lwjgl.opengl.GL11.*
 import org.lwjgl.opengl.GL12
 import org.lwjgl.opengl.GL30.*
 import org.lwjgl.stb.STBImage
@@ -17,33 +14,6 @@ import kotlin.math.floor
 import kotlin.math.pow
 
 class Texture {
-
-    constructor()
-    constructor(vararg textures: TextureEnum) {
-        glEnable(GL_TEXTURE_3D)
-
-        val imageBuffers = textures.map { getImageBufferData(it.name) }
-
-        val mipmapCount = width.times(height).toFloat().pow(.1f).let { floor(it).toInt() }
-
-        bind()
-            .setParameter(GL_TEXTURE_WRAP_S, GL_REPEAT)
-            .setParameter(GL_TEXTURE_WRAP_T, GL_REPEAT)
-            .setParameter(GL_TEXTURE_MAG_FILTER, GL_LINEAR)
-            .setParameter(GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR)
-
-//        glTexStorage3D(GL_TEXTURE_3D, mipmapCount, GL_RGBA8, width, height, imageBuffers.size - 1)
-
-        GL12.glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA8, width, height, imageBuffers.size - 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0)
-
-//        glBindImageTexture(0, id, 0, true, 0, GL_READ_WRITE, GL_RGBA);
-
-        imageBuffers.withIndex().forEach { (index, data) ->
-            glTexSubImage3D(GL_TEXTURE_3D, 0, 0, 0, index, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data)
-        }
-
-//        glGenerateMipmap(GL_TEXTURE_3D)
-    }
 
     private val id: Int = glGenTextures()
 
@@ -61,7 +31,46 @@ class Texture {
             }
         }
 
-    fun getImageBufferData(name: String): ByteBuffer {
+    constructor()
+    constructor(vararg textures: TextureEnum) {
+/*
+println("""constructor: ${glGetError()}""")
+
+        glEnable(GL_TEXTURE_2D_ARRAY)
+        println("""glEnable: ${glGetError()}""")
+
+        val imageBuffers = textures.map { getImageBufferData(it.name) }
+
+//        val mipmapCount = width.times(height).toFloat().pow(.1f).let { floor(it).toInt() }
+
+        bind()
+            .setParameter(GL_TEXTURE_WRAP_S, GL_REPEAT)
+            .setParameter(GL_TEXTURE_WRAP_T, GL_REPEAT)
+            .setParameter(GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR)
+            .setParameter(GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+        println("""setParameter: ${glGetError()}""")
+
+        val depth = imageBuffers.size
+
+        glTexStorage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGBA8, width, height, depth)
+//        GL12.glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGBA8,
+//            width, height, depth,
+//            0, GL_RGBA, GL_UNSIGNED_BYTE, buffer)
+        println("""glTexStorage3D: ${glGetError()}""")
+
+        unbind()
+
+        imageBuffers.withIndex().forEach { (index, data) ->
+            glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, index, width, height, 1, GL_RGBA, GL_UNSIGNED_BYTE, data)
+        }
+
+//        glGenerateMipmap(GL_TEXTURE_2D_ARRAY)
+        println("""glGetError(): ${glGetError()}""")
+        unbind()
+        */
+    }
+
+    fun getImageBufferData(name: String): ImageByteBuffer {
         val resourcePath = "./textures/$name.png"
         val safePath = getSafePath(resourcePath)
 
@@ -85,20 +94,25 @@ class Texture {
                 )
             }
 
-            width = w.get()
-            height = h.get()
+//            width = w.get()
+//            height = h.get()
 
-            return imageByteBuffer
+            return ImageByteBuffer(imageByteBuffer, w.get(), h.get())
         }
     }
 
     fun bind(): Texture {
-        glBindTexture(GL_TEXTURE_3D, id)
+        glBindTexture(GL_TEXTURE_2D_ARRAY, id)
+        return this
+    }
+
+    fun unbind(): Texture {
+        glBindTexture(GL_TEXTURE_2D_ARRAY, 0)
         return this
     }
 
     fun setParameter(name: Int, value: Int): Texture {
-        glTexParameteri(GL_TEXTURE_3D, name, value)
+        glTexParameteri(GL_TEXTURE_2D_ARRAY, name, value)
         return this
     }
 
@@ -115,22 +129,32 @@ class Texture {
 
     companion object {
 
-        fun createTexture(width: Int, height: Int, data: ByteBuffer): Texture {
+        fun oldCreateTexture(width: Int, height: Int, data: ByteBuffer): Texture {
             val texture = Texture()
             texture.width = width
             texture.height = height
             val mipmapCount = width.times(height).toFloat().pow(.1f).let { floor(it).toInt() }
 
-            texture.bind()
-                .setParameter(GL_TEXTURE_WRAP_S, GL_REPEAT)
-                .setParameter(GL_TEXTURE_WRAP_T, GL_REPEAT)
-                .setParameter(GL_TEXTURE_MAG_FILTER, GL_LINEAR)
-                .setParameter(GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR)
-                .uploadData(width, height, data, mipmapCount)
+//            texture.bind()
+//                .setParameter(GL_TEXTURE_WRAP_S, GL_REPEAT)
+//                .setParameter(GL_TEXTURE_WRAP_T, GL_REPEAT)
+//                .setParameter(GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+//                .setParameter(GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR)
+//                .uploadData(width, height, data, mipmapCount)
 
             return texture
         }
 
+        fun getImageBufferData(name: String): ImageByteBuffer {
+            return Texture().getImageBufferData(name)
+        }
+
     }
+
+}
+
+class ImageByteBuffer(val buffer: ByteBuffer,
+                      val width: Int,
+                      val height: Int) {
 
 }

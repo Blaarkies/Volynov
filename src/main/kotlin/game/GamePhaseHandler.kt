@@ -168,6 +168,7 @@ class GamePhaseHandler {
 
     fun update() {
         camera.update()
+        val planet = gameState.gravityBodies.maxByOrNull { it.worldBody.mass }!!
 
         val phaseAction = phaseUpdateMap[currentPhase]
         when {

@@ -17,9 +17,9 @@ import java.awt.Color as AwtColor
 
 class Font(font: Font = Font(MONOSPACED, BOLD, 32), antiAlias: Boolean = true) {
 
-    private val glyphs: MutableMap<Char, Glyph>
+    private val glyphs: MutableMap<Char, Glyph> = HashMap()
     private var fontBitMapShadow: Texture = Texture()
-    private val fontBitMap: Texture
+    private val fontBitMap: Texture = Texture()
     private var fontHeight = 0
     private var fontWidth = 0
 
@@ -33,12 +33,12 @@ class Font(font: Font = Font(MONOSPACED, BOLD, 32), antiAlias: Boolean = true) {
     )
 
     init {
-        glyphs = HashMap()
-        val (texture, shadowTexture) = createFontTexture(font, antiAlias)
-        fontBitMap = texture
-        fontBitMapShadow = shadowTexture
-
-        fontWidth = glyphs.map { it.value.width }.maxOrNull()!!
+//        glyphs = HashMap()
+//        val (texture, shadowTexture) = createFontTexture(font, antiAlias)
+//        fontBitMap = texture
+//        fontBitMapShadow = shadowTexture
+//
+//        fontWidth = glyphs.map { it.value.width }.maxOrNull()!!
     }
 
     private fun createFontTexture(font: Font, antiAlias: Boolean): List<Texture> {
@@ -97,7 +97,7 @@ class Font(font: Font = Font(MONOSPACED, BOLD, 32), antiAlias: Boolean = true) {
         buffer.put(bytePixels)
         buffer.flip()
 
-        val fontTexture = Texture.createTexture(width, height, buffer)
+        val fontTexture = Texture.oldCreateTexture(width, height, buffer)
         MemoryUtil.memFree(buffer)
         return listOf(fontTexture, shadowTexture)
     }
@@ -139,7 +139,7 @@ class Font(font: Font = Font(MONOSPACED, BOLD, 32), antiAlias: Boolean = true) {
         buffer.put(bytePixels)
         buffer.flip()
 
-        val shadowTexture = Texture.createTexture(width, height, buffer)
+        val shadowTexture = Texture.oldCreateTexture(width, height, buffer)
         MemoryUtil.memFree(buffer)
         return shadowTexture
     }

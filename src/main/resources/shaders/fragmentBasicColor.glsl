@@ -1,4 +1,5 @@
 #version 330
+#extension GL_EXT_texture_array : enable
 
 in vec4 out_vertexColor;
 in vec2 out_textureCoordinate;
@@ -9,14 +10,19 @@ in vec3 out_lightPosition;
 
 out vec4 fragmentColor;
 
-uniform sampler3D textureImage;
+//uniform sampler2D textureImage;
+uniform sampler2DArray textureImage;
 uniform vec3 lightColor;
 uniform vec3 viewPos;
 
 void main() {
-    vec4 objectColor = out_vertexColor
-    + texture(textureImage, vec3(out_textureCoordinate, out_normal.z))
-    + vec4(0, 0, 0, 1);
+    vec4 objectColor =
+//    out_vertexColor
+//      + texture(textureImage, out_textureCoordinate);
+     texture2DArray(textureImage, vec3(out_textureCoordinate, 0));
+//    + vec4(0, 0, 0, 1);
+    fragmentColor =vec4( objectColor.rgb, 1);
+    return;
 
     if (out_ambient.x > .99) { // Object that do not yet support diffuse/specular light
         fragmentColor = objectColor;
